@@ -21,7 +21,7 @@ class _LoanApplicationScreenSimpleState
 
   int? _customerId;
   String _selectedDuration = '30'; // Default 30 days
-  double _interestRate = 10.0; // Default 10%
+  double _interestRate = 30.0; // Default 30%
   bool _isLoading = false;
 
   final List<String> _durationOptions = ['7', '14', '30', '60', '90'];
