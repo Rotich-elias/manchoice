@@ -19,7 +19,7 @@ class PlumerApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system, // Automatically switches based on system preference
-      initialRoute: '/dashboard', // Skip directly to dashboard for testing
+      initialRoute: '/login', // Start with login screen
       getPages: [
         GetPage(name: '/', page: () => const MainPage()),
         ...AppRoutes.routes,
