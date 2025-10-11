@@ -1,0 +1,1952 @@
+#!/usr/bin/env dart
+
+import 'dart:io';
+import 'dart:convert';
+
+Future<void> main(List<String> arguments) async {
+  print('\x1B[36m🪶 Plumer CLI - Flutter scaffolding made easy\x1B[0m');
+
+  if (arguments.isEmpty || arguments[0] == 'help' || arguments[0] == '--help' || arguments[0] == '-h') {
+    _showHelp();
+    exit(0);
+  }
+
+  if (!await _isFlutterProject()) {
+    print('\x1B[31m❌ This is not a Flutter project. Exiting.\x1B[0m');
+    exit(1);
+  }
+
+  final packageName = await _getPackageName();
+  final command = arguments[0];
+
+  if (command == 'init') {
+    await _initProject();
+  } else if (command.startsWith('install:')) {
+    final subCommand = command.split(':');
+    if (subCommand.length == 2 && subCommand[1] == 'widget') {
+      if (arguments.length < 2) {
+        print('\x1B[31m❌ Missing required widget name for "install:widget".\x1B[0m');
+        print('Example: plumer install:widget slider');
+        print('         plumer install:widget slider lib/components');
+        exit(1);
+      }
+      final widgetName = arguments[1];
+      final customPath = arguments.length > 2 ? arguments[2] : null;
+      await _installWidget(widgetName, customPath);
+    } else {
+      print('\x1B[31m❌ Unknown install command: $command\x1B[0m');
+      print('Available: install:widget');
+    }
+  } else {
+    if (arguments.length < 2) {
+      print('\x1B[31m❌ Missing required path argument for "$command".\x1B[0m');
+      print('Example: plumer $command Booking/Flight');
+      exit(1);
+    }
+
+    final rawPath = arguments[1];
+    final pathParts = rawPath.split('/');
+    final classBaseName = _toPascalCase(pathParts.last);
+    final folderPath = pathParts.length > 1
+        ? pathParts.sublist(0, pathParts.length - 1).map(_toSnakeCase).join('/')
+        : '';
+    final snakeName = _toSnakeCase(pathParts.last);
+
+    switch (command) {
+      case 'make:controller':
+        await _createController(folderPath, classBaseName, snakeName);
+        break;
+      case 'make:binding':
+        await _createBinding(folderPath, classBaseName, snakeName, packageName);
+        break;
+      case 'make:screen':
+        await _createScreen(folderPath, classBaseName, snakeName, packageName);
+        break;
+      case 'make:page':
+        await _makePage(folderPath, classBaseName, snakeName, packageName);
+        break;
+      case 'make:service':
+        await _createService(folderPath, classBaseName, snakeName, packageName);
+        break;
+      case 'make:model':
+        await _createModel(folderPath, classBaseName, snakeName, packageName);
+        break;
+      default:
+        print('\x1B[31m❌ Unknown command: $command\x1B[0m');
+        _showHelp();
+    }
+  }
+}
+
+Future<void> _initProject() async {
+  final pubspec = File('pubspec.yaml');
+  if (!pubspec.existsSync()) {
+    print('\x1B[31m❌ Error: Not a Flutter project. pubspec.yaml not found.\x1B[0m');
+    exit(1);
+  }
+
+  print('\x1B[36m🚀 Initializing Flutter project with GetX and Dio...\x1B[0m');
+
+  // Install GetX and Dio
+  await Process.run('dart', ['pub', 'add', 'get']);
+  await Process.run('dart', ['pub', 'add', 'dio']);
+
+  print('\x1B[32m✅ Installed GetX and Dio.\x1B[0m');
+
+  // Create folder structure
+  final dirs = [
+    'lib/config',
+    'lib/controllers',
+    'lib/bindings',
+    'lib/models',
+    'lib/screens',
+    'lib/widgets',
+  ];
+  for (var dir in dirs) {
+    await Directory(dir).create(recursive: true);
+  }
+  print('\x1B[32m✅ Created recommended folder structure.\x1B[0m');
+
+  // Create app_colors.dart with theme support
+  final appColorsContent = '''
+import 'package:flutter/material.dart';
+
+class AppColors {
+  // Light Theme Colors
+  static const Color lightPrimary = Color(0xFF6366F1); // Modern indigo
+  static const Color lightSecondary = Color(0xFF8B5CF6); // Purple
+  static const Color lightAccent = Color(0xFF10B981); // Emerald
+  static const Color lightBackground = Color(0xFFFAFAFA);
+  static const Color lightSurface = Colors.white;
+  static const Color lightOnPrimary = Colors.white;
+  static const Color lightOnSecondary = Colors.white;
+  static const Color lightOnBackground = Color(0xFF1F2937);
+  static const Color lightOnSurface = Color(0xFF1F2937);
+  
+  // Dark Theme Colors
+  static const Color darkPrimary = Color(0xFF818CF8); // Light indigo
+  static const Color darkSecondary = Color(0xFFA78BFA); // Light purple  
+  static const Color darkAccent = Color(0xFF34D399); // Light emerald
+  static const Color darkBackground = Color(0xFF0F172A); // Dark slate
+  static const Color darkSurface = Color(0xFF1E293B); // Medium slate
+  static const Color darkOnPrimary = Color(0xFF0F172A);
+  static const Color darkOnSecondary = Color(0xFF0F172A);
+  static const Color darkOnBackground = Color(0xFFF8FAFC);
+  static const Color darkOnSurface = Color(0xFFF8FAFC);
+
+  // Legacy colors for backward compatibility
+  static const Color primary = lightPrimary;
+  static const Color accent = lightAccent;
+  static const Color appBarColor = Colors.white;
+  static const Color appBarBackground = lightPrimary;
+}
+''';
+  await File('lib/config/app_colors.dart').writeAsString(appColorsContent);
+  print('\x1B[32m✅ Created lib/config/app_colors.dart\x1B[0m');
+
+  // Create app_routes.dart
+  final appRoutesContent = '''
+import 'package:get/get.dart';
+
+class AppRoutes {
+  static final routes = <GetPage>[];
+}
+''';
+  await File('lib/config/app_routes.dart').writeAsString(appRoutesContent);
+  print('\x1B[32m✅ Created lib/config/app_routes.dart\x1B[0m');
+
+  // Create app_theme.dart
+  final appThemeContent = '''
+import 'package:flutter/material.dart';
+import 'app_colors.dart';
+
+class AppTheme {
+  static ThemeData get lightTheme {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      primarySwatch: _createMaterialColor(AppColors.lightPrimary),
+      primaryColor: AppColors.lightPrimary,
+      colorScheme: const ColorScheme.light(
+        primary: AppColors.lightPrimary,
+        secondary: AppColors.lightSecondary,
+        tertiary: AppColors.lightAccent,
+        background: AppColors.lightBackground,
+        surface: AppColors.lightSurface,
+        onPrimary: AppColors.lightOnPrimary,
+        onSecondary: AppColors.lightOnSecondary,
+        onBackground: AppColors.lightOnBackground,
+        onSurface: AppColors.lightOnSurface,
+      ),
+      scaffoldBackgroundColor: AppColors.lightBackground,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.lightPrimary,
+        foregroundColor: AppColors.lightOnPrimary,
+        elevation: 0,
+        centerTitle: true,
+      ),
+      cardTheme: const CardThemeData(
+        color: AppColors.lightSurface,
+        elevation: 2,
+        margin: EdgeInsets.all(8),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.lightPrimary,
+          foregroundColor: AppColors.lightOnPrimary,
+          elevation: 2,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.lightPrimary),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.lightPrimary, width: 2),
+        ),
+      ),
+      fontFamily: 'Roboto',
+    );
+  }
+
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      primarySwatch: _createMaterialColor(AppColors.darkPrimary),
+      primaryColor: AppColors.darkPrimary,
+      colorScheme: const ColorScheme.dark(
+        primary: AppColors.darkPrimary,
+        secondary: AppColors.darkSecondary,
+        tertiary: AppColors.darkAccent,
+        background: AppColors.darkBackground,
+        surface: AppColors.darkSurface,
+        onPrimary: AppColors.darkOnPrimary,
+        onSecondary: AppColors.darkOnSecondary,
+        onBackground: AppColors.darkOnBackground,
+        onSurface: AppColors.darkOnSurface,
+      ),
+      scaffoldBackgroundColor: AppColors.darkBackground,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.darkSurface,
+        foregroundColor: AppColors.darkOnSurface,
+        elevation: 0,
+        centerTitle: true,
+      ),
+      cardTheme: const CardThemeData(
+        color: AppColors.darkSurface,
+        elevation: 4,
+        margin: EdgeInsets.all(8),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.darkPrimary,
+          foregroundColor: AppColors.darkOnPrimary,
+          elevation: 2,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.darkPrimary),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.darkPrimary, width: 2),
+        ),
+      ),
+      fontFamily: 'Roboto',
+    );
+  }
+
+  static MaterialColor _createMaterialColor(Color color) {
+    List strengths = <double>[.05];
+    final swatch = <int, Color>{};
+    final int r = color.red, g = color.green, b = color.blue;
+
+    for (int i = 1; i < 10; i++) {
+      strengths.add(0.1 * i);
+    }
+
+    for (var strength in strengths) {
+      final double ds = 0.5 - strength;
+      swatch[(strength * 1000).round()] = Color.fromRGBO(
+        r + ((ds < 0 ? r : (255 - r)) * ds).round(),
+        g + ((ds < 0 ? g : (255 - g)) * ds).round(),
+        b + ((ds < 0 ? b : (255 - b)) * ds).round(),
+        1,
+      );
+    }
+
+    return MaterialColor(color.value, swatch);
+  }
+}
+''';
+  await File('lib/config/app_theme.dart').writeAsString(appThemeContent);
+  print('\x1B[32m✅ Created lib/config/app_theme.dart\x1B[0m');
+
+  // Create MainPage
+  final mainPageContent = '''
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+class MainPage extends StatelessWidget {
+  const MainPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Welcome to Plumer'),
+        actions: [
+          IconButton(
+            icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+            onPressed: () {
+              Get.changeThemeMode(
+                isDark ? ThemeMode.light : ThemeMode.dark,
+              );
+            },
+            tooltip: isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.flutter_dash,
+              size: 80,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Plumer CLI',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Your Flutter project has been initialized successfully!',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onBackground,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.palette,
+                      size: 40,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Theme Support',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Your app now supports both light and dark themes. Toggle between them using the button in the app bar!',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                Get.snackbar(
+                  'Welcome!',
+                  'Start building your amazing Flutter app with Plumer CLI',
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  colorText: Theme.of(context).colorScheme.onPrimary,
+                );
+              },
+              icon: const Icon(Icons.rocket_launch),
+              label: const Text('Get Started'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+''';
+  await File('lib/screens/main_page.dart').writeAsString(mainPageContent);
+  print('\x1B[32m✅ Created lib/screens/main_page.dart\x1B[0m');
+
+  // Replace main.dart
+  final mainDartContent = '''
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:get/get.dart';
+import 'config/app_theme.dart';
+import 'config/app_routes.dart';
+import 'screens/main_page.dart';
+
+void main() {
+  runApp(const PlumerApp());
+}
+
+class PlumerApp extends StatelessWidget {
+  const PlumerApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return GetMaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Plumer App',
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system, // Automatically switches based on system preference
+      initialRoute: '/',
+      getPages: [
+        GetPage(name: '/', page: () => const MainPage()),
+        ...AppRoutes.routes,
+      ],
+    );
+  }
+}
+''';
+  await File('lib/main.dart').writeAsString(mainDartContent);
+  print('\x1B[32m✅ Overwrote lib/main.dart with Plumer starter template.\x1B[0m');
+
+  print('\x1B[36m🎉 Plumer initialization complete! Run your app with:\n   flutter run\x1B[0m');
+}
+
+Future<void> _installWidget(String widgetName, String? customPath) async {
+  print('\x1B[36m📦 Installing widget: $widgetName\x1B[0m');
+  
+  // Determine the target folder
+  final targetFolder = customPath ?? 'lib/widgets';
+  
+  // Create target directory if it doesn't exist
+  final targetDir = Directory(targetFolder);
+  if (!targetDir.existsSync()) {
+    await targetDir.create(recursive: true);
+    print('\x1B[32m✅ Created directory: $targetFolder\x1B[0m');
+  }
+  
+  // Construct the GitHub raw file URL
+  final githubUrl = 'https://raw.githubusercontent.com/denisdevke/plumer/main/widgets/$widgetName.dart';
+  final targetFile = File('$targetFolder/$widgetName.dart');
+  
+  // Check if file already exists
+  if (targetFile.existsSync()) {
+    print('\x1B[33m⚠️  Widget $widgetName.dart already exists in $targetFolder\x1B[0m');
+    print('Do you want to overwrite it? (y/N): ');
+    final response = stdin.readLineSync()?.toLowerCase();
+    if (response != 'y' && response != 'yes') {
+      print('\x1B[36m📋 Installation cancelled.\x1B[0m');
+      return;
+    }
+  }
+  
+  try {
+    print('\x1B[36m⬇️  Downloading from GitHub...\x1B[0m');
+    
+    // Download the widget file from GitHub
+    final result = await Process.run('curl', [
+      '-s',
+      '-f',
+      '-L',
+      githubUrl,
+    ]);
+    
+    if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty) {
+      final widgetContent = result.stdout.toString();
+      
+      // Check if we got a valid Dart file (basic validation)
+      if (!widgetContent.contains('class') || widgetContent.contains('404: Not Found')) {
+        print('\x1B[31m❌ Widget "$widgetName" not found in the repository.\x1B[0m');
+        print('Available widgets: slider, button, card, input, dialog');
+        print('Or check: https://github.com/denisdevke/plumer/tree/main/widgets');
+        return;
+      }
+      
+      // Write the file
+      await targetFile.writeAsString(widgetContent);
+      
+      print('\x1B[32m✅ Successfully installed $widgetName.dart to $targetFolder\x1B[0m');
+      
+      // Show usage instructions
+      print('\x1B[36m💡 Usage instructions:\x1B[0m');
+      print('   1. Import the widget in your screen/page:');
+      print('      import \'package:your_app/$targetFolder/$widgetName.dart\';');
+      print('   2. Use it in your widget tree:');
+      print('      ${_toPascalCase(widgetName)}()');
+      
+    } else {
+      print('\x1B[31m❌ Failed to download widget from GitHub.\x1B[0m');
+      print('Error: ${result.stderr}');
+      print('Please check your internet connection and try again.');
+    }
+    
+  } catch (e) {
+    print('\x1B[31m❌ Error downloading widget: $e\x1B[0m');
+    print('Please ensure curl is installed and you have internet connectivity.');
+  }
+}
+
+Future<void> _createService(String folder, String pascal, String snake, String packageName) async {
+  final dir = 'lib/services${folder.isNotEmpty ? '/$folder' : ''}';
+  final file = File('$dir/${snake}_service.dart');
+  
+  // Check if file already exists
+  if (file.existsSync()) {
+    print('\x1B[33m⚠️  Service ${snake}_service.dart already exists in $dir\x1B[0m');
+    print('Do you want to overwrite it? (y/N): ');
+    final response = stdin.readLineSync()?.toLowerCase();
+    if (response != 'y' && response != 'yes') {
+      print('\x1B[36m📋 Service creation cancelled.\x1B[0m');
+      return;
+    }
+  }
+  
+  // Ensure required files exist
+  await _ensureApiConfig(packageName);
+  await _ensureBaseApiService(packageName);
+  
+  await file.create(recursive: true);
+  final importPath = 'package:$packageName/config/api_endpoints.dart';
+  final baseServiceImport = 'package:$packageName/services/base_api_service.dart';
+  
+  await file.writeAsString('''
+import 'package:dio/dio.dart';
+import 'package:get/get.dart' hide Response, FormData, MultipartFile;
+import '$importPath';
+import '$baseServiceImport';
+
+/// ${pascal}Service - Handles all ${pascal.toLowerCase()} related API calls
+/// 
+/// Usage:
+/// ```dart
+/// final service = Get.find<${pascal}Service>();
+/// final result = await service.get${pascal}List();
+/// ```
+class ${pascal}Service extends BaseApiService {
+  static const String _baseEndpoint = '/${snake}';
+  
+  /// Get list of ${snake}s
+  Future<Response> get${pascal}List({
+    int? page,
+    int? limit,
+    Map<String, dynamic>? filters,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      
+      if (page != null) queryParams['page'] = page;
+      if (limit != null) queryParams['limit'] = limit;
+      if (filters != null) queryParams.addAll(filters);
+      
+      logInfo('Fetching ${snake} list', data: queryParams);
+      
+      final response = await dio.get(
+        ApiEndpoints.buildUrl(_baseEndpoint),
+        queryParameters: queryParams.isEmpty ? null : queryParams,
+      );
+      
+      logSuccess('Successfully fetched ${snake} list');
+      return response;
+      
+    } catch (e) {
+      logError('Failed to fetch ${snake} list', error: e);
+      rethrow;
+    }
+  }
+  
+  /// Get ${snake} by ID
+  Future<Response> get${pascal}ById(String id) async {
+    try {
+      logInfo('Fetching ${snake} with ID: \$id');
+      
+      final response = await dio.get(
+        ApiEndpoints.buildUrl('\$_baseEndpoint/\$id'),
+      );
+      
+      logSuccess('Successfully fetched ${snake} with ID: \$id');
+      return response;
+      
+    } catch (e) {
+      logError('Failed to fetch ${snake} with ID: \$id', error: e);
+      rethrow;
+    }
+  }
+  
+  /// Create new ${snake}
+  Future<Response> create${pascal}(Map<String, dynamic> data) async {
+    try {
+      logInfo('Creating new ${snake}', data: data);
+      
+      final response = await dio.post(
+        ApiEndpoints.buildUrl(_baseEndpoint),
+        data: data,
+      );
+      
+      logSuccess('Successfully created ${snake}');
+      return response;
+      
+    } catch (e) {
+      logError('Failed to create ${snake}', error: e);
+      rethrow;
+    }
+  }
+  
+  /// Update ${snake} by ID
+  Future<Response> update${pascal}(String id, Map<String, dynamic> data) async {
+    try {
+      logInfo('Updating ${snake} with ID: \$id', data: data);
+      
+      final response = await dio.put(
+        ApiEndpoints.buildUrl('\$_baseEndpoint/\$id'),
+        data: data,
+      );
+      
+      logSuccess('Successfully updated ${snake} with ID: \$id');
+      return response;
+      
+    } catch (e) {
+      logError('Failed to update ${snake} with ID: \$id', error: e);
+      rethrow;
+    }
+  }
+  
+  /// Delete ${snake} by ID
+  Future<Response> delete${pascal}(String id) async {
+    try {
+      logInfo('Deleting ${snake} with ID: \$id');
+      
+      final response = await dio.delete(
+        ApiEndpoints.buildUrl('\$_baseEndpoint/\$id'),
+      );
+      
+      logSuccess('Successfully deleted ${snake} with ID: \$id');
+      return response;
+      
+    } catch (e) {
+      logError('Failed to delete ${snake} with ID: \$id', error: e);
+      rethrow;
+    }
+  }
+  
+  /// Upload file for ${snake}
+  Future<Response> upload${pascal}File(String id, String filePath) async {
+    try {
+      logInfo('Uploading file for ${snake} with ID: \$id');
+      
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(filePath),
+        '${snake}_id': id,
+      });
+      
+      final response = await dio.post(
+        ApiEndpoints.buildUrl('\$_baseEndpoint/\$id/upload'),
+        data: formData,
+      );
+      
+      logSuccess('Successfully uploaded file for ${snake} with ID: \$id');
+      return response;
+      
+    } catch (e) {
+      logError('Failed to upload file for ${snake} with ID: \$id', error: e);
+      rethrow;
+    }
+  }
+  
+  /// Search ${snake}s
+  Future<Response> search${pascal}s(String query, {
+    int? page,
+    int? limit,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'q': query,
+      };
+      
+      if (page != null) queryParams['page'] = page;
+      if (limit != null) queryParams['limit'] = limit;
+      
+      logInfo('Searching ${snake}s with query: \$query');
+      
+      final response = await dio.get(
+        ApiEndpoints.buildUrl('\$_baseEndpoint/search'),
+        queryParameters: queryParams,
+      );
+      
+      logSuccess('Successfully searched ${snake}s');
+      return response;
+      
+    } catch (e) {
+      logError('Failed to search ${snake}s', error: e);
+      rethrow;
+    }
+  }
+}
+''');
+  
+  print('\x1B[32m✅ Service created: ${file.path}\x1B[0m');
+  
+  // Show usage instructions
+  print('\x1B[36m💡 Usage instructions:\x1B[0m');
+  print('   1. Register the service in your binding:');
+  print('      Get.lazyPut<${pascal}Service>(() => ${pascal}Service());');
+  print('   2. Use it in your controller:');
+  print('      final service = Get.find<${pascal}Service>();');
+  print('      final response = await service.get${pascal}List();');
+}
+
+Future<void> _ensureApiConfig(String packageName) async {
+  final configFile = File('lib/config/api_endpoints.dart');
+  if (!configFile.existsSync()) {
+    await configFile.create(recursive: true);
+    await configFile.writeAsString('''
+/// API Endpoints Configuration
+/// 
+/// This file contains all API endpoints and configuration for your app.
+/// Update the base URL and endpoints according to your backend API.
+class ApiEndpoints {
+  // Base Configuration
+  static const String baseUrl = 'https://api.yourapp.com/v1';
+  static const int connectTimeout = 30000; // 30 seconds
+  static const int receiveTimeout = 30000; // 30 seconds
+  static const int sendTimeout = 30000; // 30 seconds
+  
+  // Environment Configuration
+  static bool get isDevelopment => const bool.fromEnvironment('DEBUG', defaultValue: true);
+  static String get environment => isDevelopment ? 'development' : 'production';
+  
+  // API Versioning
+  static const String apiVersion = 'v1';
+  
+  // Authentication Endpoints
+  static const String login = '/auth/login';
+  static const String register = '/auth/register';
+  static const String refreshToken = '/auth/refresh';
+  static const String logout = '/auth/logout';
+  static const String forgotPassword = '/auth/forgot-password';
+  static const String resetPassword = '/auth/reset-password';
+  
+  // User Endpoints
+  static const String profile = '/user/profile';
+  static const String updateProfile = '/user/profile';
+  static const String changePassword = '/user/change-password';
+  
+  // Common Endpoints
+  static const String upload = '/upload';
+  static const String config = '/config';
+  static const String health = '/health';
+  
+  // Utility Methods
+  static String buildUrl(String endpoint) {
+    if (endpoint.startsWith('http')) return endpoint;
+    return '\$baseUrl\$endpoint';
+  }
+  
+  static Map<String, String> get defaultHeaders => {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'X-API-Version': apiVersion,
+    'X-Platform': 'mobile',
+  };
+  
+  // Development URLs (override for local development)
+  static String get devBaseUrl => 'http://localhost:3000/api/v1';
+  static String get currentBaseUrl => isDevelopment ? devBaseUrl : baseUrl;
+}
+''');
+    print('\x1B[32m✅ Created lib/config/api_endpoints.dart\x1B[0m');
+  }
+}
+
+Future<void> _ensureBaseApiService(String packageName) async {
+  final serviceFile = File('lib/services/base_api_service.dart');
+  if (!serviceFile.existsSync()) {
+    await serviceFile.create(recursive: true);
+    await serviceFile.writeAsString('''
+import 'package:dio/dio.dart';
+import 'package:get/get.dart';
+import 'package:flutter/foundation.dart';
+import 'package:$packageName/config/api_endpoints.dart';
+
+/// Base API Service with authentication and interceptors
+/// 
+/// All service classes should extend this base class to get:
+/// - Automatic authentication headers
+/// - Request/response logging
+/// - Error handling
+/// - Retry logic
+abstract class BaseApiService extends GetxService {
+  late Dio _dio;
+  
+  Dio get dio => _dio;
+  
+  // Observable auth token
+  final RxString _authToken = ''.obs;
+  String get authToken => _authToken.value;
+  set authToken(String token) => _authToken.value = token;
+  
+  // Observable for network status
+  final RxBool isConnected = true.obs;
+  
+  @override
+  void onInit() {
+    super.onInit();
+    _initializeDio();
+  }
+  
+  void _initializeDio() {
+    _dio = Dio(BaseOptions(
+      baseUrl: ApiEndpoints.currentBaseUrl,
+      connectTimeout: const Duration(milliseconds: ApiEndpoints.connectTimeout),
+      receiveTimeout: const Duration(milliseconds: ApiEndpoints.receiveTimeout),
+      sendTimeout: const Duration(milliseconds: ApiEndpoints.sendTimeout),
+      headers: ApiEndpoints.defaultHeaders,
+    ));
+    
+    _addInterceptors();
+  }
+  
+  void _addInterceptors() {
+    // Auth Interceptor
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) {
+        // Add auth token if available
+        if (_authToken.value.isNotEmpty) {
+          options.headers['Authorization'] = 'Bearer \${_authToken.value}';
+        }
+        
+        // Add additional headers if needed
+        options.headers.addAll(_getAdditionalHeaders());
+        
+        if (kDebugMode) {
+          logInfo('🚀 REQUEST[\${options.method}] => \${options.path}', 
+            data: {
+              'headers': options.headers,
+              'queryParams': options.queryParameters,
+              'data': options.data,
+            }
+          );
+        }
+        
+        handler.next(options);
+      },
+      
+      onResponse: (response, handler) {
+        if (kDebugMode) {
+          logSuccess('✅ RESPONSE[\${response.statusCode}] => \${response.requestOptions.path}',
+            data: response.data
+          );
+        }
+        handler.next(response);
+      },
+      
+      onError: (DioException error, handler) {
+        _handleError(error);
+        handler.next(error);
+      },
+    ));
+    
+    // Retry Interceptor
+    _dio.interceptors.add(RetryInterceptor());
+    
+    // Logging Interceptor (only in debug mode)
+    if (kDebugMode) {
+      _dio.interceptors.add(LogInterceptor(
+        requestBody: true,
+        responseBody: true,
+        requestHeader: true,
+        responseHeader: false,
+        logPrint: (obj) => logInfo(obj.toString()),
+      ));
+    }
+  }
+  
+  Map<String, dynamic> _getAdditionalHeaders() {
+    return {
+      'X-Request-ID': DateTime.now().millisecondsSinceEpoch.toString(),
+      'X-Client-Version': '1.0.0', // Update with your app version
+    };
+  }
+  
+  void _handleError(DioException error) {
+    String errorMessage = 'An error occurred';
+    
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        errorMessage = 'Connection timeout. Please check your internet connection.';
+        isConnected.value = false;
+        break;
+        
+      case DioExceptionType.badResponse:
+        final statusCode = error.response?.statusCode;
+        switch (statusCode) {
+          case 401:
+            errorMessage = 'Unauthorized. Please login again.';
+            _handleUnauthorized();
+            break;
+          case 403:
+            errorMessage = 'Access forbidden.';
+            break;
+          case 404:
+            errorMessage = 'Resource not found.';
+            break;
+          case 422:
+            errorMessage = 'Validation error.';
+            break;
+          case 500:
+            errorMessage = 'Server error. Please try again later.';
+            break;
+          default:
+            errorMessage = error.response?.data?['message'] ?? 'Server error occurred.';
+        }
+        break;
+        
+      case DioExceptionType.cancel:
+        errorMessage = 'Request was cancelled.';
+        break;
+        
+      case DioExceptionType.unknown:
+        errorMessage = 'No internet connection.';
+        isConnected.value = false;
+        break;
+        
+      default:
+        errorMessage = 'An unexpected error occurred.';
+    }
+    
+    logError('❌ API ERROR: \$errorMessage', error: error);
+    
+    // Show user-friendly error message
+    if (Get.isSnackbarOpen == false) {
+      Get.snackbar(
+        'Error',
+        errorMessage,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Get.theme.colorScheme.error,
+        colorText: Get.theme.colorScheme.onError,
+      );
+    }
+  }
+  
+  void _handleUnauthorized() {
+    // Clear auth token
+    _authToken.value = '';
+    
+    // Navigate to login screen
+    // Get.offAllNamed('/login'); // Uncomment and update route as needed
+  }
+  
+  // Helper methods for consistent logging
+  void logInfo(String message, {dynamic data}) {
+    if (kDebugMode) {
+      print('ℹ️ [API] \$message');
+      if (data != null) print('   Data: \$data');
+    }
+  }
+  
+  void logSuccess(String message, {dynamic data}) {
+    if (kDebugMode) {
+      print('✅ [API] \$message');
+      if (data != null) print('   Data: \$data');
+    }
+  }
+  
+  void logError(String message, {dynamic error, dynamic data}) {
+    if (kDebugMode) {
+      print('❌ [API] \$message');
+      if (error != null) print('   Error: \$error');
+      if (data != null) print('   Data: \$data');
+    }
+  }
+  
+  // Utility methods
+  void updateAuthToken(String token) {
+    authToken = token;
+  }
+  
+  void clearAuthToken() {
+    authToken = '';
+  }
+  
+  bool get isAuthenticated => authToken.isNotEmpty;
+  
+  // Override this in child classes for service-specific headers
+  Map<String, String> getServiceHeaders() => {};
+}
+
+/// Retry Interceptor for handling temporary network failures
+class RetryInterceptor extends Interceptor {
+  static const int maxRetries = 3;
+  static const Duration retryDelay = Duration(seconds: 1);
+  
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    if (_shouldRetry(err) && err.requestOptions.extra['retryCount'] != null) {
+      final retryCount = (err.requestOptions.extra['retryCount'] as int?) ?? 0;
+      
+      if (retryCount < maxRetries) {
+        err.requestOptions.extra['retryCount'] = retryCount + 1;
+        
+        // Wait before retry
+        await Future.delayed(retryDelay * (retryCount + 1));
+        
+        try {
+          final response = await Dio().fetch(err.requestOptions);
+          handler.resolve(response);
+          return;
+        } catch (e) {
+          // Continue to next retry or fail
+        }
+      }
+    }
+    
+    handler.next(err);
+  }
+  
+  bool _shouldRetry(DioException error) {
+    return error.type == DioExceptionType.connectionTimeout ||
+           error.type == DioExceptionType.receiveTimeout ||
+           error.type == DioExceptionType.unknown ||
+           (error.response?.statusCode != null && 
+            error.response!.statusCode! >= 500);
+  }
+}
+''');
+    print('\x1B[32m✅ Created lib/services/base_api_service.dart\x1B[0m');
+  }
+}
+
+void _showHelp() {
+  print('\x1B[36m🪶 Plumer CLI - Available Commands:\x1B[0m');
+  print('');
+  print('\x1B[33mProject Setup:\x1B[0m');
+  print('  init                     Initialize project with GetX, themes, and structure');
+  print('');
+  print('\x1B[33mCode Generation:\x1B[0m');
+  print('  make:controller [path]   Generate a GetX controller');
+  print('  make:binding [path]      Generate a GetX binding');
+  print('  make:screen [path]       Generate a Flutter screen/page');
+  print('  make:model [path]        Generate a data model with JSON serialization');
+  print('  make:service [path]      Generate an API service with Dio integration');
+  print('  make:page [path]         Generate complete page (controller + binding + screen + route)');
+  print('');
+  print('\x1B[33mWidget Installation:\x1B[0m');
+  print('  install:widget [name]              Install widget to lib/widgets/');
+  print('  install:widget [name] [folder]     Install widget to custom folder');
+  print('');
+  print('\x1B[33mExamples:\x1B[0m');
+  print('  plumer init');
+  print('  plumer make:page User/Profile');
+  print('  plumer make:controller Auth/Login');
+  print('  plumer make:model User');
+  print('  plumer make:service Api/User');
+  print('  plumer install:widget slider');
+  print('  plumer install:widget button lib/components');
+  print('');
+  print('\x1B[33mFor more information, visit:\x1B[0m https://github.com/denisdevke/plumer');
+}
+
+Future<bool> _isFlutterProject() async {
+  final pubspec = File('pubspec.yaml');
+  if (!pubspec.existsSync()) return false;
+  final content = await pubspec.readAsString();
+  return content.contains('flutter:');
+}
+
+Future<String> _getPackageName() async {
+  final pubspec = File('pubspec.yaml');
+  if (!pubspec.existsSync()) {
+    print('\x1B[31m❌ pubspec.yaml not found. Exiting.\x1B[0m');
+    exit(1);
+  }
+  final content = await pubspec.readAsLines();
+  for (final line in content) {
+    final trimmed = line.trim();
+    if (trimmed.startsWith('name:')) {
+      final name = trimmed.substring(5).trim();
+      if (name.isNotEmpty) return name;
+    }
+  }
+  print('\x1B[31m❌ Could not find project name in pubspec.yaml. Exiting.\x1B[0m');
+  exit(1);
+}
+
+Future<void> _makePage(String folder, String pascal, String snake, String packageName) async {
+  final controllerPath = 'lib/controllers${folder.isNotEmpty ? '/$folder' : ''}/${snake}_controller.dart';
+  final bindingPath = 'lib/bindings${folder.isNotEmpty ? '/$folder' : ''}/${snake}_binding.dart';
+  final screenPath = 'lib/screens${folder.isNotEmpty ? '/$folder' : ''}/${snake}_screen.dart';
+
+  final routeName = "/${folder.isNotEmpty ? folder + '/' : ''}${snake}".replaceAll('_', '');
+  final routeSignature = "GetPage(name: '$routeName',";
+
+  final appRoutesFile = File('lib/config/app_routes.dart');
+  if (!appRoutesFile.existsSync()) {
+    print('\x1B[31m❌ lib/config/app_routes.dart not found. Cannot update routes.\x1B[0m');
+    exit(1);
+  }
+
+  final appRoutesContent = await appRoutesFile.readAsString();
+
+  final conflicts = <String>[];
+  if (File(controllerPath).existsSync()) conflicts.add(controllerPath);
+  if (File(bindingPath).existsSync()) conflicts.add(bindingPath);
+  if (File(screenPath).existsSync()) conflicts.add(screenPath);
+  if (appRoutesContent.contains(routeSignature)) conflicts.add('Route already exists in app_routes.dart');
+
+  if (conflicts.isNotEmpty) {
+    print('\x1B[31m❌ Cannot create page because the following already exist:\x1B[0m');
+    for (final c in conflicts) {
+      print(' - $c');
+    }
+    print('\x1B[31mAborting and reverting changes.\x1B[0m');
+    exit(1);
+  }
+
+  await _createController(folder, pascal, snake);
+  await _createBinding(folder, pascal, snake, packageName);
+  await _createScreen(folder, pascal, snake, packageName);
+  await _updateAppRoutes(folder, pascal, snake, packageName);
+
+  print('\x1B[32m✅ Page created and registered in routes for "$folder/$pascal".\x1B[0m');
+}
+
+Future<void> _createController(String folder, String pascal, String snake) async {
+  final dir = 'lib/controllers${folder.isNotEmpty ? '/$folder' : ''}';
+  final file = File('$dir/${snake}_controller.dart');
+  await file.create(recursive: true);
+  await file.writeAsString('''
+import 'package:get/get.dart';
+
+class ${pascal}Controller extends GetxController {
+
+}
+''');
+  print('\x1B[32m✅ Controller created: ${file.path}\x1B[0m');
+}
+
+Future<void> _createBinding(String folder, String pascal, String snake, String packageName) async {
+  final dir = 'lib/bindings${folder.isNotEmpty ? '/$folder' : ''}';
+  final file = File('$dir/${snake}_binding.dart');
+  await file.create(recursive: true);
+  final importPath = 'package:$packageName/controllers${folder.isNotEmpty ? '/$folder' : ''}/${snake}_controller.dart';
+  await file.writeAsString('''
+import 'package:get/get.dart';
+import '$importPath';
+
+class ${pascal}Binding extends Bindings {
+  @override
+  void dependencies() {
+    Get.lazyPut<${pascal}Controller>(() => ${pascal}Controller());
+  }
+}
+''');
+  print('\x1B[32m✅ Binding created: ${file.path}\x1B[0m');
+}
+
+Future<void> _createScreen(String folder, String pascal, String snake, String packageName) async {
+  final dir = 'lib/screens${folder.isNotEmpty ? '/$folder' : ''}';
+  final file = File('$dir/${snake}_screen.dart');
+  await file.create(recursive: true);
+  final importPath = 'package:$packageName/controllers${folder.isNotEmpty ? '/$folder' : ''}/${snake}_controller.dart';
+  await file.writeAsString('''
+import 'package:get/get.dart';
+import 'package:flutter/material.dart';
+import 'package:$packageName/config/app_colors.dart';
+import '$importPath';
+
+class ${pascal}Screen extends GetView<${pascal}Controller> {
+  const ${pascal}Screen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('${_splitPascalCase(pascal)}'),
+        backgroundColor: AppColors.appBarBackground,
+        foregroundColor: AppColors.appBarColor,
+      ),
+      body: const Center(
+        child: Text(
+          '${_splitPascalCase(pascal)} Screen',
+          style: TextStyle(color: AppColors.primary, fontSize: 24),
+        ),
+      ),
+    );
+  }
+}
+''');
+  print('\x1B[32m✅ Screen created: ${file.path}\x1B[0m');
+}
+
+Future<void> _updateAppRoutes(
+  String folder,
+  String pascal,
+  String snake,
+  String packageName,
+) async {
+  final appRoutesFile = File('lib/config/app_routes.dart');
+
+  if (!appRoutesFile.existsSync()) {
+    print('\x1B[31m❌ lib/config/app_routes.dart not found.\x1B[0m');
+    exit(1);
+  }
+
+  var content = await appRoutesFile.readAsString();
+
+  final importBinding =
+      "import 'package:$packageName/bindings${folder.isNotEmpty ? '/$folder' : ''}/${snake}_binding.dart';";
+  final importScreen =
+      "import 'package:$packageName/screens${folder.isNotEmpty ? '/$folder' : ''}/${snake}_screen.dart';";
+
+  final routeName =
+      "/${folder.isNotEmpty ? folder + '/' : ''}${snake}".replaceAll('_', '');
+  final pageRegistration =
+      "GetPage(name: '$routeName', page: () => const ${pascal}Screen(), binding: ${pascal}Binding()),";
+
+  // Insert imports at top if not present
+  if (!content.contains(importBinding)) {
+    // Put AFTER the last import OR at top
+    final importRegex = RegExp(r"(import .+;)");
+    final matches = importRegex.allMatches(content).toList();
+    if (matches.isNotEmpty) {
+      final lastImport = matches.last;
+      content = content.replaceRange(
+        lastImport.end,
+        lastImport.end,
+        '\n$importBinding',
+      );
+    } else {
+      content = '$importBinding\n$content';
+    }
+  }
+
+  if (!content.contains(importScreen)) {
+    final importRegex = RegExp(r"(import .+;)");
+    final matches = importRegex.allMatches(content).toList();
+    if (matches.isNotEmpty) {
+      final lastImport = matches.last;
+      content = content.replaceRange(
+        lastImport.end,
+        lastImport.end,
+        '\n$importScreen',
+      );
+    } else {
+      content = '$importScreen\n$content';
+    }
+  }
+
+  // Flexible route list regex for [] or <GetPage>[]
+  final routesRegex =
+      RegExp(r'static final routes\s*=\s*(<GetPage>)?\[(.*?)\];', dotAll: true);
+  final match = routesRegex.firstMatch(content);
+
+  if (match != null) {
+    final currentRoutes = match.group(2)?.trim() ?? '';
+    final updatedRoutes = (currentRoutes.isEmpty)
+        ? '  $pageRegistration'
+        : '$currentRoutes\n    $pageRegistration';
+
+    final newRoutes = match.group(1) != null
+        ? 'static final routes = <GetPage>[\n$updatedRoutes\n  ];'
+        : 'static final routes = [\n$updatedRoutes\n  ];';
+
+    content = content.replaceFirst(routesRegex, newRoutes);
+
+    await appRoutesFile.writeAsString(content);
+    print(
+        '\x1B[32m✅ Route for "$routeName" added to lib/config/app_routes.dart\x1B[0m');
+  } else {
+    print(
+        '\x1B[31m❌ Could not locate routes list in app_routes.dart. Please ensure it uses: static final routes = []; or static final routes = <GetPage>[];\x1B[0m');
+    exit(1);
+  }
+}
+
+String _toSnakeCase(String input) {
+  return input.replaceAllMapped(
+      RegExp(r'([a-z0-9])([A-Z])'), (Match m) => '${m[1]}_${m[2]}').toLowerCase();
+}
+
+String _toPascalCase(String input) {
+  return input
+      .split(RegExp(r'[_\-\s]'))
+      .where((part) => part.isNotEmpty)
+      .map((part) => part[0].toUpperCase() + part.substring(1))
+      .join();
+}
+
+String _splitPascalCase(String input) {
+  return input.replaceAllMapped(RegExp(r'([a-z])([A-Z])'), (m) => '${m[1]} ${m[2]}');
+}
+
+Future<void> _createModel(String folder, String pascal, String snake, String packageName) async {
+  final dir = 'lib/models${folder.isNotEmpty ? '/$folder' : ''}';
+  final file = File('$dir/${snake}_model.dart');
+  
+  // Check if file already exists
+  if (file.existsSync()) {
+    print('\x1B[33m⚠️  Model ${snake}_model.dart already exists in $dir\x1B[0m');
+    print('Do you want to overwrite it? (y/N): ');
+    final response = stdin.readLineSync()?.toLowerCase();
+    if (response != 'y' && response != 'yes') {
+      print('\x1B[36m📋 Model creation cancelled.\x1B[0m');
+      return;
+    }
+  }
+
+  // Ensure base model exists
+  await _ensureBaseModel(packageName);
+  
+  await file.create(recursive: true);
+  
+  await file.writeAsString('''
+import 'package:$packageName/models/base_model.dart';
+
+/// ${pascal} model class extending BaseModel
+/// 
+/// Inherits CRUD operations, validation, and API integration from BaseModel.
+/// Configure fillable fields and customize behavior as needed.
+/// 
+/// Usage:
+/// ```dart
+/// // Create and save
+/// final ${snake} = ${pascal}();
+/// ${snake}.fill({'name': 'John', 'email': 'john@example.com'});
+/// await ${snake}.save();
+/// 
+/// // Find by ID
+/// final ${snake} = await ${pascal}.find(1);
+/// 
+/// // Update
+/// ${snake}.set('name', 'Jane');
+/// await ${snake}.update();
+/// 
+/// // Delete
+/// await ${snake}.delete();
+/// 
+/// // Get all
+/// final ${snake}List = await ${pascal}.all();
+/// ```
+class ${pascal} extends BaseModel {
+  // Define your model fields
+  String? name;
+  String? email;
+  String? description;
+  bool isActive;
+
+  ${pascal}({
+    super.id,
+    this.name,
+    this.email,
+    this.description,
+    this.isActive = true,
+    super.createdAt,
+    super.updatedAt,
+  });
+
+  /// Define which fields can be mass assigned
+  @override
+  List<String> get fillable => [
+    'name',
+    'email',
+    'description',
+    'is_active',
+  ];
+
+  /// API endpoint for this model
+  @override
+  String get endpoint => '/${snake}s';
+
+  /// Primary key field name
+  @override
+  String get primaryKey => 'id';
+
+  /// Creates a ${pascal} instance from JSON data
+  factory ${pascal}.fromJson(Map<String, dynamic> json) {
+    return ${pascal}(
+      id: json['id'] as int?,
+      name: json['name'] as String?,
+      email: json['email'] as String?,
+      description: json['description'] as String?,
+      isActive: json['is_active'] as bool? ?? true,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'] as String)
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'] as String)
+          : null,
+    );
+  }
+
+  /// Converts the ${pascal} instance to JSON
+  @override
+  Map<String, dynamic> toJson() {
+    final json = super.toJson();
+    json.addAll({
+      'name': name,
+      'email': email,
+      'description': description,
+      'is_active': isActive,
+    });
+    return json;
+  }
+
+  /// Custom validation rules for ${pascal}
+  @override
+  bool isValid() {
+    if (!super.isValid()) return false;
+    
+    // Custom validation
+    if (name?.isEmpty ?? true) {
+      addError('name', 'Name is required');
+      return false;
+    }
+    
+    if (email != null && email!.isNotEmpty && !_isValidEmail(email!)) {
+      addError('email', 'Invalid email format');
+      return false;
+    }
+    
+    return true;
+  }
+
+  /// Email validation helper
+  bool _isValidEmail(String email) {
+    return RegExp(r'^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}\$').hasMatch(email);
+  }
+
+  /// Gets display name for UI
+  String get displayName => name?.isNotEmpty == true ? name! : 'Unnamed ${pascal}';
+
+  /// Check if ${snake} is active
+  bool get active => isActive;
+
+  /// Static methods for model operations
+  
+  /// Get all ${snake}s
+  static Future<List<${pascal}>> all() async {
+    final instance = ${pascal}();
+    final results = await instance.getAll();
+    return results.map((json) => ${pascal}.fromJson(json)).toList();
+  }
+
+  /// Find ${snake} by ID
+  static Future<${pascal}?> find(int id) async {
+    final instance = ${pascal}();
+    final result = await instance.findById(id);
+    return result != null ? ${pascal}.fromJson(result) : null;
+  }
+
+  /// Create new ${snake}
+  static Future<${pascal}?> create(Map<String, dynamic> data) async {
+    final instance = ${pascal}();
+    instance.fill(data);
+    if (await instance.save()) {
+      return instance;
+    }
+    return null;
+  }
+
+  /// Get ${snake}s with pagination
+  static Future<List<${pascal}>> paginate({
+    int page = 1,
+    int limit = 15,
+    Map<String, dynamic>? filters,
+  }) async {
+    final instance = ${pascal}();
+    final results = await instance.getPaginated(
+      page: page,
+      limit: limit,
+      filters: filters,
+    );
+    return results.map((json) => ${pascal}.fromJson(json)).toList();
+  }
+
+  /// Search ${snake}s
+  static Future<List<${pascal}>> search(String query) async {
+    final instance = ${pascal}();
+    final results = await instance.searchRecords(query);
+    return results.map((json) => ${pascal}.fromJson(json)).toList();
+  }
+
+  /// Count all ${snake}s
+  static Future<int> count() async {
+    final instance = ${pascal}();
+    return await instance.getCount();
+  }
+
+  /// Create instance from BaseModel data
+  @override
+  ${pascal} fromBaseModel(Map<String, dynamic> data) {
+    return ${pascal}.fromJson(data);
+  }
+}
+''');
+
+  print('\x1B[32m✅ Created ${pascal} model in $dir/${snake}_model.dart\x1B[0m');
+  print('\x1B[36m💡 Model extends BaseModel with: CRUD operations, validation, fillables, and API integration\x1B[0m');
+}
+
+Future<void> _ensureBaseModel(String packageName) async {
+  final baseModelFile = File('lib/models/base_model.dart');
+  
+  if (baseModelFile.existsSync()) {
+    return; // Base model already exists
+  }
+  
+  await baseModelFile.create(recursive: true);
+  
+  await baseModelFile.writeAsString('''
+import 'package:dio/dio.dart';
+import 'package:get/get.dart' hide Response, FormData, MultipartFile;
+import 'package:$packageName/config/api_endpoints.dart';
+
+/// BaseModel class providing CRUD operations and API integration
+/// 
+/// All models should extend this class to inherit:
+/// - CRUD operations (save, update, delete, find)
+/// - Mass assignment with fillables
+/// - Validation and error handling
+/// - API integration with Dio
+/// - Field getters and setters
+/// 
+/// Usage:
+/// ```dart
+/// class User extends BaseModel {
+///   String? name;
+///   String? email;
+///   
+///   @override
+///   List<String> get fillable => ['name', 'email'];
+///   
+///   @override
+///   String get endpoint => '/users';
+/// }
+/// ```
+abstract class BaseModel {
+  int? id;
+  DateTime? createdAt;
+  DateTime? updatedAt;
+  
+  /// Validation errors
+  final Map<String, List<String>> _errors = {};
+  
+  /// Original attributes for tracking changes
+  final Map<String, dynamic> _original = {};
+  
+  /// Current attributes
+  final Map<String, dynamic> _attributes = {};
+  
+  /// Dio instance for API calls
+  static Dio get _dio {
+    final dio = Dio();
+    // Add interceptors, headers, etc. as needed
+    return dio;
+  }
+
+  BaseModel({
+    this.id,
+    this.createdAt,
+    this.updatedAt,
+  }) {
+    _syncAttributes();
+  }
+
+  /// Define which fields can be mass assigned
+  List<String> get fillable => [];
+
+  /// API endpoint for this model
+  String get endpoint;
+
+  /// Primary key field name
+  String get primaryKey => 'id';
+
+  /// Table/resource name (derived from endpoint)
+  String get table => endpoint.replaceFirst('/', '');
+
+  /// Check if model exists in database
+  bool get exists => id != null;
+
+  /// Check if model is new (not saved yet)
+  bool get isNew => !exists;
+
+  /// Get all validation errors
+  Map<String, List<String>> get errors => Map.from(_errors);
+
+  /// Check if model has validation errors
+  bool get hasErrors => _errors.isNotEmpty;
+
+  /// Get first error message
+  String? get firstError {
+    if (_errors.isEmpty) return null;
+    final firstKey = _errors.keys.first;
+    return _errors[firstKey]?.first;
+  }
+
+  /// Sync current model state to attributes
+  void _syncAttributes() {
+    _attributes.clear();
+    _attributes['id'] = id;
+    _attributes['created_at'] = createdAt?.toIso8601String();
+    _attributes['updated_at'] = updatedAt?.toIso8601String();
+  }
+
+  /// Mass assignment of attributes
+  void fill(Map<String, dynamic> data) {
+    data.forEach((key, value) {
+      if (fillable.contains(key)) {
+        set(key, value);
+      }
+    });
+  }
+
+  /// Set field value with fillable check
+  void set(String field, dynamic value) {
+    if (fillable.contains(field)) {
+      _attributes[field] = value;
+      _setModelProperty(field, value);
+    }
+  }
+
+  /// Get field value
+  dynamic get(String field) {
+    return _attributes[field];
+  }
+
+  /// Set model property via reflection-like approach
+  void _setModelProperty(String field, dynamic value) {
+    // This would ideally use reflection, but for simplicity
+    // we'll handle common field mappings
+    switch (field) {
+      case 'id':
+        id = value as int?;
+        break;
+      case 'created_at':
+        createdAt = value is String ? DateTime.tryParse(value) : value as DateTime?;
+        break;
+      case 'updated_at':
+        updatedAt = value is String ? DateTime.tryParse(value) : value as DateTime?;
+        break;
+    }
+  }
+
+  /// Add validation error
+  void addError(String field, String message) {
+    _errors.putIfAbsent(field, () => []).add(message);
+  }
+
+  /// Clear all errors
+  void clearErrors() {
+    _errors.clear();
+  }
+
+  /// Clear errors for specific field
+  void clearError(String field) {
+    _errors.remove(field);
+  }
+
+  /// Basic validation (override in child classes)
+  bool isValid() {
+    clearErrors();
+    return true;
+  }
+
+  /// Convert model to JSON
+  Map<String, dynamic> toJson() {
+    final json = <String, dynamic>{};
+    json['id'] = id;
+    json['created_at'] = createdAt?.toIso8601String();
+    json['updated_at'] = updatedAt?.toIso8601String();
+    return json;
+  }
+
+  /// Create model instance from BaseModel data (override in child classes)
+  BaseModel fromBaseModel(Map<String, dynamic> data);
+
+  /// Save model (create or update)
+  Future<bool> save() async {
+    if (!isValid()) return false;
+
+    try {
+      if (isNew) {
+        return await _create();
+      } else {
+        return await _update();
+      }
+    } catch (e) {
+      addError('save', 'Failed to save: \$e');
+      return false;
+    }
+  }
+
+  /// Create new record
+  Future<bool> _create() async {
+    final response = await _dio.post(
+      ApiEndpoints.buildUrl(endpoint),
+      data: toJson(),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        id = data['id'] as int?;
+        createdAt = data['created_at'] != null 
+          ? DateTime.tryParse(data['created_at'] as String) 
+          : null;
+        updatedAt = data['updated_at'] != null 
+          ? DateTime.tryParse(data['updated_at'] as String) 
+          : null;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  /// Update existing record
+  Future<bool> _update() async {
+    final response = await _dio.put(
+      ApiEndpoints.buildUrl('\$endpoint/\$id'),
+      data: toJson(),
+    );
+
+    if (response.statusCode == 200) {
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        updatedAt = data['updated_at'] != null 
+          ? DateTime.tryParse(data['updated_at'] as String) 
+          : null;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  /// Update model
+  Future<bool> update([Map<String, dynamic>? data]) async {
+    if (data != null) {
+      fill(data);
+    }
+    return await save();
+  }
+
+  /// Delete model
+  Future<bool> delete() async {
+    if (isNew) return false;
+
+    try {
+      final response = await _dio.delete(
+        ApiEndpoints.buildUrl('\$endpoint/\$id'),
+      );
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (e) {
+      addError('delete', 'Failed to delete: \$e');
+      return false;
+    }
+  }
+
+  /// Refresh model from database
+  Future<bool> refresh() async {
+    if (isNew) return false;
+
+    try {
+      final data = await findById(id!);
+      if (data != null) {
+        final model = fromBaseModel(data);
+        // Update current instance with fresh data
+        id = model.id;
+        createdAt = model.createdAt;
+        updatedAt = model.updatedAt;
+        return true;
+      }
+      return false;
+    } catch (e) {
+      addError('refresh', 'Failed to refresh: \$e');
+      return false;
+    }
+  }
+
+  /// Find record by ID
+  Future<Map<String, dynamic>?> findById(int id) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.buildUrl('\$endpoint/\$id'),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = response.data;
+        return data is Map<String, dynamic> ? data : null;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Get all records
+  Future<List<Map<String, dynamic>>> getAll() async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.buildUrl(endpoint),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is Map<String, dynamic> && data['data'] is List) {
+          return (data['data'] as List).cast<Map<String, dynamic>>();
+        } else if (data is List) {
+          return data.cast<Map<String, dynamic>>();
+        }
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Get paginated records
+  Future<List<Map<String, dynamic>>> getPaginated({
+    int page = 1,
+    int limit = 15,
+    Map<String, dynamic>? filters,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'limit': limit,
+      };
+      
+      if (filters != null) {
+        queryParams.addAll(filters);
+      }
+
+      final response = await _dio.get(
+        ApiEndpoints.buildUrl(endpoint),
+        queryParameters: queryParams,
+      );
+      
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is Map<String, dynamic> && data['data'] is List) {
+          return (data['data'] as List).cast<Map<String, dynamic>>();
+        } else if (data is List) {
+          return data.cast<Map<String, dynamic>>();
+        }
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Search records
+  Future<List<Map<String, dynamic>>> searchRecords(String query) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.buildUrl('\$endpoint/search'),
+        queryParameters: {'q': query},
+      );
+      
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is Map<String, dynamic> && data['data'] is List) {
+          return (data['data'] as List).cast<Map<String, dynamic>>();
+        } else if (data is List) {
+          return data.cast<Map<String, dynamic>>();
+        }
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Get count of records
+  Future<int> getCount() async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.buildUrl('\$endpoint/count'),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is Map<String, dynamic> && data['count'] is int) {
+          return data['count'] as int;
+        } else if (data is int) {
+          return data;
+        }
+      }
+      return 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  /// Check if model was recently created (within last 24 hours)
+  bool get isRecentlyCreated {
+    if (createdAt == null) return false;
+    final now = DateTime.now();
+    final difference = now.difference(createdAt!);
+    return difference.inHours <= 24;
+  }
+
+  /// Check if model was recently updated (within last hour)
+  bool get isRecentlyUpdated {
+    if (updatedAt == null) return false;
+    final now = DateTime.now();
+    final difference = now.difference(updatedAt!);
+    return difference.inMinutes <= 60;
+  }
+
+  /// Convert to string for debugging
+  @override
+  String toString() {
+    return '\${runtimeType}(id: \$id, created: \$createdAt, updated: \$updatedAt)';
+  }
+
+  /// Equality comparison
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is BaseModel &&
+        other.runtimeType == runtimeType &&
+        other.id == id;
+  }
+
+  /// Hash code
+  @override
+  int get hashCode => Object.hash(runtimeType, id);
+}
+''');
+
+  print('\x1B[32m✅ Created BaseModel in lib/models/base_model.dart\x1B[0m');
+}
+
+
