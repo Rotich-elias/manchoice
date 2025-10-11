@@ -11,7 +11,8 @@ class PaymentsScreen extends StatefulWidget {
 }
 
 class _PaymentsScreenState extends State<PaymentsScreen> {
-  final TextEditingController _transactionCodeController = TextEditingController();
+  final TextEditingController _transactionCodeController =
+      TextEditingController();
 
   // TODO: Replace with actual data from database/API
   final String productName = "Yamaha YBR 125";
@@ -19,7 +20,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   final double amountPaid = 45000.0;
   final DateTime nextPaymentDue = DateTime.now().add(const Duration(days: 5));
   final double dailyPaymentAmount = 500.0;
-  final String mpesaPaybill = "123456"; // TODO: Replace with actual paybill number
+  final String mpesaPaybill =
+      "247247"; // TODO: Replace with actual paybill number
 
   // TODO: Fetch from database
   final List<Map<String, dynamic>> paymentHistory = [
@@ -187,15 +189,15 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                     Text(
                       'Loan Summary',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.9),
-                          ),
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
                     ),
                     Text(
                       productName,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -266,21 +268,24 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                   Text(
                     'Next Payment Due',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.85),
-                        ),
+                      color: Colors.white.withValues(alpha: 0.85),
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     DateFormat('MMM dd, yyyy').format(nextPaymentDue),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
@@ -288,9 +293,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 child: Text(
                   '${_daysUntil(nextPaymentDue)} days left',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
@@ -313,17 +318,13 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         children: [
           Row(
             children: [
-              Icon(
-                icon,
-                color: Colors.white.withValues(alpha: 0.7),
-                size: 16,
-              ),
+              Icon(icon, color: Colors.white.withValues(alpha: 0.7), size: 16),
               const SizedBox(width: 6),
               Text(
                 label,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.8),
-                    ),
+                  color: Colors.white.withValues(alpha: 0.8),
+                ),
               ),
             ],
           ),
@@ -331,9 +332,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           Text(
             value,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
@@ -363,16 +364,16 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             children: [
               Text(
                 'Repayment Progress',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               Text(
                 '${paymentProgress.toStringAsFixed(1)}%',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ],
           ),
@@ -382,7 +383,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             child: LinearProgressIndicator(
               value: paymentProgress / 100,
               minHeight: 12,
-              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.2),
               valueColor: AlwaysStoppedAnimation<Color>(
                 Theme.of(context).colorScheme.primary,
               ),
@@ -395,16 +398,16 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               Text(
                 'KES ${_formatCurrency(amountPaid)}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               Text(
                 'KES ${_formatCurrency(totalLoanAmount)}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -444,9 +447,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               const SizedBox(width: 12),
               Text(
                 'Make Payment',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -480,26 +483,29 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                     Text(
                       'Lipa na M-PESA',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green.shade800,
-                          ),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green.shade800,
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'Follow these steps to pay:',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
                 _buildPaymentStep('1', 'Go to M-PESA menu'),
                 _buildPaymentStep('2', 'Select Lipa na M-PESA'),
                 _buildPaymentStep('3', 'Select Paybill'),
                 _buildPaymentStep('4', 'Enter Business No: $mpesaPaybill'),
-                _buildPaymentStep('5', 'Enter Account No: Your Phone Number'),
-                _buildPaymentStep('6', 'Enter Amount: KES ${_formatCurrency(dailyPaymentAmount)}'),
+                _buildPaymentStep('5', 'No: Your Phone Number'),
+                _buildPaymentStep(
+                  '6',
+                  'Enter Amount: KES ${_formatCurrency(dailyPaymentAmount)}',
+                ),
                 _buildPaymentStep('7', 'Enter M-PESA PIN'),
                 const SizedBox(height: 16),
 
@@ -519,14 +525,14 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                         children: [
                           Text(
                             'Paybill Number',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Colors.grey.shade600,
-                                ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: Colors.grey.shade600),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             mpesaPaybill,
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.green.shade800,
                                   letterSpacing: 2,
@@ -559,9 +565,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           // Transaction Code Input
           Text(
             'After Payment',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -573,7 +579,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
-              helperText: 'Enter the M-PESA confirmation code you received via SMS',
+              helperText:
+                  'Enter the M-PESA confirmation code you received via SMS',
             ),
             textCapitalization: TextCapitalization.characters,
             maxLength: 10,
@@ -625,12 +632,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 13),
-            ),
-          ),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
         ],
       ),
     );
@@ -655,8 +657,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                   Text(
                     'Payment History',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -728,23 +730,23 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 Text(
                   DateFormat('MMM dd, yyyy').format(date),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   isPaid ? 'Paid' : 'Missed',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: isPaid ? Colors.green : Colors.red,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    color: isPaid ? Colors.green : Colors.red,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 if (isPaid && payment['transactionCode'] != null)
                   Text(
                     'Code: ${payment['transactionCode']}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey),
                   ),
               ],
             ),
@@ -757,23 +759,23 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               Text(
                 'KES ${_formatCurrency(payment['amount'])}',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: isPaid ? Colors.green : Colors.red,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: isPaid ? Colors.green : Colors.red,
+                ),
               ),
               if (isPaid)
                 Text(
                   '✅ Paid',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.green,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.green),
                 )
               else
                 Text(
                   '❌ Missed',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.red,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.red),
                 ),
             ],
           ),
@@ -806,9 +808,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               const SizedBox(width: 12),
               Text(
                 'Reminders & Notifications',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -833,14 +835,14 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                       Text(
                         'SMS Reminders Active',
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Text(
                         'You will receive automatic SMS reminders',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey.shade600,
-                            ),
+                          color: Colors.grey.shade600,
+                        ),
                       ),
                     ],
                   ),
@@ -855,9 +857,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           // Upcoming Payments
           Text(
             'Upcoming Payments',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
 
@@ -887,7 +889,10 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     );
   }
 
-  Widget _buildUpcomingPaymentItem(BuildContext context, Map<String, dynamic> payment) {
+  Widget _buildUpcomingPaymentItem(
+    BuildContext context,
+    Map<String, dynamic> payment,
+  ) {
     final date = payment['date'] as DateTime;
     final daysUntil = _daysUntil(date);
 
@@ -901,11 +906,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.schedule,
-            color: Colors.orange.shade700,
-            size: 20,
-          ),
+          Icon(Icons.schedule, color: Colors.orange.shade700, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -913,15 +914,15 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               children: [
                 Text(
                   DateFormat('MMM dd, yyyy').format(date),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 Text(
                   payment['description'],
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey.shade600,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -931,16 +932,16 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             children: [
               Text(
                 'KES ${_formatCurrency(payment['amount'])}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               Text(
                 'in $daysUntil days',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.orange.shade700,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: Colors.orange.shade700,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -1016,8 +1017,14 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               const Divider(),
               const SizedBox(height: 8),
               _buildDetailRow('Transaction Code:', transactionCode),
-              _buildDetailRow('Amount:', 'KES ${_formatCurrency(dailyPaymentAmount)}'),
-              _buildDetailRow('Date:', DateFormat('MMM dd, yyyy - HH:mm').format(DateTime.now())),
+              _buildDetailRow(
+                'Amount:',
+                'KES ${_formatCurrency(dailyPaymentAmount)}',
+              ),
+              _buildDetailRow(
+                'Date:',
+                DateFormat('MMM dd, yyyy - HH:mm').format(DateTime.now()),
+              ),
             ],
           ),
           actions: [
@@ -1053,19 +1060,10 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 13,
-            ),
-          ),
+          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
           Text(
             value,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
           ),
         ],
       ),
@@ -1085,11 +1083,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: Colors.grey.shade300,
-                  ),
-                ),
+                border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1097,8 +1091,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                   Text(
                     'Full Payment History',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   IconButton(
                     onPressed: () => Get.back(),
@@ -1124,7 +1118,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   }
 
   String _formatCurrency(double amount) {
-    return amount.toStringAsFixed(2).replaceAllMapped(
+    return amount
+        .toStringAsFixed(2)
+        .replaceAllMapped(
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (Match m) => '${m[1]},',
         );

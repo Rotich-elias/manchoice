@@ -8,10 +8,7 @@ class SupportScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Support & Help'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Support & Help'), centerTitle: true),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -44,7 +41,8 @@ class SupportScreen extends StatelessWidget {
                       const SizedBox(height: 16),
                       Text(
                         'How can we help you?',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
@@ -54,8 +52,8 @@ class SupportScreen extends StatelessWidget {
                         'We\'re here to assist you with any questions',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.white.withValues(alpha: 0.9),
-                            ),
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
                       ),
                     ],
                   ),
@@ -67,18 +65,18 @@ class SupportScreen extends StatelessWidget {
               Text(
                 'Contact Us',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
               const SizedBox(height: 16),
               _buildContactCard(
                 context,
                 icon: Icons.phone,
                 title: 'Call Us',
-                subtitle: '+254 700 000 000',
+                subtitle: '+254 721 237 811',
                 color: Colors.green,
-                onTap: () => _makePhoneCall('+254700000000'),
+                onTap: () => _makePhoneCall('+254721237811'),
               ),
               const SizedBox(height: 12),
               _buildContactCard(
@@ -94,9 +92,9 @@ class SupportScreen extends StatelessWidget {
                 context,
                 icon: Icons.chat,
                 title: 'WhatsApp',
-                subtitle: '+254 712 345 678',
+                subtitle: '+254 721 237 811',
                 color: Colors.green.shade700,
-                onTap: () => _openWhatsApp('+254712345678'),
+                onTap: () => _openWhatsApp('+254721237811'),
               ),
               const SizedBox(height: 24),
 
@@ -104,9 +102,9 @@ class SupportScreen extends StatelessWidget {
               Text(
                 'Quick Actions',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
               const SizedBox(height: 16),
               Card(
@@ -144,9 +142,9 @@ class SupportScreen extends StatelessWidget {
               Text(
                 'Business Hours',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
               const SizedBox(height: 16),
               Card(
@@ -154,7 +152,10 @@ class SupportScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      _buildBusinessHourRow('Monday - Friday', '8:00 AM - 6:00 PM'),
+                      _buildBusinessHourRow(
+                        'Monday - Friday',
+                        '8:00 AM - 6:00 PM',
+                      ),
                       const Divider(),
                       _buildBusinessHourRow('Saturday', '9:00 AM - 4:00 PM'),
                       const Divider(),
@@ -169,9 +170,9 @@ class SupportScreen extends StatelessWidget {
               Text(
                 'Visit Us',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
               const SizedBox(height: 16),
               Card(
@@ -256,14 +257,8 @@ class SupportScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            day,
-            style: const TextStyle(fontWeight: FontWeight.w500),
-          ),
-          Text(
-            hours,
-            style: const TextStyle(color: Colors.grey),
-          ),
+          Text(day, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(hours, style: const TextStyle(color: Colors.grey)),
         ],
       ),
     );
@@ -332,10 +327,7 @@ class SupportScreen extends StatelessWidget {
             children: [
               const Text(
                 'Frequently Asked Questions',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 24),
               _buildFAQItem(
@@ -382,16 +374,10 @@ class SupportScreen extends StatelessWidget {
         children: [
           Text(
             question,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 4),
-          Text(
-            answer,
-            style: const TextStyle(color: Colors.grey),
-          ),
+          Text(answer, style: const TextStyle(color: Colors.grey)),
         ],
       ),
     );
@@ -419,10 +405,7 @@ class SupportScreen extends StatelessWidget {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               Get.back();
