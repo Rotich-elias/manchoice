@@ -56,6 +56,13 @@ class LoanRepository {
     DateTime? dueDate,
     String? purpose,
     String? notes,
+    // Photo paths
+    String? bikePhotoPath,
+    String? logbookPhotoPath,
+    String? passportPhotoPath,
+    String? idPhotoPath,
+    String? nextOfKinIdPhotoPath,
+    String? guarantorIdPhotoPath,
   }) async {
     try {
       final response = await _apiService.post(
@@ -68,6 +75,13 @@ class LoanRepository {
           if (dueDate != null) 'due_date': dueDate.toIso8601String().split('T')[0],
           if (purpose != null) 'purpose': purpose,
           if (notes != null) 'notes': notes,
+          // Photo paths
+          if (bikePhotoPath != null) 'bike_photo_path': bikePhotoPath,
+          if (logbookPhotoPath != null) 'logbook_photo_path': logbookPhotoPath,
+          if (passportPhotoPath != null) 'passport_photo_path': passportPhotoPath,
+          if (idPhotoPath != null) 'id_photo_path': idPhotoPath,
+          if (nextOfKinIdPhotoPath != null) 'next_of_kin_id_photo_path': nextOfKinIdPhotoPath,
+          if (guarantorIdPhotoPath != null) 'guarantor_id_photo_path': guarantorIdPhotoPath,
         },
       );
 

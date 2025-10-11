@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../models/cart_item.dart';
+import '../services/cart_service.dart';
 
 class ProductsScreen extends StatefulWidget {
   const ProductsScreen({super.key});
@@ -10,6 +12,8 @@ class ProductsScreen extends StatefulWidget {
 
 class _ProductsScreenState extends State<ProductsScreen> {
   String _selectedCategory = 'All';
+  final CartService _cartService = Get.put(CartService());
+
   final List<String> _categories = [
     'All',
     'Engine Parts',
@@ -19,6 +23,18 @@ class _ProductsScreenState extends State<ProductsScreen> {
     'Body Parts',
     'Accessories',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Get loan data from navigation arguments
+    final args = Get.arguments as Map<String, dynamic>?;
+    if (args != null) {
+      final loanId = args['loanId'] as int?;
+      final customerId = args['customerId'] as int?;
+      _cartService.setLoanContext(loanId: loanId, customerId: customerId);
+    }
+  }
 
   // TODO: Fetch products from database
   final List<Map<String, dynamic>> _sampleProducts = [
@@ -78,21 +94,87 @@ class _ProductsScreenState extends State<ProductsScreen> {
               );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.shopping_cart_outlined),
-            onPressed: () {
-              Get.snackbar(
-                'Cart',
-                'Shopping cart will be implemented',
-                snackPosition: SnackPosition.BOTTOM,
-              );
-            },
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.shopping_cart_outlined),
+                onPressed: () {
+                  Get.toNamed('/cart');
+                },
+              ),
+              Obx(() => _cartService.itemCount > 0
+                  ? Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          '${_cartService.itemCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink()),
+            ],
           ),
         ],
       ),
       body: SafeArea(
         child: Column(
           children: [
+            // Loan Application Banner
+            if (_cartService.loanId != null)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                color: Colors.green.shade50,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check_circle,
+                      color: Colors.green.shade700,
+                      size: 32,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Loan Application Submitted!',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green.shade900,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Select products to add to your loan. Admin will review and approve.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.green.shade800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             // Category Filter
             Container(
               height: 60,
@@ -369,17 +451,20 @@ class _ProductsScreenState extends State<ProductsScreen> {
                             onPressed: product['inStock']
                                 ? () {
                                     Get.back();
-                                    Get.snackbar(
-                                      'Added to Cart',
-                                      '${product['name']} added to cart',
-                                      snackPosition: SnackPosition.BOTTOM,
-                                      backgroundColor: Colors.green,
-                                      colorText: Colors.white,
+                                    _cartService.addItem(
+                                      CartItem(
+                                        id: product['name'], // Using name as ID for sample data
+                                        name: product['name'],
+                                        category: product['category'],
+                                        price: product['price'].toDouble(),
+                                        description: product['description'],
+                                        quantity: 1,
+                                      ),
                                     );
                                   }
                                 : null,
                             icon: const Icon(Icons.shopping_cart),
-                            label: const Text('Add'),
+                            label: const Text('Add to Cart'),
                           ),
                         ),
                       ],

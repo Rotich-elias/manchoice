@@ -47,6 +47,21 @@ class CustomerRepository {
     String? businessName,
     double? creditLimit,
     String? notes,
+    // Motorcycle details
+    String? motorcycleNumberPlate,
+    String? motorcycleChassisNumber,
+    String? motorcycleModel,
+    String? motorcycleType,
+    String? motorcycleEngineCC,
+    String? motorcycleColour,
+    // Next of kin details
+    String? nextOfKinName,
+    String? nextOfKinPhone,
+    String? nextOfKinRelationship,
+    // Guarantor details
+    String? guarantorName,
+    String? guarantorPhone,
+    String? guarantorRelationship,
   }) async {
     try {
       final response = await _apiService.post(
@@ -60,6 +75,21 @@ class CustomerRepository {
           if (businessName != null) 'business_name': businessName,
           if (creditLimit != null) 'credit_limit': creditLimit,
           if (notes != null) 'notes': notes,
+          // Motorcycle details
+          if (motorcycleNumberPlate != null) 'motorcycle_number_plate': motorcycleNumberPlate,
+          if (motorcycleChassisNumber != null) 'motorcycle_chassis_number': motorcycleChassisNumber,
+          if (motorcycleModel != null) 'motorcycle_model': motorcycleModel,
+          if (motorcycleType != null) 'motorcycle_type': motorcycleType,
+          if (motorcycleEngineCC != null) 'motorcycle_engine_cc': motorcycleEngineCC,
+          if (motorcycleColour != null) 'motorcycle_colour': motorcycleColour,
+          // Next of kin details
+          if (nextOfKinName != null) 'next_of_kin_name': nextOfKinName,
+          if (nextOfKinPhone != null) 'next_of_kin_phone': nextOfKinPhone,
+          if (nextOfKinRelationship != null) 'next_of_kin_relationship': nextOfKinRelationship,
+          // Guarantor details
+          if (guarantorName != null) 'guarantor_name': guarantorName,
+          if (guarantorPhone != null) 'guarantor_phone': guarantorPhone,
+          if (guarantorRelationship != null) 'guarantor_relationship': guarantorRelationship,
         },
       );
 

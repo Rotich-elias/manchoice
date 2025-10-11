@@ -180,6 +180,15 @@ class DashboardScreen extends StatelessWidget {
               // Menu Cards
               _buildMenuCard(
                 context,
+                icon: Icons.add_circle,
+                title: 'New Loan Application',
+                subtitle: 'Apply for a motorcycle loan',
+                color: Colors.orange,
+                onTap: () => Get.toNamed('/new-loan-application'),
+              ),
+              const SizedBox(height: 12),
+              _buildMenuCard(
+                context,
                 icon: Icons.request_quote,
                 title: 'Apply for Spare Parts Loan',
                 subtitle: 'Get financing for motorcycle spares',
