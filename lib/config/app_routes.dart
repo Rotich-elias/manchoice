@@ -4,6 +4,7 @@ import 'package:manchoice/screens/profile_screen.dart';
 import 'package:manchoice/screens/splash_screen.dart';
 import 'package:manchoice/screens/login_screen.dart';
 import 'package:manchoice/screens/signup_screen.dart';
+import 'package:manchoice/screens/signup_screen_simple.dart';
 import 'package:manchoice/screens/dashboard_screen.dart';
 import 'package:manchoice/screens/loan_application_screen.dart';
 import 'package:manchoice/screens/payments_screen.dart';
@@ -14,7 +15,8 @@ class AppRoutes {
   static final routes = <GetPage>[
     GetPage(name: '/splash', page: () => const SplashScreen()),
     GetPage(name: '/login', page: () => const LoginScreen()),
-    GetPage(name: '/signup', page: () => const SignupScreen()),
+    GetPage(name: '/signup', page: () => const SignupScreenSimple()),
+    GetPage(name: '/signup-full', page: () => const SignupScreen()), // Full loan application form
     GetPage(name: '/dashboard', page: () => const DashboardScreen()),
     GetPage(name: '/loan-application', page: () => const LoanApplicationScreen()),
     GetPage(name: '/payments', page: () => const PaymentsScreen()),
