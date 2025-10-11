@@ -79,17 +79,28 @@ class _SplashScreenState extends State<SplashScreen>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Logo Icon
+                        // Company Logo
                         Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            shape: BoxShape.circle,
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.2),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
                           ),
-                          child: Icon(
-                            Icons.motorcycle,
-                            size: 100,
-                            color: Theme.of(context).colorScheme.onPrimary,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Image.asset(
+                              'lib/assets/images/logo.jpg',
+                              width: 180,
+                              height: 180,
+                              fit: BoxFit.contain,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 32),
@@ -132,7 +143,7 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Credit Management System',
+                          '"Aiming the future, Together"',
                           textAlign: TextAlign.center,
                           style:
                               Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -140,6 +151,19 @@ class _SplashScreenState extends State<SplashScreen>
                                         .colorScheme
                                         .onPrimary
                                         .withValues(alpha: 0.8),
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Credit Management System',
+                          textAlign: TextAlign.center,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary
+                                        .withValues(alpha: 0.7),
                                   ),
                         ),
                         const SizedBox(height: 60),

@@ -7,7 +7,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:manchoice/main.dart';
+import 'package:manschoice/main.dart';
 
 void main() {
   testWidgets('App loads successfully', (WidgetTester tester) async {

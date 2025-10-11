@@ -1,16 +1,16 @@
 import 'package:get/get.dart';
-import 'package:manchoice/bindings/profile_binding.dart';
-import 'package:manchoice/screens/profile_screen.dart';
-import 'package:manchoice/screens/splash_screen.dart';
-import 'package:manchoice/screens/login_screen.dart';
-import 'package:manchoice/screens/signup_screen.dart';
-import 'package:manchoice/screens/signup_screen_simple.dart';
-import 'package:manchoice/screens/dashboard_screen.dart';
-import 'package:manchoice/screens/loan_application_screen.dart';
-import 'package:manchoice/screens/loan_application_screen_simple.dart';
-import 'package:manchoice/screens/payments_screen.dart';
-import 'package:manchoice/screens/products_screen.dart';
-import 'package:manchoice/screens/support_screen.dart';
+import 'package:manschoice/bindings/profile_binding.dart';
+import 'package:manschoice/screens/profile_screen.dart';
+import 'package:manschoice/screens/splash_screen.dart';
+import 'package:manschoice/screens/login_screen.dart';
+import 'package:manschoice/screens/signup_screen.dart';
+import 'package:manschoice/screens/signup_screen_simple.dart';
+import 'package:manschoice/screens/dashboard_screen.dart';
+import 'package:manschoice/screens/loan_application_screen.dart';
+import 'package:manschoice/screens/loan_application_screen_simple.dart';
+import 'package:manschoice/screens/payments_screen.dart';
+import 'package:manschoice/screens/products_screen.dart';
+import 'package:manschoice/screens/support_screen.dart';
 
 class AppRoutes {
   static final routes = <GetPage>[
