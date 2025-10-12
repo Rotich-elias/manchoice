@@ -12,31 +12,31 @@ class SignupScreenSimple extends StatefulWidget {
 class _SignupScreenSimpleState extends State<SignupScreenSimple> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _pinController = TextEditingController();
+  final _confirmPinController = TextEditingController();
   final _authService = AuthService();
 
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
+  bool _obscurePin = true;
+  bool _obscureConfirmPin = true;
   bool _isLoading = false;
 
   @override
   void dispose() {
     _nameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
+    _phoneController.dispose();
+    _pinController.dispose();
+    _confirmPinController.dispose();
     super.dispose();
   }
 
   Future<void> _handleSignup() async {
     if (_formKey.currentState!.validate()) {
-      // Check if passwords match
-      if (_passwordController.text != _confirmPasswordController.text) {
+      // Check if PINs match
+      if (_pinController.text != _confirmPinController.text) {
         Get.snackbar(
-          'Password Mismatch',
-          'Passwords do not match',
+          'PIN Mismatch',
+          'PINs do not match',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.red,
           colorText: Colors.white,
@@ -50,9 +50,9 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
       try {
         final result = await _authService.register(
           name: _nameController.text.trim(),
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-          passwordConfirmation: _confirmPasswordController.text,
+          phone: _phoneController.text.trim(),
+          pin: _pinController.text,
+          pinConfirmation: _confirmPinController.text,
         );
 
         if (!mounted) return;
@@ -156,84 +156,97 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Email Field
+                  // Phone Number Field
                   TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
                     decoration: const InputDecoration(
-                      labelText: 'Email',
-                      hintText: 'Enter your email',
-                      prefixIcon: Icon(Icons.email),
+                      labelText: 'Phone Number',
+                      hintText: '254712345678',
+                      prefixIcon: Icon(Icons.phone),
+                      helperText: 'Format: 254XXXXXXXXX',
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
+                        return 'Please enter your phone number';
                       }
-                      if (!value.contains('@') || !value.contains('.')) {
-                        return 'Please enter a valid email';
+                      if (!RegExp(r'^254[0-9]{9}$').hasMatch(value)) {
+                        return 'Invalid phone format. Use 254XXXXXXXXX';
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
 
-                  // Password Field
+                  // PIN Field
                   TextFormField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
+                    controller: _pinController,
+                    obscureText: _obscurePin,
+                    keyboardType: TextInputType.number,
+                    maxLength: 4,
                     decoration: InputDecoration(
-                      labelText: 'Password',
-                      hintText: 'Enter your password',
+                      labelText: '4-Digit PIN',
+                      hintText: 'Create your PIN',
                       prefixIcon: const Icon(Icons.lock),
+                      counterText: '',
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword
+                          _obscurePin
                               ? Icons.visibility
                               : Icons.visibility_off,
                         ),
                         onPressed: () {
                           setState(() {
-                            _obscurePassword = !_obscurePassword;
+                            _obscurePin = !_obscurePin;
                           });
                         },
                       ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
+                        return 'Please create a PIN';
                       }
-                      if (value.length < 8) {
-                        return 'Password must be at least 8 characters';
+                      if (value.length != 4) {
+                        return 'PIN must be exactly 4 digits';
+                      }
+                      if (!RegExp(r'^[0-9]{4}$').hasMatch(value)) {
+                        return 'PIN must contain only numbers';
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
 
-                  // Confirm Password Field
+                  // Confirm PIN Field
                   TextFormField(
-                    controller: _confirmPasswordController,
-                    obscureText: _obscureConfirmPassword,
+                    controller: _confirmPinController,
+                    obscureText: _obscureConfirmPin,
+                    keyboardType: TextInputType.number,
+                    maxLength: 4,
                     decoration: InputDecoration(
-                      labelText: 'Confirm Password',
-                      hintText: 'Re-enter your password',
-                      prefixIcon: const Icon(Icons.lock_outline),
+                      labelText: 'Confirm PIN',
+                      hintText: 'Re-enter your PIN',
+                      prefixIcon: const Icon(Icons.lock),
+                      counterText: '',
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscureConfirmPassword
+                          _obscureConfirmPin
                               ? Icons.visibility
                               : Icons.visibility_off,
                         ),
                         onPressed: () {
                           setState(() {
-                            _obscureConfirmPassword = !_obscureConfirmPassword;
+                            _obscureConfirmPin = !_obscureConfirmPin;
                           });
                         },
                       ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please confirm your password';
+                        return 'Please confirm your PIN';
+                      }
+                      if (value != _pinController.text) {
+                        return 'PINs do not match';
                       }
                       return null;
                     },
@@ -252,17 +265,12 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
                         : const Text(
                             'Sign Up',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                   ),
                   const SizedBox(height: 16),

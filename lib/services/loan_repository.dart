@@ -142,6 +142,23 @@ class LoanRepository {
     }
   }
 
+  // Reject loan
+  Future<Loan?> rejectLoan(int id, String rejectionReason) async {
+    try {
+      final response = await _apiService.post(
+        '${ApiConfig.loans}/$id/reject',
+        data: {'rejection_reason': rejectionReason},
+      );
+
+      if (response.data['success'] == true) {
+        return Loan.fromJson(response.data['data']);
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Failed to reject loan: $e');
+    }
+  }
+
   // Delete loan
   Future<bool> deleteLoan(int id) async {
     try {

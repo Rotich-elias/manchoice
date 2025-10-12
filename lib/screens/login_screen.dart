@@ -11,16 +11,16 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _pinController = TextEditingController();
   final _authService = AuthService();
-  bool _obscurePassword = true;
+  bool _obscurePin = true;
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
+    _phoneController.dispose();
+    _pinController.dispose();
     super.dispose();
   }
 
@@ -30,8 +30,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
       try {
         final result = await _authService.login(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
+          phone: _phoneController.text.trim(),
+          pin: _pinController.text,
         );
 
         if (!mounted) return;
@@ -135,54 +135,61 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 48),
 
-                  // Email Field
+                  // Phone Number Field
                   TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
                     decoration: const InputDecoration(
-                      labelText: 'Email',
-                      hintText: 'Enter your email',
-                      prefixIcon: Icon(Icons.email),
+                      labelText: 'Phone Number',
+                      hintText: '254712345678',
+                      prefixIcon: Icon(Icons.phone),
+                      helperText: 'Format: 254XXXXXXXXX',
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
+                        return 'Please enter your phone number';
                       }
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email';
+                      if (!RegExp(r'^254[0-9]{9}$').hasMatch(value)) {
+                        return 'Invalid phone format. Use 254XXXXXXXXX';
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
 
-                  // Password Field
+                  // PIN Field
                   TextFormField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
+                    controller: _pinController,
+                    obscureText: _obscurePin,
+                    keyboardType: TextInputType.number,
+                    maxLength: 4,
                     decoration: InputDecoration(
-                      labelText: 'Password',
-                      hintText: 'Enter your password',
+                      labelText: '4-Digit PIN',
+                      hintText: 'Enter your PIN',
                       prefixIcon: const Icon(Icons.lock),
+                      counterText: '',
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword
+                          _obscurePin
                               ? Icons.visibility
                               : Icons.visibility_off,
                         ),
                         onPressed: () {
                           setState(() {
-                            _obscurePassword = !_obscurePassword;
+                            _obscurePin = !_obscurePin;
                           });
                         },
                       ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
+                        return 'Please enter your PIN';
                       }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
+                      if (value.length != 4) {
+                        return 'PIN must be exactly 4 digits';
+                      }
+                      if (!RegExp(r'^[0-9]{4}$').hasMatch(value)) {
+                        return 'PIN must contain only numbers';
                       }
                       return null;
                     },

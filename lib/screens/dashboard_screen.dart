@@ -180,6 +180,15 @@ class DashboardScreen extends StatelessWidget {
               // Menu Cards
               _buildMenuCard(
                 context,
+                icon: Icons.receipt_long,
+                title: 'My Loans',
+                subtitle: 'View loan status and payment history',
+                color: Colors.blue,
+                onTap: () => Get.toNamed('/my-loans'),
+              ),
+              const SizedBox(height: 12),
+              _buildMenuCard(
+                context,
                 icon: Icons.add_circle,
                 title: 'New Loan Application',
                 subtitle: 'Apply for a motorcycle loan',
@@ -192,7 +201,7 @@ class DashboardScreen extends StatelessWidget {
                 icon: Icons.request_quote,
                 title: 'Apply for Spare Parts Loan',
                 subtitle: 'Get financing for motorcycle spares',
-                color: Colors.blue,
+                color: Colors.teal,
                 onTap: () => Get.toNamed('/loan-application'),
               ),
               const SizedBox(height: 12),
@@ -355,6 +364,14 @@ class DashboardScreen extends StatelessWidget {
             onTap: () {
               Get.back();
               Get.toNamed('/profile');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.receipt_long),
+            title: const Text('My Loans'),
+            onTap: () {
+              Get.back();
+              Get.toNamed('/my-loans');
             },
           ),
           ListTile(

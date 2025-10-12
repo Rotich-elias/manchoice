@@ -9,6 +9,7 @@ import 'package:manschoice/screens/dashboard_screen.dart';
 import 'package:manschoice/screens/loan_application_screen.dart';
 import 'package:manschoice/screens/loan_application_screen_simple.dart';
 import 'package:manschoice/screens/new_loan_application_screen.dart';
+import 'package:manschoice/screens/my_loans_screen.dart';
 import 'package:manschoice/screens/payments_screen.dart';
 import 'package:manschoice/screens/products_screen.dart';
 import 'package:manschoice/screens/cart_screen.dart';
@@ -24,6 +25,7 @@ class AppRoutes {
     GetPage(name: '/loan-application', page: () => const LoanApplicationScreenSimple()),
     GetPage(name: '/loan-application-full', page: () => const LoanApplicationScreen()), // Full loan application form
     GetPage(name: '/new-loan-application', page: () => const NewLoanApplicationScreen()), // New comprehensive loan application
+    GetPage(name: '/my-loans', page: () => const MyLoansScreen()),
     GetPage(name: '/payments', page: () => const PaymentsScreen()),
     GetPage(name: '/products', page: () => const ProductsScreen()),
     GetPage(name: '/cart', page: () => const CartScreen()),

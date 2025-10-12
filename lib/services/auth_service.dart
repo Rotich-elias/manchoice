@@ -8,18 +8,18 @@ class AuthService {
   // Register new user
   Future<Map<String, dynamic>> register({
     required String name,
-    required String email,
-    required String password,
-    required String passwordConfirmation,
+    required String phone,
+    required String pin,
+    required String pinConfirmation,
   }) async {
     try {
       final response = await _apiService.post(
         ApiConfig.register,
         data: {
           'name': name,
-          'email': email,
-          'password': password,
-          'password_confirmation': passwordConfirmation,
+          'phone': phone,
+          'pin': pin,
+          'pin_confirmation': pinConfirmation,
         },
       );
 
@@ -51,15 +51,15 @@ class AuthService {
 
   // Login user
   Future<Map<String, dynamic>> login({
-    required String email,
-    required String password,
+    required String phone,
+    required String pin,
   }) async {
     try {
       final response = await _apiService.post(
         ApiConfig.login,
         data: {
-          'email': email,
-          'password': password,
+          'phone': phone,
+          'pin': pin,
         },
       );
 

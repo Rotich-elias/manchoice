@@ -11,7 +11,7 @@ class Loan {
   final double totalAmount;
   final double amountPaid;
   final double balance;
-  final String status; // pending, approved, active, completed, defaulted, cancelled
+  final String status; // pending, approved, active, completed, defaulted, cancelled, rejected
   final DateTime? disbursementDate;
   final DateTime? dueDate;
   final int? durationDays;
