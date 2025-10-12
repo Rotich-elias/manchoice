@@ -6,8 +6,6 @@ import 'package:manschoice/screens/login_screen.dart';
 import 'package:manschoice/screens/signup_screen.dart';
 import 'package:manschoice/screens/signup_screen_simple.dart';
 import 'package:manschoice/screens/dashboard_screen.dart';
-import 'package:manschoice/screens/loan_application_screen.dart';
-import 'package:manschoice/screens/loan_application_screen_simple.dart';
 import 'package:manschoice/screens/new_loan_application_screen.dart';
 import 'package:manschoice/screens/my_loans_screen.dart';
 import 'package:manschoice/screens/payments_screen.dart';
@@ -22,9 +20,8 @@ class AppRoutes {
     GetPage(name: '/signup', page: () => const SignupScreenSimple()),
     GetPage(name: '/signup-full', page: () => const SignupScreen()), // Full loan application form
     GetPage(name: '/dashboard', page: () => const DashboardScreen()),
-    GetPage(name: '/loan-application', page: () => const LoanApplicationScreenSimple()),
-    GetPage(name: '/loan-application-full', page: () => const LoanApplicationScreen()), // Full loan application form
-    GetPage(name: '/new-loan-application', page: () => const NewLoanApplicationScreen()), // New comprehensive loan application
+    GetPage(name: '/loan-application', page: () => const NewLoanApplicationScreen()), // Unified loan application
+    GetPage(name: '/new-loan-application', page: () => const NewLoanApplicationScreen()), // Keep both routes for compatibility
     GetPage(name: '/my-loans', page: () => const MyLoansScreen()),
     GetPage(name: '/payments', page: () => const PaymentsScreen()),
     GetPage(name: '/products', page: () => const ProductsScreen()),

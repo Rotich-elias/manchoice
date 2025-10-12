@@ -60,6 +60,52 @@ class CartScreen extends StatelessWidget {
                 ),
               ),
 
+            // No Loan Application Banner (if no loan context)
+            if (cartService.loanId == null)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                color: Colors.orange.shade50,
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.warning_amber,
+                          color: Colors.orange.shade700,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Complete your profile to checkout these items',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.orange.shade900,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Get.toNamed('/new-loan-application', arguments: {
+                          'fromCart': true,
+                        });
+                      },
+                      icon: const Icon(Icons.person_add),
+                      label: const Text('Complete Profile Now'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        minimumSize: const Size(double.infinity, 45),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
             // Cart Items List
             Expanded(
               child: ListView.separated(
@@ -300,13 +346,17 @@ class CartScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => _handleCheckout(context, cartService),
+                  onPressed: cartService.loanId != null
+                      ? () => _handleCheckout(context, cartService)
+                      : null,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text(
-                    'Proceed to Checkout',
-                    style: TextStyle(
+                  child: Text(
+                    cartService.loanId != null
+                        ? 'Proceed to Checkout'
+                        : 'Complete Profile First',
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),

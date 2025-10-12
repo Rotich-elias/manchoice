@@ -15,6 +15,21 @@ class CustomerApi {
   final double totalPaid;
   final int loanCount;
   final String? notes;
+  // Motorcycle Details
+  final String? motorcycleNumberPlate;
+  final String? motorcycleChassisNumber;
+  final String? motorcycleModel;
+  final String? motorcycleType;
+  final String? motorcycleEngineCC;
+  final String? motorcycleColour;
+  // Next of Kin Details
+  final String? nextOfKinName;
+  final String? nextOfKinPhone;
+  final String? nextOfKinRelationship;
+  // Guarantor Details
+  final String? guarantorName;
+  final String? guarantorPhone;
+  final String? guarantorRelationship;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -35,6 +50,18 @@ class CustomerApi {
     this.totalPaid = 0.0,
     this.loanCount = 0,
     this.notes,
+    this.motorcycleNumberPlate,
+    this.motorcycleChassisNumber,
+    this.motorcycleModel,
+    this.motorcycleType,
+    this.motorcycleEngineCC,
+    this.motorcycleColour,
+    this.nextOfKinName,
+    this.nextOfKinPhone,
+    this.nextOfKinRelationship,
+    this.guarantorName,
+    this.guarantorPhone,
+    this.guarantorRelationship,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -57,6 +84,18 @@ class CustomerApi {
       totalPaid: double.parse(json['total_paid']?.toString() ?? '0'),
       loanCount: json['loan_count'] ?? 0,
       notes: json['notes'],
+      motorcycleNumberPlate: json['motorcycle_number_plate'],
+      motorcycleChassisNumber: json['motorcycle_chassis_number'],
+      motorcycleModel: json['motorcycle_model'],
+      motorcycleType: json['motorcycle_type'],
+      motorcycleEngineCC: json['motorcycle_engine_cc'],
+      motorcycleColour: json['motorcycle_colour'],
+      nextOfKinName: json['next_of_kin_name'],
+      nextOfKinPhone: json['next_of_kin_phone'],
+      nextOfKinRelationship: json['next_of_kin_relationship'],
+      guarantorName: json['guarantor_name'],
+      guarantorPhone: json['guarantor_phone'],
+      guarantorRelationship: json['guarantor_relationship'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
       deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at']) : null,

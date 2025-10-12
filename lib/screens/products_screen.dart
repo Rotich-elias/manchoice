@@ -231,17 +231,33 @@ class _ProductsScreenState extends State<ProductsScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Get.snackbar(
-            'Request Part',
-            'Request unavailable part functionality will be implemented',
-            snackPosition: SnackPosition.BOTTOM,
+      floatingActionButton: Obx(() {
+        // Show "Complete Profile" FAB if cart has items but no loan application
+        if (_cartService.itemCount > 0 && _cartService.loanId == null) {
+          return FloatingActionButton.extended(
+            onPressed: () {
+              Get.toNamed('/new-loan-application', arguments: {
+                'fromCart': true,
+              });
+            },
+            backgroundColor: Colors.orange,
+            icon: const Icon(Icons.person_add),
+            label: const Text('Complete Profile'),
           );
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Request Part'),
-      ),
+        }
+        // Otherwise show "Request Part" FAB
+        return FloatingActionButton.extended(
+          onPressed: () {
+            Get.snackbar(
+              'Request Part',
+              'Request unavailable part functionality will be implemented',
+              snackPosition: SnackPosition.BOTTOM,
+            );
+          },
+          icon: const Icon(Icons.add),
+          label: const Text('Request Part'),
+        );
+      }),
     );
   }
 

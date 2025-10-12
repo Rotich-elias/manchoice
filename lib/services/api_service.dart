@@ -171,7 +171,12 @@ class ApiService {
         }
       }
     } else if (error.type == DioExceptionType.connectionError) {
-      errorMessage = 'No internet connection';
+      // Check if it's a connection refused or actual network issue
+      if (error.message?.contains('Connection refused') ?? false) {
+        errorMessage = 'Cannot reach server. Please ensure the backend is running.';
+      } else {
+        errorMessage = 'No internet connection. Please check your network.';
+      }
     }
 
     return errorMessage;

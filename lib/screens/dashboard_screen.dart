@@ -1,14 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../services/auth_service.dart';
+import '../models/user.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // TODO: Get actual user name from authentication/database
-    const String userName = 'John Doe';
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
 
+class _DashboardScreenState extends State<DashboardScreen> {
+  final AuthService _authService = AuthService();
+  User? _currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final user = await _authService.getCurrentUser();
+      if (mounted) {
+        setState(() {
+          _currentUser = user;
+        });
+      }
+    } catch (e) {
+      // Silently fail - user will see default name
+    }
+  }
+
+  String get userName => _currentUser?.name ?? 'User';
+  String get userPhone => _currentUser?.phone ?? '';
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -189,20 +218,11 @@ class DashboardScreen extends StatelessWidget {
               const SizedBox(height: 12),
               _buildMenuCard(
                 context,
-                icon: Icons.add_circle,
-                title: 'New Loan Application',
-                subtitle: 'Apply for a motorcycle loan',
+                icon: Icons.person_add,
+                title: 'Complete Profile',
+                subtitle: 'Complete your profile to apply for financing',
                 color: Colors.orange,
                 onTap: () => Get.toNamed('/new-loan-application'),
-              ),
-              const SizedBox(height: 12),
-              _buildMenuCard(
-                context,
-                icon: Icons.request_quote,
-                title: 'Apply for Spare Parts Loan',
-                subtitle: 'Get financing for motorcycle spares',
-                color: Colors.teal,
-                onTap: () => Get.toNamed('/loan-application'),
               ),
               const SizedBox(height: 12),
               _buildMenuCard(
@@ -336,14 +356,14 @@ class DashboardScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'John Doe',
+                  userName,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                 ),
                 Text(
-                  '+254 712 345 678',
+                  userPhone,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.white.withValues(alpha: 0.9),
                       ),
@@ -526,7 +546,7 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  void _handleLogout(BuildContext context) {
+  Future<void> _handleLogout(BuildContext context) async {
     Get.dialog(
       AlertDialog(
         title: const Text('Logout'),
@@ -537,13 +557,29 @@ class DashboardScreen extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Get.back(); // Close dialog
+
+              // Show loading
+              Get.dialog(
+                const Center(
+                  child: CircularProgressIndicator(),
+                ),
+                barrierDismissible: false,
+              );
+
+              // Call logout API
+              await _authService.logout();
+
+              Get.back(); // Close loading
               Get.offAllNamed('/login'); // Navigate to login and clear stack
+
               Get.snackbar(
                 'Logged Out',
                 'You have been successfully logged out',
                 snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: Colors.green,
+                colorText: Colors.white,
               );
             },
             style: ElevatedButton.styleFrom(

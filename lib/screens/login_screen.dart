@@ -141,16 +141,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     keyboardType: TextInputType.phone,
                     decoration: const InputDecoration(
                       labelText: 'Phone Number',
-                      hintText: '254712345678',
+                      hintText: '0712345678',
                       prefixIcon: Icon(Icons.phone),
-                      helperText: 'Format: 254XXXXXXXXX',
+                      helperText: 'Format: 0XXXXXXXXX',
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your phone number';
                       }
-                      if (!RegExp(r'^254[0-9]{9}$').hasMatch(value)) {
-                        return 'Invalid phone format. Use 254XXXXXXXXX';
+                      if (!RegExp(r'^0[0-9]{9}$').hasMatch(value)) {
+                        return 'Invalid phone format. Use 0XXXXXXXXX';
                       }
                       return null;
                     },

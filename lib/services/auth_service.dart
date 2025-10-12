@@ -120,4 +120,35 @@ class AuthService {
   bool isAuthenticated() {
     return _apiService.isAuthenticated;
   }
+
+  // Mark profile as completed
+  Future<Map<String, dynamic>> completeProfile({
+    required int customerId,
+  }) async {
+    try {
+      final response = await _apiService.post(
+        '${ApiConfig.baseUrl}/complete-profile',
+        data: {
+          'customer_id': customerId,
+        },
+      );
+
+      if (response.data['success'] == true) {
+        return {
+          'success': true,
+          'user': User.fromJson(response.data['data']),
+        };
+      }
+
+      return {
+        'success': false,
+        'message': response.data['message'] ?? 'Failed to complete profile',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': e.toString(),
+      };
+    }
+  }
 }

@@ -4,6 +4,9 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/customer_repository.dart';
 import '../services/loan_repository.dart';
+import '../services/cart_service.dart';
+import '../services/auth_service.dart';
+import '../models/customer_api.dart';
 
 class NewLoanApplicationScreen extends StatefulWidget {
   const NewLoanApplicationScreen({super.key});
@@ -18,6 +21,111 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
   final _imagePicker = ImagePicker();
   int _currentStep = 0;
   bool _isSubmitting = false;
+  bool _fromCart = false;
+  bool _isLoading = true;
+  CartService? _cartService;
+  CustomerApi? _existingCustomer;
+  double _profileCompletion = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Check if coming from cart
+    final args = Get.arguments as Map<String, dynamic>?;
+    if (args != null) {
+      _fromCart = args['fromCart'] == true;
+      if (_fromCart) {
+        try {
+          _cartService = Get.find<CartService>();
+        } catch (e) {
+          _fromCart = false;
+        }
+      }
+    }
+    _loadExistingProfile();
+  }
+
+  Future<void> _loadExistingProfile() async {
+    try {
+      final customerRepo = CustomerRepository();
+      final customer = await customerRepo.getMyProfile();
+
+      if (customer != null && mounted) {
+        setState(() {
+          _existingCustomer = customer;
+          _preFillForm(customer);
+          _calculateCompletionPercentage();
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _preFillForm(CustomerApi customer) {
+    _fullNameController.text = customer.name ?? '';
+    _phoneController.text = customer.phone ?? '';
+    _nationalIdController.text = customer.idNumber ?? '';
+    _workingStationController.text = customer.address ?? '';
+    _numberPlateController.text = customer.motorcycleNumberPlate ?? '';
+    _chassisNumberController.text = customer.motorcycleChassisNumber ?? '';
+    _modelController.text = customer.motorcycleModel ?? '';
+    _typeController.text = customer.motorcycleType ?? '';
+    _engineCCController.text = customer.motorcycleEngineCC ?? '';
+    _colourController.text = customer.motorcycleColour ?? '';
+    _kinNameController.text = customer.nextOfKinName ?? '';
+    _kinPhoneController.text = customer.nextOfKinPhone ?? '';
+    _kinRelationshipController.text = customer.nextOfKinRelationship ?? '';
+    _guarantorNameController.text = customer.guarantorName ?? '';
+    _guarantorPhoneController.text = customer.guarantorPhone ?? '';
+    _guarantorRelationshipController.text = customer.guarantorRelationship ?? '';
+  }
+
+  void _calculateCompletionPercentage() {
+    int filledFields = 0;
+    int totalFields = 22; // 16 text fields + 6 photos
+
+    // Personal Info (4 fields)
+    if (_fullNameController.text.isNotEmpty) filledFields++;
+    if (_phoneController.text.isNotEmpty) filledFields++;
+    if (_nationalIdController.text.isNotEmpty) filledFields++;
+    if (_workingStationController.text.isNotEmpty) filledFields++;
+
+    // Motorcycle Details (6 fields)
+    if (_numberPlateController.text.isNotEmpty) filledFields++;
+    if (_chassisNumberController.text.isNotEmpty) filledFields++;
+    if (_modelController.text.isNotEmpty) filledFields++;
+    if (_typeController.text.isNotEmpty) filledFields++;
+    if (_engineCCController.text.isNotEmpty) filledFields++;
+    if (_colourController.text.isNotEmpty) filledFields++;
+
+    // Next of Kin (3 fields)
+    if (_kinNameController.text.isNotEmpty) filledFields++;
+    if (_kinPhoneController.text.isNotEmpty) filledFields++;
+    if (_kinRelationshipController.text.isNotEmpty) filledFields++;
+
+    // Guarantor (3 fields)
+    if (_guarantorNameController.text.isNotEmpty) filledFields++;
+    if (_guarantorPhoneController.text.isNotEmpty) filledFields++;
+    if (_guarantorRelationshipController.text.isNotEmpty) filledFields++;
+
+    // Photos (6 fields)
+    if (_bikePhoto != null) filledFields++;
+    if (_logbookPhoto != null) filledFields++;
+    if (_passportPhoto != null) filledFields++;
+    if (_idPhoto != null) filledFields++;
+    if (_kinIdPhoto != null) filledFields++;
+    if (_guarantorIdPhoto != null) filledFields++;
+
+    setState(() {
+      _profileCompletion = (filledFields / totalFields) * 100;
+    });
+  }
 
   // Personal Information Controllers
   final _fullNameController = TextEditingController();
@@ -151,29 +259,56 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
       final customerRepo = CustomerRepository();
       final loanRepo = LoanRepository();
 
-      // Step 1: Create customer with complete application info
-      final customer = await customerRepo.createCustomer(
-        name: _fullNameController.text,
-        phone: _phoneController.text,
-        idNumber: _nationalIdController.text,
-        address: _workingStationController.text,
-        motorcycleNumberPlate: _numberPlateController.text,
-        motorcycleChassisNumber: _chassisNumberController.text,
-        motorcycleModel: _modelController.text,
-        motorcycleType: _typeController.text,
-        motorcycleEngineCC: _engineCCController.text,
-        motorcycleColour: _colourController.text,
-        nextOfKinName: _kinNameController.text,
-        nextOfKinPhone: _kinPhoneController.text,
-        nextOfKinRelationship: _kinRelationshipController.text,
-        guarantorName: _guarantorNameController.text,
-        guarantorPhone: _guarantorPhoneController.text,
-        guarantorRelationship: _guarantorRelationshipController.text,
-        notes: 'Loan application submitted',
-      );
+      // Step 1: Create or Update customer with complete application info
+      final CustomerApi? customer;
+
+      if (_existingCustomer != null) {
+        // Update existing customer
+        customer = await customerRepo.updateCustomer(
+          id: _existingCustomer!.id,
+          name: _fullNameController.text,
+          phone: _phoneController.text,
+          idNumber: _nationalIdController.text,
+          address: _workingStationController.text,
+          motorcycleNumberPlate: _numberPlateController.text,
+          motorcycleChassisNumber: _chassisNumberController.text,
+          motorcycleModel: _modelController.text,
+          motorcycleType: _typeController.text,
+          motorcycleEngineCC: _engineCCController.text,
+          motorcycleColour: _colourController.text,
+          nextOfKinName: _kinNameController.text,
+          nextOfKinPhone: _kinPhoneController.text,
+          nextOfKinRelationship: _kinRelationshipController.text,
+          guarantorName: _guarantorNameController.text,
+          guarantorPhone: _guarantorPhoneController.text,
+          guarantorRelationship: _guarantorRelationshipController.text,
+          notes: _existingCustomer!.notes ?? 'Profile updated',
+        );
+      } else {
+        // Create new customer
+        customer = await customerRepo.createCustomer(
+          name: _fullNameController.text,
+          phone: _phoneController.text,
+          idNumber: _nationalIdController.text,
+          address: _workingStationController.text,
+          motorcycleNumberPlate: _numberPlateController.text,
+          motorcycleChassisNumber: _chassisNumberController.text,
+          motorcycleModel: _modelController.text,
+          motorcycleType: _typeController.text,
+          motorcycleEngineCC: _engineCCController.text,
+          motorcycleColour: _colourController.text,
+          nextOfKinName: _kinNameController.text,
+          nextOfKinPhone: _kinPhoneController.text,
+          nextOfKinRelationship: _kinRelationshipController.text,
+          guarantorName: _guarantorNameController.text,
+          guarantorPhone: _guarantorPhoneController.text,
+          guarantorRelationship: _guarantorRelationshipController.text,
+          notes: 'Profile completed from mobile app',
+        );
+      }
 
       if (customer == null) {
-        throw Exception('Failed to create customer record');
+        throw Exception('Failed to ${_existingCustomer != null ? "update" : "create"} customer record');
       }
 
       // Step 2: Create loan application with photo paths
@@ -196,24 +331,47 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
         throw Exception('Failed to create loan application');
       }
 
+      // Step 3: Mark user's profile as completed
+      final authService = AuthService();
+      await authService.completeProfile(customerId: customer.id);
+
       if (!mounted) return;
 
-      // Show success message
-      Get.snackbar(
-        'Success',
-        'Loan application submitted! Now select products.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 2),
-      );
+      // If coming from cart, associate cart with loan and return to cart
+      if (_fromCart && _cartService != null) {
+        _cartService!.setLoanContext(
+          loanId: loan.id,
+          customerId: customer.id,
+        );
 
-      // Navigate to products page
-      await Future.delayed(const Duration(seconds: 1));
-      Get.offNamed('/products', arguments: {
-        'loanId': loan.id,
-        'customerId': customer.id,
-      });
+        Get.snackbar(
+          'Success',
+          'Profile completed! Continue to checkout.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+        );
+
+        await Future.delayed(const Duration(seconds: 1));
+        Get.back(); // Return to cart/products screen
+      } else {
+        // Default flow: Show success and navigate to products
+        Get.snackbar(
+          'Success',
+          'Profile completed! Now select products.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+        );
+
+        await Future.delayed(const Duration(seconds: 1));
+        Get.offNamed('/products', arguments: {
+          'loanId': loan.id,
+          'customerId': customer.id,
+        });
+      }
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -234,89 +392,210 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New Loan Application'),
+        title: const Text('Complete Your Profile'),
         centerTitle: true,
       ),
-      body: Form(
-        key: _formKey,
-        child: Stepper(
-          currentStep: _currentStep,
-          onStepContinue: () {
-            if (_currentStep < 4) {
-              setState(() => _currentStep++);
-            } else {
-              _submitApplication();
-            }
-          },
-          onStepCancel: () {
-            if (_currentStep > 0) {
-              setState(() => _currentStep--);
-            }
-          },
-          onStepTapped: (step) => setState(() => _currentStep = step),
-          controlsBuilder: (context, details) {
-            return Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: Row(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                // Profile Completion Banner
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        _profileCompletion >= 75
+                            ? Colors.green.shade400
+                            : _profileCompletion >= 50
+                                ? Colors.orange.shade400
+                                : Colors.red.shade400,
+                        _profileCompletion >= 75
+                            ? Colors.green.shade600
+                            : _profileCompletion >= 50
+                                ? Colors.orange.shade600
+                                : Colors.red.shade600,
+                      ],
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _profileCompletion >= 100
+                            ? Icons.check_circle
+                            : Icons.account_circle,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Profile Completion',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: LinearProgressIndicator(
+                                      value: _profileCompletion / 100,
+                                      backgroundColor: Colors.white.withValues(alpha: 0.3),
+                                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                      minHeight: 8,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  '${_profileCompletion.toInt()}%',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Cart context banner
+                if (_fromCart && _cartService != null && _cartService!.itemCount > 0)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    color: Colors.blue.shade50,
+                    child: Row(
                 children: [
-                  ElevatedButton(
-                    onPressed: _isSubmitting ? null : details.onStepContinue,
-                    child: _isSubmitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(_currentStep == 4 ? 'Submit' : 'Continue'),
+                  Icon(
+                    Icons.shopping_cart,
+                    color: Colors.blue.shade700,
+                    size: 24,
                   ),
                   const SizedBox(width: 12),
-                  if (_currentStep > 0)
-                    TextButton(
-                      onPressed: _isSubmitting ? null : details.onStepCancel,
-                      child: const Text('Back'),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Complete your loan application',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.blue.shade900,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'You have ${_cartService!.itemCount} item(s) in your cart',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue.shade800,
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
                 ],
               ),
-            );
-          },
-          steps: [
-            // Step 1: Personal Information
-            Step(
-              title: const Text('Personal Information'),
-              isActive: _currentStep >= 0,
-              state: _currentStep > 0 ? StepState.complete : StepState.indexed,
-              content: _buildPersonalInfoStep(),
             ),
-            // Step 2: Motorcycle Details
-            Step(
-              title: const Text('Motorcycle Details'),
-              isActive: _currentStep >= 1,
-              state: _currentStep > 1 ? StepState.complete : StepState.indexed,
-              content: _buildMotorcycleDetailsStep(),
+          Expanded(
+            child: Form(
+              key: _formKey,
+              child: Stepper(
+                currentStep: _currentStep,
+                onStepContinue: () {
+                  if (_currentStep < 4) {
+                    setState(() => _currentStep++);
+                  } else {
+                    _submitApplication();
+                  }
+                },
+                onStepCancel: () {
+                  if (_currentStep > 0) {
+                    setState(() => _currentStep--);
+                  }
+                },
+                onStepTapped: (step) => setState(() => _currentStep = step),
+                controlsBuilder: (context, details) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: Row(
+                      children: [
+                        ElevatedButton(
+                          onPressed: _isSubmitting ? null : details.onStepContinue,
+                          child: _isSubmitting
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : Text(_currentStep == 4 ? 'Submit' : 'Continue'),
+                        ),
+                        const SizedBox(width: 12),
+                        if (_currentStep > 0)
+                          TextButton(
+                            onPressed: _isSubmitting ? null : details.onStepCancel,
+                            child: const Text('Back'),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+                steps: [
+                  // Step 1: Personal Information
+                  Step(
+                    title: const Text('Personal Information'),
+                    isActive: _currentStep >= 0,
+                    state: _currentStep > 0 ? StepState.complete : StepState.indexed,
+                    content: _buildPersonalInfoStep(),
+                  ),
+                  // Step 2: Motorcycle Details
+                  Step(
+                    title: const Text('Motorcycle Details'),
+                    isActive: _currentStep >= 1,
+                    state: _currentStep > 1 ? StepState.complete : StepState.indexed,
+                    content: _buildMotorcycleDetailsStep(),
+                  ),
+                  // Step 3: Photos
+                  Step(
+                    title: const Text('Upload Photos'),
+                    isActive: _currentStep >= 2,
+                    state: _currentStep > 2 ? StepState.complete : StepState.indexed,
+                    content: _buildPhotosStep(),
+                  ),
+                  // Step 4: Next of Kin
+                  Step(
+                    title: const Text('Next of Kin'),
+                    isActive: _currentStep >= 3,
+                    state: _currentStep > 3 ? StepState.complete : StepState.indexed,
+                    content: _buildNextOfKinStep(),
+                  ),
+                  // Step 5: Guarantor
+                  Step(
+                    title: const Text('Guarantor Details'),
+                    isActive: _currentStep >= 4,
+                    state: StepState.indexed,
+                    content: _buildGuarantorStep(),
+                  ),
+                ],
+              ),
             ),
-            // Step 3: Photos
-            Step(
-              title: const Text('Upload Photos'),
-              isActive: _currentStep >= 2,
-              state: _currentStep > 2 ? StepState.complete : StepState.indexed,
-              content: _buildPhotosStep(),
-            ),
-            // Step 4: Next of Kin
-            Step(
-              title: const Text('Next of Kin'),
-              isActive: _currentStep >= 3,
-              state: _currentStep > 3 ? StepState.complete : StepState.indexed,
-              content: _buildNextOfKinStep(),
-            ),
-            // Step 5: Guarantor
-            Step(
-              title: const Text('Guarantor Details'),
-              isActive: _currentStep >= 4,
-              state: StepState.indexed,
-              content: _buildGuarantorStep(),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

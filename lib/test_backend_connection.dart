@@ -30,7 +30,7 @@ class _BackendConnectionTestState extends State<BackendConnectionTest> {
       // Test 1: Login
       setState(() => _status = '1/3 Testing authentication...');
       final loginResult = await _authService.login(
-        phone: '254712345678',
+        phone: '0712345678',
         pin: '1234',
       );
 
