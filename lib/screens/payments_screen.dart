@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import '../models/loan.dart';
+import '../services/payment_repository.dart';
 
 class PaymentsScreen extends StatefulWidget {
   const PaymentsScreen({super.key});
@@ -13,15 +15,22 @@ class PaymentsScreen extends StatefulWidget {
 class _PaymentsScreenState extends State<PaymentsScreen> {
   final TextEditingController _transactionCodeController =
       TextEditingController();
+  final TextEditingController _amountController = TextEditingController();
+  final PaymentRepository _paymentRepository = PaymentRepository();
 
-  // TODO: Replace with actual data from database/API
-  final String productName = "Yamaha YBR 125";
-  final double totalLoanAmount = 150000.0;
-  final double amountPaid = 45000.0;
-  final DateTime nextPaymentDue = DateTime.now().add(const Duration(days: 5));
-  final double dailyPaymentAmount = 500.0;
-  final String mpesaPaybill =
-      "247247"; // TODO: Replace with actual paybill number
+  bool _isSubmitting = false;
+  String _selectedPaymentMethod = 'mpesa';
+
+  // Get loan data from navigation arguments
+  Loan? _loan;
+  final String mpesaPaybill = "247247"; // TODO: Replace with actual paybill number
+
+  @override
+  void initState() {
+    super.initState();
+    // Get loan data passed from previous screen
+    _loan = Get.arguments as Loan?;
+  }
 
   // TODO: Fetch from database
   final List<Map<String, dynamic>> paymentHistory = [
@@ -76,17 +85,44 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     },
   ];
 
-  double get remainingBalance => totalLoanAmount - amountPaid;
-  double get paymentProgress => (amountPaid / totalLoanAmount) * 100;
+  double get remainingBalance => _loan?.balance ?? 0;
+  double get paymentProgress => _loan?.paymentProgress ?? 0;
+  double get totalLoanAmount => _loan?.totalAmount ?? 0;
+  double get amountPaid => _loan?.amountPaid ?? 0;
+  String get productName => _loan?.purpose ?? 'Loan';
+  DateTime get nextPaymentDue => _loan?.dueDate ?? DateTime.now();
 
   @override
   void dispose() {
     _transactionCodeController.dispose();
+    _amountController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Show error if no loan data
+    if (_loan == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Payments')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              const Text('No loan data available'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => Get.back(),
+                child: const Text('Go Back'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Payments & Installments'),
@@ -249,9 +285,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               Expanded(
                 child: _buildSummaryItem(
                   context,
-                  'Daily Payment',
-                  'KES ${_formatCurrency(dailyPaymentAmount)}',
-                  Icons.calendar_today,
+                  'Balance',
+                  'KES ${_formatCurrency(remainingBalance)}',
+                  Icons.account_balance,
                 ),
               ),
             ],
@@ -504,7 +540,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 _buildPaymentStep('5', 'No: Your Phone Number'),
                 _buildPaymentStep(
                   '6',
-                  'Enter Amount: KES ${_formatCurrency(dailyPaymentAmount)}',
+                  'Enter Amount: Any amount towards your balance',
                 ),
                 _buildPaymentStep('7', 'Enter M-PESA PIN'),
                 const SizedBox(height: 16),
@@ -562,28 +598,78 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
           const SizedBox(height: 20),
 
-          // Transaction Code Input
+          // After Payment Section
           Text(
-            'After Payment',
+            'After Payment - Submit Details',
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
+
+          // Payment Method Selector
+          DropdownButtonFormField<String>(
+            initialValue: _selectedPaymentMethod,
+            decoration: InputDecoration(
+              labelText: 'Payment Method',
+              prefixIcon: const Icon(Icons.payment),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            items: const [
+              DropdownMenuItem(value: 'mpesa', child: Text('M-PESA')),
+              DropdownMenuItem(value: 'cash', child: Text('Cash')),
+              DropdownMenuItem(value: 'bank_transfer', child: Text('Bank Transfer')),
+              DropdownMenuItem(value: 'other', child: Text('Other')),
+            ],
+            onChanged: (value) {
+              setState(() {
+                _selectedPaymentMethod = value ?? 'mpesa';
+              });
+            },
+          ),
+          const SizedBox(height: 16),
+
+          // Amount Input
+          TextField(
+            controller: _amountController,
+            decoration: InputDecoration(
+              labelText: 'Amount Paid',
+              hintText: 'Enter amount paid',
+              prefixIcon: const Icon(Icons.attach_money),
+              prefixText: 'KES ',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              helperText: 'Balance: KES ${_formatCurrency(remainingBalance)}',
+            ),
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Transaction Code Input
           TextField(
             controller: _transactionCodeController,
             decoration: InputDecoration(
-              labelText: 'M-PESA Transaction Code',
-              hintText: 'e.g., QAX1B2C3D4',
+              labelText: _selectedPaymentMethod == 'mpesa'
+                  ? 'M-PESA Transaction Code'
+                  : 'Receipt/Reference Number',
+              hintText: _selectedPaymentMethod == 'mpesa'
+                  ? 'e.g., QAX1B2C3D4'
+                  : 'Enter receipt number',
               prefixIcon: const Icon(Icons.confirmation_number),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
-              helperText:
-                  'Enter the M-PESA confirmation code you received via SMS',
+              helperText: _selectedPaymentMethod == 'mpesa'
+                  ? 'Enter the M-PESA confirmation code you received via SMS'
+                  : 'Enter your payment receipt or reference number',
             ),
             textCapitalization: TextCapitalization.characters,
-            maxLength: 10,
           ),
           const SizedBox(height: 16),
 
@@ -591,11 +677,20 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () {
+              onPressed: _isSubmitting ? null : () {
                 _confirmPayment(context);
               },
-              icon: const Icon(Icons.check_circle),
-              label: const Text('Confirm Payment'),
+              icon: _isSubmitting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.check_circle),
+              label: Text(_isSubmitting ? 'Submitting...' : 'Submit Payment for Approval'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 backgroundColor: Colors.green,
@@ -950,13 +1045,15 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     );
   }
 
-  void _confirmPayment(BuildContext context) {
+  Future<void> _confirmPayment(BuildContext context) async {
     final transactionCode = _transactionCodeController.text.trim();
+    final amountText = _amountController.text.trim();
 
-    if (transactionCode.isEmpty) {
+    // Validation
+    if (amountText.isEmpty) {
       Get.snackbar(
         'Error',
-        'Please enter the M-PESA transaction code',
+        'Please enter the amount paid',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -964,94 +1061,160 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       return;
     }
 
-    // TODO: Verify payment with backend API
-    Get.dialog(
-      AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.hourglass_empty, color: Colors.orange),
-            SizedBox(width: 12),
-            Text('Verifying Payment'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text(
-              'Please wait while we verify your payment...',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ],
-        ),
-      ),
-    );
+    final amount = double.tryParse(amountText);
+    if (amount == null || amount <= 0) {
+      Get.snackbar(
+        'Error',
+        'Please enter a valid amount',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
 
-    // Simulate API call
-    Future.delayed(const Duration(seconds: 2), () {
+    if (amount > remainingBalance) {
+      Get.snackbar(
+        'Warning',
+        'Amount exceeds remaining balance. Your payment will be adjusted to KES ${_formatCurrency(remainingBalance)}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
+      );
+    }
+
+    if (transactionCode.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Please enter the transaction/receipt code',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    // Submit payment to API
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      final payment = await _paymentRepository.createPayment(
+        loanId: _loan!.id,
+        amount: amount,
+        paymentMethod: _selectedPaymentMethod,
+        mpesaReceiptNumber: transactionCode,
+        notes: 'Payment submitted by customer via mobile app',
+      );
+
+      setState(() {
+        _isSubmitting = false;
+      });
+
       if (!context.mounted) return;
 
-      Get.back(); // Close loading dialog
+      if (payment != null) {
+        // Show success message
+        Get.dialog(
+          AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.pending_actions, color: Colors.orange, size: 32),
+                SizedBox(width: 12),
+                Text('Payment Submitted!'),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Your payment has been submitted successfully and is awaiting admin approval.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline, color: Colors.orange),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Your loan balance will be updated once the admin approves your payment.',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 8),
+                _buildDetailRow('Transaction Code:', transactionCode),
+                _buildDetailRow(
+                  'Amount:',
+                  'KES ${_formatCurrency(amount)}',
+                ),
+                _buildDetailRow(
+                  'Payment Method:',
+                  _selectedPaymentMethod.toUpperCase(),
+                ),
+                _buildDetailRow(
+                  'Date:',
+                  DateFormat('MMM dd, yyyy - HH:mm').format(DateTime.now()),
+                ),
+                _buildDetailRow(
+                  'Status:',
+                  'Pending Approval',
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Get.back();
+                  _transactionCodeController.clear();
+                  _amountController.clear();
+                  Get.back(); // Go back to previous screen
+                },
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        Get.snackbar(
+          'Error',
+          'Failed to submit payment. Please try again.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isSubmitting = false;
+      });
 
-      // Show success message
-      Get.dialog(
-        AlertDialog(
-          title: const Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.green, size: 32),
-              SizedBox(width: 12),
-              Text('Payment Confirmed!'),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Your payment has been successfully recorded.',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 16),
-              const Divider(),
-              const SizedBox(height: 8),
-              _buildDetailRow('Transaction Code:', transactionCode),
-              _buildDetailRow(
-                'Amount:',
-                'KES ${_formatCurrency(dailyPaymentAmount)}',
-              ),
-              _buildDetailRow(
-                'Date:',
-                DateFormat('MMM dd, yyyy - HH:mm').format(DateTime.now()),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Get.back();
-                _transactionCodeController.clear();
-                setState(() {}); // Refresh the UI
-              },
-              child: const Text('Close'),
-            ),
-            ElevatedButton.icon(
-              onPressed: () {
-                Get.back();
-                Get.snackbar(
-                  'Receipt',
-                  'Receipt download will be implemented',
-                  snackPosition: SnackPosition.BOTTOM,
-                );
-              },
-              icon: const Icon(Icons.receipt),
-              label: const Text('Get Receipt'),
-            ),
-          ],
-        ),
+      if (!context.mounted) return;
+
+      Get.snackbar(
+        'Error',
+        'Failed to submit payment: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
       );
-    });
+    }
   }
 
   Widget _buildDetailRow(String label, String value) {

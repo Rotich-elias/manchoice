@@ -2,8 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/customer_repository.dart';
-import '../services/loan_repository.dart';
 import '../services/cart_service.dart';
 import '../services/auth_service.dart';
 import '../models/customer_api.dart';
@@ -19,7 +20,6 @@ class NewLoanApplicationScreen extends StatefulWidget {
 class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _imagePicker = ImagePicker();
-  int _currentStep = 0;
   bool _isSubmitting = false;
   bool _fromCart = false;
   bool _isLoading = true;
@@ -43,6 +43,27 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
       }
     }
     _loadExistingProfile();
+    _setupListeners();
+  }
+
+  void _setupListeners() {
+    // Add listeners to all text controllers to update completion percentage
+    _fullNameController.addListener(_calculateCompletionPercentage);
+    _phoneController.addListener(_calculateCompletionPercentage);
+    _nationalIdController.addListener(_calculateCompletionPercentage);
+    _workingStationController.addListener(_calculateCompletionPercentage);
+    _numberPlateController.addListener(_calculateCompletionPercentage);
+    _chassisNumberController.addListener(_calculateCompletionPercentage);
+    _modelController.addListener(_calculateCompletionPercentage);
+    _typeController.addListener(_calculateCompletionPercentage);
+    _engineCCController.addListener(_calculateCompletionPercentage);
+    _colourController.addListener(_calculateCompletionPercentage);
+    _kinNameController.addListener(_calculateCompletionPercentage);
+    _kinPhoneController.addListener(_calculateCompletionPercentage);
+    _kinRelationshipController.addListener(_calculateCompletionPercentage);
+    _guarantorNameController.addListener(_calculateCompletionPercentage);
+    _guarantorPhoneController.addListener(_calculateCompletionPercentage);
+    _guarantorRelationshipController.addListener(_calculateCompletionPercentage);
   }
 
   Future<void> _loadExistingProfile() async {
@@ -60,10 +81,95 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
       } else {
         setState(() => _isLoading = false);
       }
+
+      // Load saved photos
+      await _loadSavedPhotos();
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _loadSavedPhotos() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      final bikePath = prefs.getString('bike_photo_path');
+      final logbookPath = prefs.getString('logbook_photo_path');
+      final passportPath = prefs.getString('passport_photo_path');
+      final idPath = prefs.getString('id_photo_path');
+      final kinIdPath = prefs.getString('kin_id_photo_path');
+      final guarantorIdPath = prefs.getString('guarantor_id_photo_path');
+
+      if (mounted) {
+        setState(() {
+          if (bikePath != null && File(bikePath).existsSync()) {
+            _bikePhoto = File(bikePath);
+          }
+          if (logbookPath != null && File(logbookPath).existsSync()) {
+            _logbookPhoto = File(logbookPath);
+          }
+          if (passportPath != null && File(passportPath).existsSync()) {
+            _passportPhoto = File(passportPath);
+          }
+          if (idPath != null && File(idPath).existsSync()) {
+            _idPhoto = File(idPath);
+          }
+          if (kinIdPath != null && File(kinIdPath).existsSync()) {
+            _kinIdPhoto = File(kinIdPath);
+          }
+          if (guarantorIdPath != null && File(guarantorIdPath).existsSync()) {
+            _guarantorIdPhoto = File(guarantorIdPath);
+          }
+          _calculateCompletionPercentage();
+        });
+      }
+    } catch (e) {
+      // Error loading photos, continue without them
+    }
+  }
+
+  String _getPhotoKey(String imageType) {
+    switch (imageType) {
+      case 'bike':
+        return 'bike_photo_path';
+      case 'logbook':
+        return 'logbook_photo_path';
+      case 'passport':
+        return 'passport_photo_path';
+      case 'id':
+        return 'id_photo_path';
+      case 'kinId':
+        return 'kin_id_photo_path';
+      case 'guarantorId':
+        return 'guarantor_id_photo_path';
+      default:
+        return '${imageType}_photo_path';
+    }
+  }
+
+  Future<String> _saveImagePermanently(File tempFile, String imageType) async {
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      final permanentDir = Directory('${appDir.path}/loan_documents');
+
+      if (!await permanentDir.exists()) {
+        await permanentDir.create(recursive: true);
+      }
+
+      final fileName = '${imageType}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final permanentPath = '${permanentDir.path}/$fileName';
+
+      await tempFile.copy(permanentPath);
+
+      // Save path to SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_getPhotoKey(imageType), permanentPath);
+
+      return permanentPath;
+    } catch (e) {
+      rethrow;
     }
   }
 
@@ -190,27 +296,34 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
       );
 
       if (pickedFile != null) {
+        // Save the image permanently
+        final permanentPath = await _saveImagePermanently(
+          File(pickedFile.path),
+          imageType,
+        );
+
         setState(() {
           switch (imageType) {
             case 'bike':
-              _bikePhoto = File(pickedFile.path);
+              _bikePhoto = File(permanentPath);
               break;
             case 'logbook':
-              _logbookPhoto = File(pickedFile.path);
+              _logbookPhoto = File(permanentPath);
               break;
             case 'passport':
-              _passportPhoto = File(pickedFile.path);
+              _passportPhoto = File(permanentPath);
               break;
             case 'id':
-              _idPhoto = File(pickedFile.path);
+              _idPhoto = File(permanentPath);
               break;
             case 'kinId':
-              _kinIdPhoto = File(pickedFile.path);
+              _kinIdPhoto = File(permanentPath);
               break;
             case 'guarantorId':
-              _guarantorIdPhoto = File(pickedFile.path);
+              _guarantorIdPhoto = File(permanentPath);
               break;
           }
+          _calculateCompletionPercentage();
         });
       }
     } catch (e) {
@@ -257,9 +370,8 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
 
     try {
       final customerRepo = CustomerRepository();
-      final loanRepo = LoanRepository();
 
-      // Step 1: Create or Update customer with complete application info
+      // Create or Update customer with complete profile info
       final CustomerApi? customer;
 
       if (_existingCustomer != null) {
@@ -311,64 +423,48 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
         throw Exception('Failed to ${_existingCustomer != null ? "update" : "create"} customer record');
       }
 
-      // Step 2: Create loan application with photo paths
-      final loan = await loanRepo.createLoan(
-        customerId: customer.id,
-        principalAmount: 0.0, // Will be set after product selection
-        interestRate: 30.0, // 30% default
-        durationDays: 30, // 30 days default
-        purpose: 'Motorcycle Loan Application',
-        notes: 'Application submitted from mobile app. Pending admin verification.',
-        bikePhotoPath: _bikePhoto!.path,
-        logbookPhotoPath: _logbookPhoto!.path,
-        passportPhotoPath: _passportPhoto!.path,
-        idPhotoPath: _idPhoto!.path,
-        nextOfKinIdPhotoPath: _kinIdPhoto!.path,
-        guarantorIdPhotoPath: _guarantorIdPhoto!.path,
-      );
-
-      if (loan == null) {
-        throw Exception('Failed to create loan application');
-      }
-
-      // Step 3: Mark user's profile as completed
+      // Mark user's profile as completed
       final authService = AuthService();
       await authService.completeProfile(customerId: customer.id);
 
       if (!mounted) return;
 
-      // If coming from cart, associate cart with loan and return to cart
+      // Store photo paths in cart service for later loan creation
+      if (_cartService != null) {
+        _cartService!.setCustomerDocuments(
+          bikePhoto: _bikePhoto!.path,
+          logbookPhoto: _logbookPhoto!.path,
+          passportPhoto: _passportPhoto!.path,
+          idPhoto: _idPhoto!.path,
+          kinIdPhoto: _kinIdPhoto!.path,
+          guarantorIdPhoto: _guarantorIdPhoto!.path,
+        );
+        _cartService!.setCustomerId(customer.id);
+      }
+
+      // Don't clear SharedPreferences - keep photos for user to see
+
+      // Show success message
+      Get.snackbar(
+        'Success',
+        'Profile completed! Continue shopping.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+      );
+
+      await Future.delayed(const Duration(milliseconds: 800));
+
+      // If coming from cart, navigate to products page
       if (_fromCart && _cartService != null) {
-        _cartService!.setLoanContext(
-          loanId: loan.id,
-          customerId: customer.id,
-        );
-
-        Get.snackbar(
-          'Success',
-          'Profile completed! Continue to checkout.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 2),
-        );
-
-        await Future.delayed(const Duration(seconds: 1));
-        Get.back(); // Return to cart/products screen
+        // Go back to products page (removing cart and profile screens from stack)
+        Get.offAllNamed('/products', arguments: {
+          'customerId': customer.id,
+        });
       } else {
-        // Default flow: Show success and navigate to products
-        Get.snackbar(
-          'Success',
-          'Profile completed! Now select products.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 2),
-        );
-
-        await Future.delayed(const Duration(seconds: 1));
+        // Default flow: Navigate to products
         Get.offNamed('/products', arguments: {
-          'loanId': loan.id,
           'customerId': customer.id,
         });
       }
@@ -515,84 +611,152 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
           Expanded(
             child: Form(
               key: _formKey,
-              child: Stepper(
-                currentStep: _currentStep,
-                onStepContinue: () {
-                  if (_currentStep < 4) {
-                    setState(() => _currentStep++);
-                  } else {
-                    _submitApplication();
-                  }
-                },
-                onStepCancel: () {
-                  if (_currentStep > 0) {
-                    setState(() => _currentStep--);
-                  }
-                },
-                onStepTapped: (step) => setState(() => _currentStep = step),
-                controlsBuilder: (context, details) {
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 16.0),
-                    child: Row(
-                      children: [
-                        ElevatedButton(
-                          onPressed: _isSubmitting ? null : details.onStepContinue,
-                          child: _isSubmitting
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : Text(_currentStep == 4 ? 'Submit' : 'Continue'),
-                        ),
-                        const SizedBox(width: 12),
-                        if (_currentStep > 0)
-                          TextButton(
-                            onPressed: _isSubmitting ? null : details.onStepCancel,
-                            child: const Text('Back'),
-                          ),
-                      ],
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Personal Information Section
+                    _buildSectionHeader(
+                      context,
+                      'Personal Information',
+                      Icons.person,
+                      Colors.blue,
                     ),
-                  );
-                },
-                steps: [
-                  // Step 1: Personal Information
-                  Step(
-                    title: const Text('Personal Information'),
-                    isActive: _currentStep >= 0,
-                    state: _currentStep > 0 ? StepState.complete : StepState.indexed,
-                    content: _buildPersonalInfoStep(),
-                  ),
-                  // Step 2: Motorcycle Details
-                  Step(
-                    title: const Text('Motorcycle Details'),
-                    isActive: _currentStep >= 1,
-                    state: _currentStep > 1 ? StepState.complete : StepState.indexed,
-                    content: _buildMotorcycleDetailsStep(),
-                  ),
-                  // Step 3: Photos
-                  Step(
-                    title: const Text('Upload Photos'),
-                    isActive: _currentStep >= 2,
-                    state: _currentStep > 2 ? StepState.complete : StepState.indexed,
-                    content: _buildPhotosStep(),
-                  ),
-                  // Step 4: Next of Kin
-                  Step(
-                    title: const Text('Next of Kin'),
-                    isActive: _currentStep >= 3,
-                    state: _currentStep > 3 ? StepState.complete : StepState.indexed,
-                    content: _buildNextOfKinStep(),
-                  ),
-                  // Step 5: Guarantor
-                  Step(
-                    title: const Text('Guarantor Details'),
-                    isActive: _currentStep >= 4,
-                    state: StepState.indexed,
-                    content: _buildGuarantorStep(),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    _buildPersonalInfoStep(),
+                    const SizedBox(height: 32),
+
+                    // Motorcycle Details Section
+                    _buildSectionHeader(
+                      context,
+                      'Motorcycle Details',
+                      Icons.motorcycle,
+                      Colors.green,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildMotorcycleDetailsStep(),
+                    const SizedBox(height: 32),
+
+                    // Photos Section
+                    _buildSectionHeader(
+                      context,
+                      'Upload Photos',
+                      Icons.camera_alt,
+                      Colors.orange,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildPhotosStep(),
+                    const SizedBox(height: 32),
+
+                    // Next of Kin Section
+                    _buildSectionHeader(
+                      context,
+                      'Next of Kin',
+                      Icons.people,
+                      Colors.purple,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildNextOfKinStep(),
+                    const SizedBox(height: 32),
+
+                    // Guarantor Section
+                    _buildSectionHeader(
+                      context,
+                      'Guarantor Details',
+                      Icons.shield,
+                      Colors.teal,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildGuarantorStep(),
+                    const SizedBox(height: 32),
+
+                    // Submit Button
+                    SizedBox(
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: _isSubmitting ? null : _submitApplication,
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: _isSubmitting
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                'Submit Application',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(
+    BuildContext context,
+    String title,
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            color.withValues(alpha: 0.8),
+            color,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
         ],

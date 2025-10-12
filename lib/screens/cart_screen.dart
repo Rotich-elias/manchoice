@@ -32,26 +32,26 @@ class CartScreen extends StatelessWidget {
 
         return Column(
           children: [
-            // Loan Info Banner (if loan context exists)
-            if (cartService.loanId != null)
+            // Profile Completed Banner
+            if (cartService.customerId != null)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
-                color: Colors.blue.shade50,
+                color: Colors.green.shade50,
                 child: Row(
                   children: [
                     Icon(
-                      Icons.info_outline,
-                      color: Colors.blue.shade700,
+                      Icons.check_circle_outline,
+                      color: Colors.green.shade700,
                       size: 24,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Items will be added to Loan #${cartService.loanId}',
+                        'Profile completed! Add items and checkout to create your loan.',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.blue.shade900,
+                          color: Colors.green.shade900,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -60,8 +60,8 @@ class CartScreen extends StatelessWidget {
                 ),
               ),
 
-            // No Loan Application Banner (if no loan context)
-            if (cartService.loanId == null)
+            // No Profile Completed Banner (if no customer ID)
+            if (cartService.customerId == null)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -346,14 +346,14 @@ class CartScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: cartService.loanId != null
+                  onPressed: cartService.customerId != null
                       ? () => _handleCheckout(context, cartService)
                       : null,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: Text(
-                    cartService.loanId != null
+                    cartService.customerId != null
                         ? 'Proceed to Checkout'
                         : 'Complete Profile First',
                     style: const TextStyle(
@@ -428,10 +428,10 @@ class CartScreen extends StatelessWidget {
   }
 
   void _handleCheckout(BuildContext context, CartService cartService) {
-    if (cartService.loanId == null) {
+    if (cartService.customerId == null) {
       Get.snackbar(
-        'No Loan Application',
-        'Please submit a loan application first',
+        'Profile Incomplete',
+        'Please complete your profile first',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.orange,
         colorText: Colors.white,
@@ -461,7 +461,7 @@ class CartScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             const Text(
-              'Your loan application will be updated with these products and submitted to admin for approval.',
+              'A loan application will be created with these products and submitted to admin for approval.',
               style: TextStyle(fontSize: 13),
             ),
           ],
@@ -495,7 +495,7 @@ class CartScreen extends StatelessWidget {
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
-                  Text('Processing checkout...'),
+                  Text('Creating loan application...'),
                 ],
               ),
             ),
@@ -504,32 +504,46 @@ class CartScreen extends StatelessWidget {
         barrierDismissible: false,
       );
 
-      // Update loan with cart total
+      // Create loan with cart total and documents
       final loanRepo = LoanRepository();
-      await loanRepo.updateLoan(
-        id: cartService.loanId!,
+      final loan = await loanRepo.createLoan(
+        customerId: cartService.customerId!,
         principalAmount: cartService.total,
-        notes: 'Products selected: ${cartService.items.map((item) => '${item.name} (x${item.quantity})').join(', ')}',
+        interestRate: cartService.interestRate * 100, // Convert to percentage
+        durationDays: 30,
+        purpose: 'Purchase of motorcycle parts and accessories',
+        notes: 'Products: ${cartService.items.map((item) => '${item.name} (x${item.quantity})').join(', ')}',
+        bikePhotoPath: cartService.bikePhotoPath,
+        logbookPhotoPath: cartService.logbookPhotoPath,
+        passportPhotoPath: cartService.passportPhotoPath,
+        idPhotoPath: cartService.idPhotoPath,
+        nextOfKinIdPhotoPath: cartService.kinIdPhotoPath,
+        guarantorIdPhotoPath: cartService.guarantorIdPhotoPath,
       );
 
       Get.back(); // Close loading dialog
-      Get.offAllNamed('/dashboard');
 
-      Get.snackbar(
-        'Checkout Successful',
-        'Your loan application has been updated and submitted for approval',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 3),
-      );
+      if (loan != null) {
+        Get.offAllNamed('/dashboard');
 
-      cartService.clearCart();
+        Get.snackbar(
+          'Checkout Successful',
+          'Your loan application has been created and submitted for approval',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
+
+        cartService.clearCart();
+      } else {
+        throw Exception('Failed to create loan application');
+      }
     } catch (e) {
       Get.back(); // Close loading dialog
       Get.snackbar(
         'Checkout Failed',
-        'Failed to update loan application: ${e.toString()}',
+        'Failed to create loan application: ${e.toString()}',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,

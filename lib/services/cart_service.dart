@@ -8,10 +8,26 @@ class CartService extends GetxController {
   final RxInt _loanId = 0.obs;
   final RxInt _customerId = 0.obs;
 
+  // Customer documents
+  final RxString _bikePhotoPath = ''.obs;
+  final RxString _logbookPhotoPath = ''.obs;
+  final RxString _passportPhotoPath = ''.obs;
+  final RxString _idPhotoPath = ''.obs;
+  final RxString _kinIdPhotoPath = ''.obs;
+  final RxString _guarantorIdPhotoPath = ''.obs;
+
   List<CartItem> get items => _items;
   int get itemCount => _items.length;
   int? get loanId => _loanId.value == 0 ? null : _loanId.value;
   int? get customerId => _customerId.value == 0 ? null : _customerId.value;
+
+  // Document getters
+  String? get bikePhotoPath => _bikePhotoPath.value.isEmpty ? null : _bikePhotoPath.value;
+  String? get logbookPhotoPath => _logbookPhotoPath.value.isEmpty ? null : _logbookPhotoPath.value;
+  String? get passportPhotoPath => _passportPhotoPath.value.isEmpty ? null : _passportPhotoPath.value;
+  String? get idPhotoPath => _idPhotoPath.value.isEmpty ? null : _idPhotoPath.value;
+  String? get kinIdPhotoPath => _kinIdPhotoPath.value.isEmpty ? null : _kinIdPhotoPath.value;
+  String? get guarantorIdPhotoPath => _guarantorIdPhotoPath.value.isEmpty ? null : _guarantorIdPhotoPath.value;
 
   double get subtotal => _items.fold(0, (sum, item) => sum + item.totalPrice);
   double get interestRate => 0.30; // 30% interest
@@ -27,6 +43,28 @@ class CartService extends GetxController {
   void setLoanContext({int? loanId, int? customerId}) {
     if (loanId != null) _loanId.value = loanId;
     if (customerId != null) _customerId.value = customerId;
+    _saveCart();
+  }
+
+  void setCustomerId(int customerId) {
+    _customerId.value = customerId;
+    _saveCart();
+  }
+
+  void setCustomerDocuments({
+    required String bikePhoto,
+    required String logbookPhoto,
+    required String passportPhoto,
+    required String idPhoto,
+    required String kinIdPhoto,
+    required String guarantorIdPhoto,
+  }) {
+    _bikePhotoPath.value = bikePhoto;
+    _logbookPhotoPath.value = logbookPhoto;
+    _passportPhotoPath.value = passportPhoto;
+    _idPhotoPath.value = idPhoto;
+    _kinIdPhotoPath.value = kinIdPhoto;
+    _guarantorIdPhotoPath.value = guarantorIdPhoto;
     _saveCart();
   }
 
@@ -96,6 +134,12 @@ class CartService extends GetxController {
     _items.clear();
     _loanId.value = 0;
     _customerId.value = 0;
+    _bikePhotoPath.value = '';
+    _logbookPhotoPath.value = '';
+    _passportPhotoPath.value = '';
+    _idPhotoPath.value = '';
+    _kinIdPhotoPath.value = '';
+    _guarantorIdPhotoPath.value = '';
     _saveCart();
   }
 
@@ -106,6 +150,12 @@ class CartService extends GetxController {
         'items': _items.map((item) => item.toJson()).toList(),
         'loanId': _loanId.value,
         'customerId': _customerId.value,
+        'bikePhotoPath': _bikePhotoPath.value,
+        'logbookPhotoPath': _logbookPhotoPath.value,
+        'passportPhotoPath': _passportPhotoPath.value,
+        'idPhotoPath': _idPhotoPath.value,
+        'kinIdPhotoPath': _kinIdPhotoPath.value,
+        'guarantorIdPhotoPath': _guarantorIdPhotoPath.value,
       };
       await prefs.setString('shopping_cart', jsonEncode(cartData));
     } catch (e) {
@@ -128,6 +178,12 @@ class CartService extends GetxController {
 
         _loanId.value = cartData['loanId'] as int? ?? 0;
         _customerId.value = cartData['customerId'] as int? ?? 0;
+        _bikePhotoPath.value = cartData['bikePhotoPath'] as String? ?? '';
+        _logbookPhotoPath.value = cartData['logbookPhotoPath'] as String? ?? '';
+        _passportPhotoPath.value = cartData['passportPhotoPath'] as String? ?? '';
+        _idPhotoPath.value = cartData['idPhotoPath'] as String? ?? '';
+        _kinIdPhotoPath.value = cartData['kinIdPhotoPath'] as String? ?? '';
+        _guarantorIdPhotoPath.value = cartData['guarantorIdPhotoPath'] as String? ?? '';
       }
     } catch (e) {
       // Handle error silently - start with empty cart

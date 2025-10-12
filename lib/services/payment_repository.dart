@@ -44,6 +44,7 @@ class PaymentRepository {
     required String paymentMethod,
     DateTime? paymentDate,
     String? phoneNumber,
+    String? mpesaReceiptNumber,
     String? notes,
   }) async {
     try {
@@ -56,6 +57,7 @@ class PaymentRepository {
           if (paymentDate != null)
             'payment_date': paymentDate.toIso8601String().split('T')[0],
           if (phoneNumber != null) 'phone_number': phoneNumber,
+          if (mpesaReceiptNumber != null) 'mpesa_receipt_number': mpesaReceiptNumber,
           if (notes != null) 'notes': notes,
         },
       );

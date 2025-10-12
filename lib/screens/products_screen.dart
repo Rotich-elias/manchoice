@@ -135,8 +135,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Loan Application Banner
-            if (_cartService.loanId != null)
+            // Profile Completed Banner
+            if (_cartService.customerId != null)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -154,7 +154,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Loan Application Submitted!',
+                            'Profile Completed!',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -163,7 +163,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Select products to add to your loan. Admin will review and approve.',
+                            'Select products and checkout to create your loan application.',
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.green.shade800,
@@ -232,20 +232,34 @@ class _ProductsScreenState extends State<ProductsScreen> {
         ),
       ),
       floatingActionButton: Obx(() {
-        // Show "Complete Profile" FAB if cart has items but no loan application
-        if (_cartService.itemCount > 0 && _cartService.loanId == null) {
-          return FloatingActionButton.extended(
-            onPressed: () {
-              Get.toNamed('/new-loan-application', arguments: {
-                'fromCart': true,
-              });
-            },
-            backgroundColor: Colors.orange,
-            icon: const Icon(Icons.person_add),
-            label: const Text('Complete Profile'),
-          );
+        // If cart has items
+        if (_cartService.itemCount > 0) {
+          // Check if profile is complete (customer ID exists)
+          if (_cartService.customerId != null) {
+            // Profile complete - show "Check Cart" button
+            return FloatingActionButton.extended(
+              onPressed: () {
+                Get.toNamed('/cart');
+              },
+              backgroundColor: Colors.green,
+              icon: const Icon(Icons.shopping_cart),
+              label: const Text('Check Cart'),
+            );
+          } else {
+            // Profile not complete - show "Complete Profile" button
+            return FloatingActionButton.extended(
+              onPressed: () {
+                Get.toNamed('/new-loan-application', arguments: {
+                  'fromCart': true,
+                });
+              },
+              backgroundColor: Colors.orange,
+              icon: const Icon(Icons.person_add),
+              label: const Text('Complete Profile'),
+            );
+          }
         }
-        // Otherwise show "Request Part" FAB
+        // No items in cart - show "Request Part" FAB
         return FloatingActionButton.extended(
           onPressed: () {
             Get.snackbar(
