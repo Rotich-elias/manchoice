@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import '../services/auth_service.dart';
+import '../services/loan_repository.dart';
 import '../models/user.dart';
+import '../models/loan.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -12,12 +15,16 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   final AuthService _authService = AuthService();
+  final LoanRepository _loanRepository = LoanRepository();
+
   User? _currentUser;
+  Loan? _activeLoan;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _loadActiveLoan();
   }
 
   Future<void> _loadUserData() async {
@@ -30,6 +37,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     } catch (e) {
       // Silently fail - user will see default name
+    }
+  }
+
+  Future<void> _loadActiveLoan() async {
+    try {
+      // Try to get active loan first
+      final activeLoans = await _loanRepository.getAllLoans(status: 'active');
+
+      if (activeLoans.isNotEmpty) {
+        if (mounted) {
+          setState(() {
+            _activeLoan = activeLoans.first;
+          });
+        }
+        return;
+      }
+
+      // If no active loan, try approved
+      final approvedLoans = await _loanRepository.getAllLoans(status: 'approved');
+      if (approvedLoans.isNotEmpty && mounted) {
+        setState(() {
+          _activeLoan = approvedLoans.first;
+        });
+        return;
+      }
+
+      if (mounted) {
+        setState(() {
+          _activeLoan = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _activeLoan = null;
+        });
+      }
     }
   }
 
@@ -196,6 +240,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 24),
 
+              // Active Loan Summary (if exists)
+              if (_activeLoan != null) ...[
+                _buildLoanSummaryCard(context),
+                const SizedBox(height: 24),
+              ],
+
               // Main Menu Section
               Text(
                 'Main Menu',
@@ -231,7 +281,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 title: 'My Payments / Installments',
                 subtitle: 'View and manage your payments',
                 color: Colors.green,
-                onTap: () => Get.toNamed('/payments'),
+                onTap: () => Get.toNamed('/payment-history'),
               ),
               const SizedBox(height: 12),
               _buildMenuCard(
@@ -278,7 +328,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       context,
                       icon: Icons.account_balance_wallet,
                       title: 'Total Loan',
-                      value: 'KES 0',
+                      value: _activeLoan != null
+                          ? 'KES ${NumberFormat('#,##0.00').format(_activeLoan!.totalAmount)}'
+                          : 'KES 0',
                       color: Colors.blue,
                     ),
                   ),
@@ -287,8 +339,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: _buildStatCard(
                       context,
                       icon: Icons.pending_actions,
-                      title: 'Pending',
-                      value: 'KES 0',
+                      title: 'Balance',
+                      value: _activeLoan != null
+                          ? 'KES ${NumberFormat('#,##0.00').format(_activeLoan!.balance)}'
+                          : 'KES 0',
                       color: Colors.orange,
                     ),
                   ),
@@ -302,7 +356,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       context,
                       icon: Icons.check_circle,
                       title: 'Paid',
-                      value: 'KES 0',
+                      value: _activeLoan != null
+                          ? 'KES ${NumberFormat('#,##0.00').format(_activeLoan!.amountPaid)}'
+                          : 'KES 0',
                       color: Colors.green,
                     ),
                   ),
@@ -312,7 +368,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       context,
                       icon: Icons.calendar_today,
                       title: 'Next Due',
-                      value: 'N/A',
+                      value: _activeLoan != null && _activeLoan!.dueDate != null
+                          ? DateFormat('MMM dd').format(_activeLoan!.dueDate!)
+                          : 'N/A',
                       color: Colors.red,
                     ),
                   ),
@@ -439,6 +497,189 @@ class _DashboardScreenState extends State<DashboardScreen> {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoanSummaryCard(BuildContext context) {
+    if (_activeLoan == null) return const SizedBox.shrink();
+
+    final currencyFormat = NumberFormat.currency(symbol: 'KES ', decimalDigits: 2);
+    final dateFormat = DateFormat('MMM dd, yyyy');
+
+    return Card(
+      elevation: 4,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.green.shade600,
+              Colors.green.shade800,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.account_balance_wallet,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Active Loan',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.9),
+                              ),
+                        ),
+                        Text(
+                          _activeLoan!.loanNumber,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    _activeLoan!.status.toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Outstanding Balance
+            Text(
+              'Outstanding Balance',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              currencyFormat.format(_activeLoan!.balance),
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 16),
+
+            // Progress Bar
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                value: _activeLoan!.paymentProgress / 100,
+                minHeight: 10,
+                backgroundColor: Colors.white.withValues(alpha: 0.3),
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${_activeLoan!.paymentProgress.toStringAsFixed(1)}% paid',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.85),
+                      ),
+                ),
+                Text(
+                  currencyFormat.format(_activeLoan!.amountPaid),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Divider(color: Colors.white38),
+            const SizedBox(height: 12),
+
+            // Due Date & Action Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                if (_activeLoan!.dueDate != null)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Next Payment Due',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.85),
+                            ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today, color: Colors.white, size: 14),
+                          const SizedBox(width: 6),
+                          Text(
+                            dateFormat.format(_activeLoan!.dueDate!),
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Get.toNamed('/payments', arguments: _activeLoan);
+                  },
+                  icon: const Icon(Icons.payment, size: 18),
+                  label: const Text('Pay Now'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.green.shade700,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

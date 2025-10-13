@@ -561,7 +561,7 @@ class _MyLoansScreenState extends State<MyLoansScreen> {
             TextButton.icon(
               onPressed: () {
                 Get.back();
-                Get.toNamed('/payments', arguments: {'loanId': loan.id});
+                Get.toNamed('/payments', arguments: loan);
               },
               icon: const Icon(Icons.payment),
               label: const Text('Make Payment'),

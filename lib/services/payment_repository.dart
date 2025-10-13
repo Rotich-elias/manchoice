@@ -5,12 +5,20 @@ import 'api_service.dart';
 class PaymentRepository {
   final ApiService _apiService = ApiService();
 
-  // Get all payments
-  Future<List<Payment>> getAllPayments({int page = 1}) async {
+  // Get all payments with optional filters
+  Future<List<Payment>> getAllPayments({
+    int page = 1,
+    int? loanId,
+    String? status,
+  }) async {
     try {
+      final queryParams = <String, dynamic>{'page': page};
+      if (loanId != null) queryParams['loan_id'] = loanId;
+      if (status != null) queryParams['status'] = status;
+
       final response = await _apiService.get(
         ApiConfig.payments,
-        queryParameters: {'page': page},
+        queryParameters: queryParams,
       );
 
       if (response.data['success'] == true) {
@@ -20,6 +28,24 @@ class PaymentRepository {
       return [];
     } catch (e) {
       throw Exception('Failed to fetch payments: $e');
+    }
+  }
+
+  // Get payments for active loans
+  Future<List<Payment>> getActiveLoanPayments() async {
+    try {
+      final response = await _apiService.get(
+        ApiConfig.payments,
+        queryParameters: {'active_loans_only': true},
+      );
+
+      if (response.data['success'] == true) {
+        final data = response.data['data']['data'] as List;
+        return data.map((e) => Payment.fromJson(e)).toList();
+      }
+      return [];
+    } catch (e) {
+      throw Exception('Failed to fetch active loan payments: $e');
     }
   }
 

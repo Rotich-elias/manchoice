@@ -1,3 +1,5 @@
+import 'loan.dart';
+
 class Payment {
   final int id;
   final int loanId;
@@ -14,6 +16,7 @@ class Payment {
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
+  final Loan? loan; // Associated loan details
 
   Payment({
     required this.id,
@@ -31,6 +34,7 @@ class Payment {
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
+    this.loan,
   });
 
   factory Payment.fromJson(Map<String, dynamic> json) {
@@ -50,6 +54,7 @@ class Payment {
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
       deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at']) : null,
+      loan: json['loan'] != null ? Loan.fromJson(json['loan']) : null,
     );
   }
 

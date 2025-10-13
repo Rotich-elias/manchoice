@@ -537,7 +537,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 _buildPaymentStep('2', 'Select Lipa na M-PESA'),
                 _buildPaymentStep('3', 'Select Paybill'),
                 _buildPaymentStep('4', 'Enter Business No: $mpesaPaybill'),
-                _buildPaymentStep('5', 'No: Your Phone Number'),
+                _buildPaymentStep('5', 'Account No: 846828'),
                 _buildPaymentStep(
                   '6',
                   'Enter Amount: Any amount towards your balance',
@@ -588,6 +588,55 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                         },
                         icon: const Icon(Icons.copy, color: Colors.green),
                         tooltip: 'Copy Paybill',
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Account Number Display
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Account Number',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: Colors.grey.shade600),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '846828',
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green.shade800,
+                                  letterSpacing: 2,
+                                ),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          Clipboard.setData(const ClipboardData(text: '846828'));
+                          Get.snackbar(
+                            'Copied!',
+                            'Account number copied to clipboard',
+                            snackPosition: SnackPosition.BOTTOM,
+                            duration: const Duration(seconds: 2),
+                          );
+                        },
+                        icon: const Icon(Icons.copy, color: Colors.green),
+                        tooltip: 'Copy Account Number',
                       ),
                     ],
                   ),

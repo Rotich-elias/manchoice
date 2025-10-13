@@ -9,6 +9,7 @@ import 'package:manschoice/screens/dashboard_screen.dart';
 import 'package:manschoice/screens/new_loan_application_screen.dart';
 import 'package:manschoice/screens/my_loans_screen.dart';
 import 'package:manschoice/screens/payments_screen.dart';
+import 'package:manschoice/screens/payment_history_screen.dart';
 import 'package:manschoice/screens/products_screen.dart';
 import 'package:manschoice/screens/cart_screen.dart';
 import 'package:manschoice/screens/support_screen.dart';
@@ -23,7 +24,8 @@ class AppRoutes {
     GetPage(name: '/loan-application', page: () => const NewLoanApplicationScreen()), // Unified loan application
     GetPage(name: '/new-loan-application', page: () => const NewLoanApplicationScreen()), // Keep both routes for compatibility
     GetPage(name: '/my-loans', page: () => const MyLoansScreen()),
-    GetPage(name: '/payments', page: () => const PaymentsScreen()),
+    GetPage(name: '/payments', page: () => const PaymentsScreen()), // For making payments (requires loan)
+    GetPage(name: '/payment-history', page: () => const PaymentHistoryScreen()), // For viewing payment history
     GetPage(name: '/products', page: () => const ProductsScreen()),
     GetPage(name: '/cart', page: () => const CartScreen()),
     GetPage(name: '/support', page: () => const SupportScreen()),
