@@ -1,6 +1,7 @@
 import 'customer_api.dart';
 import 'payment.dart';
 import 'user.dart';
+import 'loan_item.dart';
 
 class Loan {
   final int id;
@@ -25,6 +26,7 @@ class Loan {
   final CustomerApi? customer;
   final User? approver;
   final List<Payment>? payments;
+  final List<LoanItem>? items;
 
   Loan({
     required this.id,
@@ -49,6 +51,7 @@ class Loan {
     this.customer,
     this.approver,
     this.payments,
+    this.items,
   });
 
   factory Loan.fromJson(Map<String, dynamic> json) {
@@ -78,6 +81,9 @@ class Loan {
       approver: json['approver'] != null ? User.fromJson(json['approver']) : null,
       payments: json['payments'] != null
           ? (json['payments'] as List).map((e) => Payment.fromJson(e)).toList()
+          : null,
+      items: json['items'] != null
+          ? (json['items'] as List).map((e) => LoanItem.fromJson(e)).toList()
           : null,
     );
   }
@@ -122,5 +128,20 @@ class Loan {
   double get paymentProgress {
     if (totalAmount == 0) return 0;
     return (amountPaid / totalAmount) * 100;
+  }
+
+  // Get total value of products in this loan
+  double get totalProductsValue {
+    if (items == null) return 0.0;
+    return items!.fold(0.0, (sum, item) => sum + item.subtotal);
+  }
+
+  // Check if loan has products
+  bool get hasProducts => items != null && items!.isNotEmpty;
+
+  // Get product count
+  int get productCount {
+    if (items == null) return 0;
+    return items!.fold(0, (sum, item) => sum + item.quantity);
   }
 }

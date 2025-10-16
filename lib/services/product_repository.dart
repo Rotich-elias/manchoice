@@ -182,4 +182,21 @@ class ProductRepository {
       throw Exception('Failed to fetch products by category: $e');
     }
   }
+
+  // Get available categories
+  Future<List<String>> getCategories() async {
+    try {
+      final response = await _apiService.get(
+        '${ApiConfig.products}/categories',
+      );
+
+      if (response.data['success'] == true) {
+        final data = response.data['data'] as List;
+        return data.map((e) => e.toString()).toList();
+      }
+      return [];
+    } catch (e) {
+      throw Exception('Failed to fetch categories: $e');
+    }
+  }
 }

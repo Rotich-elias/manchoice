@@ -1,17 +1,25 @@
 class ApiConfig {
-  // Base URL for the API
-  // Change this based on your device type:
+  // Environment detection
+  static const bool isProduction = bool.fromEnvironment('dart.vm.product');
 
-  // Option 1: For Physical Device (RECOMMENDED - Current network IP)
-  static const String baseUrl = 'http://192.168.100.65:8000/api';
+  // Base URLs
+  static const String _devBaseUrl = 'http://192.168.100.65:8000/api';
 
-  // Option 2: For Android Emulator, uncomment the line below:
+  // TODO: Update this with your production backend URL after deployment
+  static const String _prodBaseUrl = 'https://your-backend-url.com/api';
+  // Example: 'https://api.manchoice.com/api'
+  // Example: 'https://manchoice-api.herokuapp.com/api'
+
+  // Auto-select base URL based on environment
+  static String get baseUrl => isProduction ? _prodBaseUrl : _devBaseUrl;
+
+  // Alternative URLs for different devices (Development only)
+  // Uncomment and use these if needed during development:
+
+  // For Android Emulator:
   // static const String baseUrl = 'http://10.0.2.2:8000/api';
 
-  // Option 3: For iOS Simulator, uncomment the line below:
-  // static const String baseUrl = 'http://localhost:8000/api';
-
-  // Option 4: For Chrome/Web, uncomment the line below:
+  // For iOS Simulator or Chrome/Web:
   // static const String baseUrl = 'http://localhost:8000/api';
 
   // API Endpoints

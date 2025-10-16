@@ -1,5 +1,6 @@
 import '../config/api_config.dart';
 import '../models/loan.dart';
+import '../models/loan_item.dart';
 import 'api_service.dart';
 
 class LoanRepository {
@@ -56,6 +57,7 @@ class LoanRepository {
     DateTime? dueDate,
     String? purpose,
     String? notes,
+    List<LoanItemRequest>? items,
     // Photo paths
     String? bikePhotoPath,
     String? logbookPhotoPath,
@@ -75,6 +77,9 @@ class LoanRepository {
           if (dueDate != null) 'due_date': dueDate.toIso8601String().split('T')[0],
           if (purpose != null) 'purpose': purpose,
           if (notes != null) 'notes': notes,
+          // Products/items for this loan
+          if (items != null && items.isNotEmpty)
+            'items': items.map((item) => item.toJson()).toList(),
           // Photo paths
           if (bikePhotoPath != null) 'bike_photo_path': bikePhotoPath,
           if (logbookPhotoPath != null) 'logbook_photo_path': logbookPhotoPath,
