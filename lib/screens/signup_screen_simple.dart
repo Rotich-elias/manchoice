@@ -13,6 +13,7 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
   final _pinController = TextEditingController();
   final _confirmPinController = TextEditingController();
   final _authService = AuthService();
@@ -25,6 +26,7 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _emailController.dispose();
     _pinController.dispose();
     _confirmPinController.dispose();
     super.dispose();
@@ -51,6 +53,7 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
         final result = await _authService.register(
           name: _nameController.text.trim(),
           phone: _phoneController.text.trim(),
+          email: _emailController.text.trim(),
           pin: _pinController.text,
           pinConfirmation: _confirmPinController.text,
         );
@@ -172,6 +175,27 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
                       }
                       if (!RegExp(r'^0[0-9]{9}$').hasMatch(value)) {
                         return 'Invalid phone format. Use 0XXXXXXXXX';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Email Field
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: 'Email Address',
+                      hintText: 'your.email@example.com',
+                      prefixIcon: Icon(Icons.email),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email address';
+                      }
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                        return 'Please enter a valid email address';
                       }
                       return null;
                     },

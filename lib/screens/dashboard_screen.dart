@@ -269,8 +269,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               _buildMenuCard(
                 context,
                 icon: Icons.person_add,
-                title: 'Complete Profile',
-                subtitle: 'Complete your profile to apply for financing',
+                title: 'Application Form',
+                subtitle: 'Fill application form to apply for financing',
                 color: Colors.orange,
                 onTap: () => Get.toNamed('/new-loan-application'),
               ),
@@ -291,15 +291,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 subtitle: 'Browse available spare parts',
                 color: Colors.orange,
                 onTap: () => Get.toNamed('/products'),
-              ),
-              const SizedBox(height: 12),
-              _buildMenuCard(
-                context,
-                icon: Icons.person,
-                title: 'Account Profile',
-                subtitle: 'View and edit your profile',
-                color: Colors.purple,
-                onTap: () => Get.toNamed('/profile'),
               ),
               const SizedBox(height: 12),
               _buildMenuCard(

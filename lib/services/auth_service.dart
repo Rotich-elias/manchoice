@@ -9,6 +9,7 @@ class AuthService {
   Future<Map<String, dynamic>> register({
     required String name,
     required String phone,
+    required String email,
     required String pin,
     required String pinConfirmation,
   }) async {
@@ -18,6 +19,7 @@ class AuthService {
         data: {
           'name': name,
           'phone': phone,
+          'email': email,
           'pin': pin,
           'pin_confirmation': pinConfirmation,
         },
