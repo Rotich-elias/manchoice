@@ -62,9 +62,14 @@ class LoanRepository {
     String? bikePhotoPath,
     String? logbookPhotoPath,
     String? passportPhotoPath,
-    String? idPhotoPath,
-    String? nextOfKinIdPhotoPath,
-    String? guarantorIdPhotoPath,
+    String? idPhotoFrontPath,
+    String? idPhotoBackPath,
+    String? nextOfKinIdFrontPath,
+    String? nextOfKinIdBackPath,
+    String? nextOfKinPassportPhotoPath,
+    String? guarantorIdFrontPath,
+    String? guarantorIdBackPath,
+    String? guarantorPassportPhotoPath,
   }) async {
     try {
       final response = await _apiService.post(
@@ -84,9 +89,14 @@ class LoanRepository {
           if (bikePhotoPath != null) 'bike_photo_path': bikePhotoPath,
           if (logbookPhotoPath != null) 'logbook_photo_path': logbookPhotoPath,
           if (passportPhotoPath != null) 'passport_photo_path': passportPhotoPath,
-          if (idPhotoPath != null) 'id_photo_path': idPhotoPath,
-          if (nextOfKinIdPhotoPath != null) 'next_of_kin_id_photo_path': nextOfKinIdPhotoPath,
-          if (guarantorIdPhotoPath != null) 'guarantor_id_photo_path': guarantorIdPhotoPath,
+          if (idPhotoFrontPath != null) 'id_photo_front_path': idPhotoFrontPath,
+          if (idPhotoBackPath != null) 'id_photo_back_path': idPhotoBackPath,
+          if (nextOfKinIdFrontPath != null) 'next_of_kin_id_front_path': nextOfKinIdFrontPath,
+          if (nextOfKinIdBackPath != null) 'next_of_kin_id_back_path': nextOfKinIdBackPath,
+          if (nextOfKinPassportPhotoPath != null) 'next_of_kin_passport_photo_path': nextOfKinPassportPhotoPath,
+          if (guarantorIdFrontPath != null) 'guarantor_id_front_path': guarantorIdFrontPath,
+          if (guarantorIdBackPath != null) 'guarantor_id_back_path': guarantorIdBackPath,
+          if (guarantorPassportPhotoPath != null) 'guarantor_passport_photo_path': guarantorPassportPhotoPath,
         },
       );
 

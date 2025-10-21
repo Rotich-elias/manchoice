@@ -12,9 +12,14 @@ class CartService extends GetxController {
   final RxString _bikePhotoPath = ''.obs;
   final RxString _logbookPhotoPath = ''.obs;
   final RxString _passportPhotoPath = ''.obs;
-  final RxString _idPhotoPath = ''.obs;
-  final RxString _kinIdPhotoPath = ''.obs;
-  final RxString _guarantorIdPhotoPath = ''.obs;
+  final RxString _idPhotoFrontPath = ''.obs;
+  final RxString _idPhotoBackPath = ''.obs;
+  final RxString _kinIdPhotoFrontPath = ''.obs;
+  final RxString _kinIdPhotoBackPath = ''.obs;
+  final RxString _kinPassportPhotoPath = ''.obs;
+  final RxString _guarantorIdPhotoFrontPath = ''.obs;
+  final RxString _guarantorIdPhotoBackPath = ''.obs;
+  final RxString _guarantorPassportPhotoPath = ''.obs;
 
   List<CartItem> get items => _items;
   int get itemCount => _items.length;
@@ -25,9 +30,14 @@ class CartService extends GetxController {
   String? get bikePhotoPath => _bikePhotoPath.value.isEmpty ? null : _bikePhotoPath.value;
   String? get logbookPhotoPath => _logbookPhotoPath.value.isEmpty ? null : _logbookPhotoPath.value;
   String? get passportPhotoPath => _passportPhotoPath.value.isEmpty ? null : _passportPhotoPath.value;
-  String? get idPhotoPath => _idPhotoPath.value.isEmpty ? null : _idPhotoPath.value;
-  String? get kinIdPhotoPath => _kinIdPhotoPath.value.isEmpty ? null : _kinIdPhotoPath.value;
-  String? get guarantorIdPhotoPath => _guarantorIdPhotoPath.value.isEmpty ? null : _guarantorIdPhotoPath.value;
+  String? get idPhotoFrontPath => _idPhotoFrontPath.value.isEmpty ? null : _idPhotoFrontPath.value;
+  String? get idPhotoBackPath => _idPhotoBackPath.value.isEmpty ? null : _idPhotoBackPath.value;
+  String? get kinIdPhotoFrontPath => _kinIdPhotoFrontPath.value.isEmpty ? null : _kinIdPhotoFrontPath.value;
+  String? get kinIdPhotoBackPath => _kinIdPhotoBackPath.value.isEmpty ? null : _kinIdPhotoBackPath.value;
+  String? get kinPassportPhotoPath => _kinPassportPhotoPath.value.isEmpty ? null : _kinPassportPhotoPath.value;
+  String? get guarantorIdPhotoFrontPath => _guarantorIdPhotoFrontPath.value.isEmpty ? null : _guarantorIdPhotoFrontPath.value;
+  String? get guarantorIdPhotoBackPath => _guarantorIdPhotoBackPath.value.isEmpty ? null : _guarantorIdPhotoBackPath.value;
+  String? get guarantorPassportPhotoPath => _guarantorPassportPhotoPath.value.isEmpty ? null : _guarantorPassportPhotoPath.value;
 
   double get subtotal => _items.fold(0, (sum, item) => sum + item.totalPrice);
   double get interestRate => 0.30; // 30% interest
@@ -55,16 +65,26 @@ class CartService extends GetxController {
     required String bikePhoto,
     required String logbookPhoto,
     required String passportPhoto,
-    required String idPhoto,
-    required String kinIdPhoto,
-    required String guarantorIdPhoto,
+    required String idPhotoFront,
+    required String idPhotoBack,
+    required String kinIdPhotoFront,
+    required String kinIdPhotoBack,
+    required String kinPassportPhoto,
+    required String guarantorIdPhotoFront,
+    required String guarantorIdPhotoBack,
+    required String guarantorPassportPhoto,
   }) {
     _bikePhotoPath.value = bikePhoto;
     _logbookPhotoPath.value = logbookPhoto;
     _passportPhotoPath.value = passportPhoto;
-    _idPhotoPath.value = idPhoto;
-    _kinIdPhotoPath.value = kinIdPhoto;
-    _guarantorIdPhotoPath.value = guarantorIdPhoto;
+    _idPhotoFrontPath.value = idPhotoFront;
+    _idPhotoBackPath.value = idPhotoBack;
+    _kinIdPhotoFrontPath.value = kinIdPhotoFront;
+    _kinIdPhotoBackPath.value = kinIdPhotoBack;
+    _kinPassportPhotoPath.value = kinPassportPhoto;
+    _guarantorIdPhotoFrontPath.value = guarantorIdPhotoFront;
+    _guarantorIdPhotoBackPath.value = guarantorIdPhotoBack;
+    _guarantorPassportPhotoPath.value = guarantorPassportPhoto;
     _saveCart();
   }
 
@@ -137,9 +157,14 @@ class CartService extends GetxController {
     _bikePhotoPath.value = '';
     _logbookPhotoPath.value = '';
     _passportPhotoPath.value = '';
-    _idPhotoPath.value = '';
-    _kinIdPhotoPath.value = '';
-    _guarantorIdPhotoPath.value = '';
+    _idPhotoFrontPath.value = '';
+    _idPhotoBackPath.value = '';
+    _kinIdPhotoFrontPath.value = '';
+    _kinIdPhotoBackPath.value = '';
+    _kinPassportPhotoPath.value = '';
+    _guarantorIdPhotoFrontPath.value = '';
+    _guarantorIdPhotoBackPath.value = '';
+    _guarantorPassportPhotoPath.value = '';
     _saveCart();
   }
 
@@ -153,9 +178,14 @@ class CartService extends GetxController {
         'bikePhotoPath': _bikePhotoPath.value,
         'logbookPhotoPath': _logbookPhotoPath.value,
         'passportPhotoPath': _passportPhotoPath.value,
-        'idPhotoPath': _idPhotoPath.value,
-        'kinIdPhotoPath': _kinIdPhotoPath.value,
-        'guarantorIdPhotoPath': _guarantorIdPhotoPath.value,
+        'idPhotoFrontPath': _idPhotoFrontPath.value,
+        'idPhotoBackPath': _idPhotoBackPath.value,
+        'kinIdPhotoFrontPath': _kinIdPhotoFrontPath.value,
+        'kinIdPhotoBackPath': _kinIdPhotoBackPath.value,
+        'kinPassportPhotoPath': _kinPassportPhotoPath.value,
+        'guarantorIdPhotoFrontPath': _guarantorIdPhotoFrontPath.value,
+        'guarantorIdPhotoBackPath': _guarantorIdPhotoBackPath.value,
+        'guarantorPassportPhotoPath': _guarantorPassportPhotoPath.value,
       };
       await prefs.setString('shopping_cart', jsonEncode(cartData));
     } catch (e) {
@@ -181,9 +211,14 @@ class CartService extends GetxController {
         _bikePhotoPath.value = cartData['bikePhotoPath'] as String? ?? '';
         _logbookPhotoPath.value = cartData['logbookPhotoPath'] as String? ?? '';
         _passportPhotoPath.value = cartData['passportPhotoPath'] as String? ?? '';
-        _idPhotoPath.value = cartData['idPhotoPath'] as String? ?? '';
-        _kinIdPhotoPath.value = cartData['kinIdPhotoPath'] as String? ?? '';
-        _guarantorIdPhotoPath.value = cartData['guarantorIdPhotoPath'] as String? ?? '';
+        _idPhotoFrontPath.value = cartData['idPhotoFrontPath'] as String? ?? '';
+        _idPhotoBackPath.value = cartData['idPhotoBackPath'] as String? ?? '';
+        _kinIdPhotoFrontPath.value = cartData['kinIdPhotoFrontPath'] as String? ?? '';
+        _kinIdPhotoBackPath.value = cartData['kinIdPhotoBackPath'] as String? ?? '';
+        _kinPassportPhotoPath.value = cartData['kinPassportPhotoPath'] as String? ?? '';
+        _guarantorIdPhotoFrontPath.value = cartData['guarantorIdPhotoFrontPath'] as String? ?? '';
+        _guarantorIdPhotoBackPath.value = cartData['guarantorIdPhotoBackPath'] as String? ?? '';
+        _guarantorPassportPhotoPath.value = cartData['guarantorPassportPhotoPath'] as String? ?? '';
       }
     } catch (e) {
       // Handle error silently - start with empty cart

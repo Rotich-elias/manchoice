@@ -516,9 +516,14 @@ class CartScreen extends StatelessWidget {
         bikePhotoPath: cartService.bikePhotoPath,
         logbookPhotoPath: cartService.logbookPhotoPath,
         passportPhotoPath: cartService.passportPhotoPath,
-        idPhotoPath: cartService.idPhotoPath,
-        nextOfKinIdPhotoPath: cartService.kinIdPhotoPath,
-        guarantorIdPhotoPath: cartService.guarantorIdPhotoPath,
+        idPhotoFrontPath: cartService.idPhotoFrontPath,
+        idPhotoBackPath: cartService.idPhotoBackPath,
+        nextOfKinIdFrontPath: cartService.kinIdPhotoFrontPath,
+        nextOfKinIdBackPath: cartService.kinIdPhotoBackPath,
+        nextOfKinPassportPhotoPath: cartService.kinPassportPhotoPath,
+        guarantorIdFrontPath: cartService.guarantorIdPhotoFrontPath,
+        guarantorIdBackPath: cartService.guarantorIdPhotoBackPath,
+        guarantorPassportPhotoPath: cartService.guarantorPassportPhotoPath,
       );
 
       Get.back(); // Close loading dialog

@@ -98,9 +98,14 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
       final bikePath = prefs.getString('bike_photo_path');
       final logbookPath = prefs.getString('logbook_photo_path');
       final passportPath = prefs.getString('passport_photo_path');
-      final idPath = prefs.getString('id_photo_path');
-      final kinIdPath = prefs.getString('kin_id_photo_path');
-      final guarantorIdPath = prefs.getString('guarantor_id_photo_path');
+      final idFrontPath = prefs.getString('id_photo_front_path');
+      final idBackPath = prefs.getString('id_photo_back_path');
+      final kinIdFrontPath = prefs.getString('kin_id_front_photo_path');
+      final kinIdBackPath = prefs.getString('kin_id_back_photo_path');
+      final kinPassportPath = prefs.getString('kin_passport_photo_path');
+      final guarantorIdFrontPath = prefs.getString('guarantor_id_front_photo_path');
+      final guarantorIdBackPath = prefs.getString('guarantor_id_back_photo_path');
+      final guarantorPassportPath = prefs.getString('guarantor_passport_photo_path');
 
       if (mounted) {
         setState(() {
@@ -113,20 +118,56 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
           if (passportPath != null && File(passportPath).existsSync()) {
             _passportPhoto = File(passportPath);
           }
-          if (idPath != null && File(idPath).existsSync()) {
-            _idPhoto = File(idPath);
+          if (idFrontPath != null && File(idFrontPath).existsSync()) {
+            _idPhotoFront = File(idFrontPath);
           }
-          if (kinIdPath != null && File(kinIdPath).existsSync()) {
-            _kinIdPhoto = File(kinIdPath);
+          if (idBackPath != null && File(idBackPath).existsSync()) {
+            _idPhotoBack = File(idBackPath);
           }
-          if (guarantorIdPath != null && File(guarantorIdPath).existsSync()) {
-            _guarantorIdPhoto = File(guarantorIdPath);
+          if (kinIdFrontPath != null && File(kinIdFrontPath).existsSync()) {
+            _kinIdPhotoFront = File(kinIdFrontPath);
+          }
+          if (kinIdBackPath != null && File(kinIdBackPath).existsSync()) {
+            _kinIdPhotoBack = File(kinIdBackPath);
+          }
+          if (kinPassportPath != null && File(kinPassportPath).existsSync()) {
+            _kinPassportPhoto = File(kinPassportPath);
+          }
+          if (guarantorIdFrontPath != null && File(guarantorIdFrontPath).existsSync()) {
+            _guarantorIdPhotoFront = File(guarantorIdFrontPath);
+          }
+          if (guarantorIdBackPath != null && File(guarantorIdBackPath).existsSync()) {
+            _guarantorIdPhotoBack = File(guarantorIdBackPath);
+          }
+          if (guarantorPassportPath != null && File(guarantorPassportPath).existsSync()) {
+            _guarantorPassportPhoto = File(guarantorPassportPath);
           }
           _calculateCompletionPercentage();
         });
       }
     } catch (e) {
       // Error loading photos, continue without them
+    }
+  }
+
+  Future<void> _clearSavedPhotoPaths() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Remove all photo paths from SharedPreferences
+      await prefs.remove('bike_photo_path');
+      await prefs.remove('logbook_photo_path');
+      await prefs.remove('passport_photo_path');
+      await prefs.remove('id_photo_front_path');
+      await prefs.remove('id_photo_back_path');
+      await prefs.remove('kin_id_front_photo_path');
+      await prefs.remove('kin_id_back_photo_path');
+      await prefs.remove('kin_passport_photo_path');
+      await prefs.remove('guarantor_id_front_photo_path');
+      await prefs.remove('guarantor_id_back_photo_path');
+      await prefs.remove('guarantor_passport_photo_path');
+    } catch (e) {
+      // Silently fail if clearing fails
     }
   }
 
@@ -138,12 +179,22 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
         return 'logbook_photo_path';
       case 'passport':
         return 'passport_photo_path';
-      case 'id':
-        return 'id_photo_path';
-      case 'kinId':
-        return 'kin_id_photo_path';
-      case 'guarantorId':
-        return 'guarantor_id_photo_path';
+      case 'idFront':
+        return 'id_photo_front_path';
+      case 'idBack':
+        return 'id_photo_back_path';
+      case 'kinIdFront':
+        return 'kin_id_front_photo_path';
+      case 'kinIdBack':
+        return 'kin_id_back_photo_path';
+      case 'kinPassport':
+        return 'kin_passport_photo_path';
+      case 'guarantorIdFront':
+        return 'guarantor_id_front_photo_path';
+      case 'guarantorIdBack':
+        return 'guarantor_id_back_photo_path';
+      case 'guarantorPassport':
+        return 'guarantor_passport_photo_path';
       default:
         return '${imageType}_photo_path';
     }
@@ -194,7 +245,7 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
 
   void _calculateCompletionPercentage() {
     int filledFields = 0;
-    int totalFields = 22; // 16 text fields + 6 photos
+    int totalFields = 27; // 16 text fields + 11 photos
 
     // Personal Info (4 fields)
     if (_fullNameController.text.isNotEmpty) filledFields++;
@@ -220,13 +271,18 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
     if (_guarantorPhoneController.text.isNotEmpty) filledFields++;
     if (_guarantorRelationshipController.text.isNotEmpty) filledFields++;
 
-    // Photos (6 fields)
+    // Photos (11 fields)
     if (_bikePhoto != null) filledFields++;
     if (_logbookPhoto != null) filledFields++;
     if (_passportPhoto != null) filledFields++;
-    if (_idPhoto != null) filledFields++;
-    if (_kinIdPhoto != null) filledFields++;
-    if (_guarantorIdPhoto != null) filledFields++;
+    if (_idPhotoFront != null) filledFields++;
+    if (_idPhotoBack != null) filledFields++;
+    if (_kinIdPhotoFront != null) filledFields++;
+    if (_kinIdPhotoBack != null) filledFields++;
+    if (_kinPassportPhoto != null) filledFields++;
+    if (_guarantorIdPhotoFront != null) filledFields++;
+    if (_guarantorIdPhotoBack != null) filledFields++;
+    if (_guarantorPassportPhoto != null) filledFields++;
 
     setState(() {
       _profileCompletion = (filledFields / totalFields) * 100;
@@ -261,9 +317,14 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
   File? _bikePhoto;
   File? _logbookPhoto;
   File? _passportPhoto;
-  File? _idPhoto;
-  File? _kinIdPhoto;
-  File? _guarantorIdPhoto;
+  File? _idPhotoFront;
+  File? _idPhotoBack;
+  File? _kinIdPhotoFront;
+  File? _kinIdPhotoBack;
+  File? _kinPassportPhoto;
+  File? _guarantorIdPhotoFront;
+  File? _guarantorIdPhotoBack;
+  File? _guarantorPassportPhoto;
 
   @override
   void dispose() {
@@ -288,8 +349,32 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
 
   Future<void> _pickImage(String imageType) async {
     try {
+      // Show dialog to choose between camera and gallery
+      final ImageSource? source = await Get.dialog<ImageSource>(
+        AlertDialog(
+          title: const Text('Select Image Source'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Colors.blue),
+                title: const Text('Camera'),
+                onTap: () => Get.back(result: ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: Colors.green),
+                title: const Text('Gallery'),
+                onTap: () => Get.back(result: ImageSource.gallery),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      if (source == null) return;
+
       final XFile? pickedFile = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
+        source: source,
         imageQuality: 80,
         maxWidth: 1920,
         maxHeight: 1920,
@@ -313,14 +398,29 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
             case 'passport':
               _passportPhoto = File(permanentPath);
               break;
-            case 'id':
-              _idPhoto = File(permanentPath);
+            case 'idFront':
+              _idPhotoFront = File(permanentPath);
               break;
-            case 'kinId':
-              _kinIdPhoto = File(permanentPath);
+            case 'idBack':
+              _idPhotoBack = File(permanentPath);
               break;
-            case 'guarantorId':
-              _guarantorIdPhoto = File(permanentPath);
+            case 'kinIdFront':
+              _kinIdPhotoFront = File(permanentPath);
+              break;
+            case 'kinIdBack':
+              _kinIdPhotoBack = File(permanentPath);
+              break;
+            case 'kinPassport':
+              _kinPassportPhoto = File(permanentPath);
+              break;
+            case 'guarantorIdFront':
+              _guarantorIdPhotoFront = File(permanentPath);
+              break;
+            case 'guarantorIdBack':
+              _guarantorIdPhotoBack = File(permanentPath);
+              break;
+            case 'guarantorPassport':
+              _guarantorPassportPhoto = File(permanentPath);
               break;
           }
           _calculateCompletionPercentage();
@@ -353,9 +453,14 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
     if (_bikePhoto == null ||
         _logbookPhoto == null ||
         _passportPhoto == null ||
-        _idPhoto == null ||
-        _kinIdPhoto == null ||
-        _guarantorIdPhoto == null) {
+        _idPhotoFront == null ||
+        _idPhotoBack == null ||
+        _kinIdPhotoFront == null ||
+        _kinIdPhotoBack == null ||
+        _kinPassportPhoto == null ||
+        _guarantorIdPhotoFront == null ||
+        _guarantorIdPhotoBack == null ||
+        _guarantorPassportPhoto == null) {
       Get.snackbar(
         'Missing Photos',
         'Please upload all required photos',
@@ -435,14 +540,20 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
           bikePhoto: _bikePhoto!.path,
           logbookPhoto: _logbookPhoto!.path,
           passportPhoto: _passportPhoto!.path,
-          idPhoto: _idPhoto!.path,
-          kinIdPhoto: _kinIdPhoto!.path,
-          guarantorIdPhoto: _guarantorIdPhoto!.path,
+          idPhotoFront: _idPhotoFront!.path,
+          idPhotoBack: _idPhotoBack!.path,
+          kinIdPhotoFront: _kinIdPhotoFront!.path,
+          kinIdPhotoBack: _kinIdPhotoBack!.path,
+          kinPassportPhoto: _kinPassportPhoto!.path,
+          guarantorIdPhotoFront: _guarantorIdPhotoFront!.path,
+          guarantorIdPhotoBack: _guarantorIdPhotoBack!.path,
+          guarantorPassportPhoto: _guarantorPassportPhoto!.path,
         );
         _cartService!.setCustomerId(customer.id);
       }
 
-      // Don't clear SharedPreferences - keep photos for user to see
+      // Clear photo paths from SharedPreferences after successful submission
+      await _clearSavedPhotoPaths();
 
       // Show success message
       Get.snackbar(
@@ -887,9 +998,16 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
         ),
         const SizedBox(height: 16),
         _buildImageUpload(
-          'ID Photo',
-          _idPhoto,
-          () => _pickImage('id'),
+          'ID Photo - Front Side',
+          _idPhotoFront,
+          () => _pickImage('idFront'),
+          Icons.badge,
+        ),
+        const SizedBox(height: 16),
+        _buildImageUpload(
+          'ID Photo - Back Side',
+          _idPhotoBack,
+          () => _pickImage('idBack'),
           Icons.badge,
         ),
       ],
@@ -929,10 +1047,24 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
         ),
         const SizedBox(height: 16),
         _buildImageUpload(
-          'Next of Kin ID Photo',
-          _kinIdPhoto,
-          () => _pickImage('kinId'),
+          'Next of Kin ID - Front Side',
+          _kinIdPhotoFront,
+          () => _pickImage('kinIdFront'),
           Icons.badge,
+        ),
+        const SizedBox(height: 16),
+        _buildImageUpload(
+          'Next of Kin ID - Back Side',
+          _kinIdPhotoBack,
+          () => _pickImage('kinIdBack'),
+          Icons.badge,
+        ),
+        const SizedBox(height: 16),
+        _buildImageUpload(
+          'Next of Kin Passport Photo',
+          _kinPassportPhoto,
+          () => _pickImage('kinPassport'),
+          Icons.person,
         ),
       ],
     );
@@ -971,10 +1103,24 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
         ),
         const SizedBox(height: 16),
         _buildImageUpload(
-          'Guarantor ID Photo',
-          _guarantorIdPhoto,
-          () => _pickImage('guarantorId'),
+          'Guarantor ID - Front Side',
+          _guarantorIdPhotoFront,
+          () => _pickImage('guarantorIdFront'),
           Icons.badge,
+        ),
+        const SizedBox(height: 16),
+        _buildImageUpload(
+          'Guarantor ID - Back Side',
+          _guarantorIdPhotoBack,
+          () => _pickImage('guarantorIdBack'),
+          Icons.badge,
+        ),
+        const SizedBox(height: 16),
+        _buildImageUpload(
+          'Guarantor Passport Photo',
+          _guarantorPassportPhoto,
+          () => _pickImage('guarantorPassport'),
+          Icons.person,
         ),
       ],
     );

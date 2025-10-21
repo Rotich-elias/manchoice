@@ -28,6 +28,19 @@ class Loan {
   final List<Payment>? payments;
   final List<LoanItem>? items;
 
+  // Photo paths
+  final String? bikePhotoPath;
+  final String? logbookPhotoPath;
+  final String? passportPhotoPath;
+  final String? idPhotoFrontPath;
+  final String? idPhotoBackPath;
+  final String? nextOfKinIdFrontPath;
+  final String? nextOfKinIdBackPath;
+  final String? nextOfKinPassportPhotoPath;
+  final String? guarantorIdFrontPath;
+  final String? guarantorIdBackPath;
+  final String? guarantorPassportPhotoPath;
+
   Loan({
     required this.id,
     required this.customerId,
@@ -52,6 +65,17 @@ class Loan {
     this.approver,
     this.payments,
     this.items,
+    this.bikePhotoPath,
+    this.logbookPhotoPath,
+    this.passportPhotoPath,
+    this.idPhotoFrontPath,
+    this.idPhotoBackPath,
+    this.nextOfKinIdFrontPath,
+    this.nextOfKinIdBackPath,
+    this.nextOfKinPassportPhotoPath,
+    this.guarantorIdFrontPath,
+    this.guarantorIdBackPath,
+    this.guarantorPassportPhotoPath,
   });
 
   factory Loan.fromJson(Map<String, dynamic> json) {
