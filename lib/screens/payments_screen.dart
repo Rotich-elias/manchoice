@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import '../models/loan.dart';
 import '../services/payment_repository.dart';
 
@@ -19,71 +24,68 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   final PaymentRepository _paymentRepository = PaymentRepository();
 
   bool _isSubmitting = false;
+  bool _isLoadingPayments = false;
   String _selectedPaymentMethod = 'mpesa';
 
   // Get loan data from navigation arguments
   Loan? _loan;
   final String mpesaPaybill = "247247"; // TODO: Replace with actual paybill number
 
+  // Real payment data from API
+  List<dynamic> _paymentHistory = [];
+  List<Map<String, dynamic>> _upcomingPayments = [];
+
   @override
   void initState() {
     super.initState();
     // Get loan data passed from previous screen
     _loan = Get.arguments as Loan?;
+    if (_loan != null) {
+      _loadPaymentData();
+    }
   }
 
-  // TODO: Fetch from database
-  final List<Map<String, dynamic>> paymentHistory = [
-    {
-      'date': DateTime.now().subtract(const Duration(days: 1)),
-      'amount': 500.0,
-      'status': 'paid',
-      'transactionCode': 'QAX1B2C3D4',
-    },
-    {
-      'date': DateTime.now().subtract(const Duration(days: 2)),
-      'amount': 500.0,
-      'status': 'paid',
-      'transactionCode': 'QAX2C3D4E5',
-    },
-    {
-      'date': DateTime.now().subtract(const Duration(days: 3)),
-      'amount': 500.0,
-      'status': 'missed',
-      'transactionCode': null,
-    },
-    {
-      'date': DateTime.now().subtract(const Duration(days: 4)),
-      'amount': 500.0,
-      'status': 'paid',
-      'transactionCode': 'QAX3D4E5F6',
-    },
-    {
-      'date': DateTime.now().subtract(const Duration(days: 5)),
-      'amount': 500.0,
-      'status': 'paid',
-      'transactionCode': 'QAX4E5F6G7',
-    },
-  ];
+  Future<void> _loadPaymentData() async {
+    if (_loan == null) return;
 
-  // TODO: Fetch from database
-  final List<Map<String, dynamic>> upcomingPayments = [
-    {
-      'date': DateTime.now().add(const Duration(days: 5)),
-      'amount': 500.0,
-      'description': 'Daily installment payment due',
-    },
-    {
-      'date': DateTime.now().add(const Duration(days: 6)),
-      'amount': 500.0,
-      'description': 'Daily installment payment due',
-    },
-    {
-      'date': DateTime.now().add(const Duration(days: 7)),
-      'amount': 500.0,
-      'description': 'Daily installment payment due',
-    },
-  ];
+    setState(() {
+      _isLoadingPayments = true;
+    });
+
+    try {
+      // Fetch real payment history from API
+      final payments = _loan!.payments ?? [];
+
+      // Calculate upcoming payments based on remaining balance and daily payment
+      final List<Map<String, dynamic>> upcoming = [];
+      if (_loan!.balance > 0 && _loan!.dueDate != null) {
+        final dailyPayment = _loan!.dailyPayment;
+        final daysRemaining = _loan!.daysRemaining;
+
+        // Show next 3 upcoming daily payments (or less if fewer days remaining)
+        final paymentsToShow = daysRemaining < 3 ? daysRemaining : 3;
+        for (int i = 1; i <= paymentsToShow; i++) {
+          upcoming.add({
+            'date': DateTime.now().add(Duration(days: i)),
+            'amount': dailyPayment,
+            'description': 'Daily installment payment due',
+          });
+        }
+      }
+
+      setState(() {
+        _paymentHistory = payments;
+        _upcomingPayments = upcoming;
+        _isLoadingPayments = false;
+      });
+    } catch (e) {
+      setState(() {
+        _paymentHistory = [];
+        _upcomingPayments = [];
+        _isLoadingPayments = false;
+      });
+    }
+  }
 
   double get remainingBalance => _loan?.balance ?? 0;
   double get paymentProgress => _loan?.paymentProgress ?? 0;
@@ -138,13 +140,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           IconButton(
             icon: const Icon(Icons.receipt_long),
             onPressed: () {
-              Get.snackbar(
-                'Statement',
-                'Statement generation will be implemented',
-                snackPosition: SnackPosition.BOTTOM,
-              );
+              _showStatement(context);
             },
-            tooltip: 'Download Statement',
+            tooltip: 'View Statement',
           ),
         ],
       ),
@@ -818,22 +816,62 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         const SizedBox(height: 12),
 
         // Recent Payments List
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: paymentHistory.length > 5 ? 5 : paymentHistory.length,
-          itemBuilder: (context, index) {
-            final payment = paymentHistory[index];
-            return _buildPaymentItem(context, payment);
-          },
-        ),
+        _isLoadingPayments
+            ? const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24.0),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            : _paymentHistory.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Center(
+                      child: Text(
+                        'No payment history yet',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey,
+                            ),
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _paymentHistory.length > 5
+                        ? 5
+                        : _paymentHistory.length,
+                    itemBuilder: (context, index) {
+                      final payment = _paymentHistory[index];
+                      return _buildPaymentItem(context, payment);
+                    },
+                  ),
       ],
     );
   }
 
-  Widget _buildPaymentItem(BuildContext context, Map<String, dynamic> payment) {
-    final bool isPaid = payment['status'] == 'paid';
-    final date = payment['date'] as DateTime;
+  Widget _buildPaymentItem(BuildContext context, dynamic payment) {
+    final bool isPaid = payment.status == 'completed';
+    final bool isPending = payment.status == 'pending';
+    final date = payment.paymentDate as DateTime;
+
+    Color statusColor;
+    IconData statusIcon;
+    String statusText;
+
+    if (isPaid) {
+      statusColor = Colors.green;
+      statusIcon = Icons.check_circle;
+      statusText = 'Completed';
+    } else if (isPending) {
+      statusColor = Colors.orange;
+      statusIcon = Icons.hourglass_empty;
+      statusText = 'Pending';
+    } else {
+      statusColor = Colors.red;
+      statusIcon = Icons.cancel;
+      statusText = 'Failed';
+    }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -842,9 +880,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isPaid
-              ? Colors.green.withValues(alpha: 0.3)
-              : Colors.red.withValues(alpha: 0.3),
+          color: statusColor.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -853,14 +889,12 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: isPaid
-                  ? Colors.green.withValues(alpha: 0.1)
-                  : Colors.red.withValues(alpha: 0.1),
+              color: statusColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
-              isPaid ? Icons.check : Icons.close,
-              color: isPaid ? Colors.green : Colors.red,
+              statusIcon,
+              color: statusColor,
               size: 24,
             ),
           ),
@@ -879,15 +913,15 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  isPaid ? 'Paid' : 'Missed',
+                  statusText,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: isPaid ? Colors.green : Colors.red,
+                    color: statusColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                if (isPaid && payment['transactionCode'] != null)
+                if (payment.mpesaReceiptNumber != null)
                   Text(
-                    'Code: ${payment['transactionCode']}',
+                    'Code: ${payment.mpesaReceiptNumber}',
                     style: Theme.of(
                       context,
                     ).textTheme.bodySmall?.copyWith(color: Colors.grey),
@@ -901,26 +935,27 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                'KES ${_formatCurrency(payment['amount'])}',
+                'KES ${_formatCurrency(payment.amount)}',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: isPaid ? Colors.green : Colors.red,
+                  color: statusColor,
                 ),
               ),
-              if (isPaid)
-                Text(
-                  '✅ Paid',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.green),
-                )
-              else
-                Text(
-                  '❌ Missed',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.red),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                child: Text(
+                  statusText,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ],
           ),
         ],
@@ -929,6 +964,11 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   }
 
   Widget _buildRemindersSection(BuildContext context) {
+    final isOverdue = _loan?.isOverdue ?? false;
+    final isBehindSchedule = _loan?.isBehindSchedule ?? false;
+    final daysRemaining = _loan?.daysRemaining ?? 0;
+    final dailyPayment = _loan?.dailyPayment ?? 0;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
@@ -960,41 +1000,152 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           ),
           const SizedBox(height: 20),
 
-          // SMS Reminder Status
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.sms, color: Colors.blue),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'SMS Reminders Active',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
+          // Payment Status Alert
+          if (isOverdue)
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.error, color: Colors.red, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'OVERDUE PAYMENT',
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
                         ),
-                      ),
-                      Text(
-                        'You will receive automatic SMS reminders',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey.shade600,
+                        Text(
+                          'Your loan is ${_loan!.daysOverdue} days overdue. Please make a payment immediately.',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.red.shade700,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const Icon(Icons.check_circle, color: Colors.green),
-              ],
+                ],
+              ),
+            )
+          else if (isBehindSchedule)
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.5)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.warning_amber, color: Colors.orange, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Behind Schedule',
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange,
+                          ),
+                        ),
+                        Text(
+                          'You are behind on your payment schedule. Expected: KES ${_formatCurrency(_loan!.expectedPaymentByToday)}, Paid: KES ${_formatCurrency(_loan!.amountPaid)}',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.orange.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else if (remainingBalance > 0)
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.green, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'On Track',
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                        Text(
+                          'Your payments are on schedule. Keep up the good work!',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+
+          // Daily Payment Reminder
+          if (remainingBalance > 0 && dailyPayment > 0)
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.blue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.calendar_today, color: Colors.blue),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Daily Payment Reminder',
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Recommended daily payment: KES ${_formatCurrency(dailyPayment)} for the next $daysRemaining days',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
           const SizedBox(height: 16),
 
@@ -1007,9 +1158,20 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           ),
           const SizedBox(height: 12),
 
-          ...upcomingPayments.map((payment) {
-            return _buildUpcomingPaymentItem(context, payment);
-          }),
+          if (_upcomingPayments.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Text(
+                'No upcoming payments',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey,
+                    ),
+              ),
+            )
+          else
+            ..._upcomingPayments.map((payment) {
+              return _buildUpcomingPaymentItem(context, payment);
+            }),
 
           const SizedBox(height: 16),
 
@@ -1314,18 +1476,753 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               ),
             ),
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: paymentHistory.length,
-                itemBuilder: (context, index) {
-                  return _buildPaymentItem(context, paymentHistory[index]);
-                },
-              ),
+              child: _paymentHistory.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No payment history yet',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey,
+                            ),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _paymentHistory.length,
+                      itemBuilder: (context, index) {
+                        return _buildPaymentItem(context, _paymentHistory[index]);
+                      },
+                    ),
             ),
           ],
         ),
       ),
       isScrollControlled: true,
+    );
+  }
+
+  void _showStatement(BuildContext context) {
+    if (_loan == null) return;
+
+    final currencyFormat = NumberFormat.currency(symbol: 'KES ', decimalDigits: 2);
+    final dateFormat = DateFormat('MMM dd, yyyy');
+    final now = DateTime.now();
+
+    Get.dialog(
+      Dialog(
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.95,
+          height: MediaQuery.of(context).size.height * 0.85,
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context).colorScheme.secondary,
+                    ],
+                  ),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'LOAN STATEMENT',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'MAN\'S CHOICE ENTERPRISE',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                  ),
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          onPressed: () => Get.back(),
+                          icon: const Icon(Icons.close, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Generated: ${DateFormat('MMM dd, yyyy HH:mm').format(now)}',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Colors.white,
+                                ),
+                          ),
+                          Text(
+                            _loan!.loanNumber,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Statement Content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Loan Summary
+                      Text(
+                        'Loan Summary',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardTheme.color,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey.shade300,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            _buildStatementRow('Loan Number:', _loan!.loanNumber),
+                            const Divider(),
+                            _buildStatementRow('Status:', _loan!.status.toUpperCase()),
+                            _buildStatementRow('Principal Amount:', currencyFormat.format(_loan!.principalAmount)),
+                            _buildStatementRow('Interest Rate:', '${_loan!.interestRate}%'),
+                            _buildStatementRow('Total Amount:', currencyFormat.format(_loan!.totalAmount)),
+                            const Divider(),
+                            if (_loan!.disbursementDate != null)
+                              _buildStatementRow('Disbursement Date:', dateFormat.format(_loan!.disbursementDate!)),
+                            if (_loan!.dueDate != null)
+                              _buildStatementRow('Due Date:', dateFormat.format(_loan!.dueDate!)),
+                            if (_loan!.durationDays != null)
+                              _buildStatementRow('Duration:', '${_loan!.durationDays} days'),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Payment Summary
+                      Text(
+                        'Payment Summary',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardTheme.color,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey.shade300,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            _buildStatementRow('Total Amount:', currencyFormat.format(_loan!.totalAmount)),
+                            _buildStatementRow('Amount Paid:', currencyFormat.format(_loan!.amountPaid), valueColor: Colors.green),
+                            _buildStatementRow('Outstanding Balance:', currencyFormat.format(_loan!.balance), valueColor: _loan!.balance > 0 ? Colors.orange : Colors.green),
+                            const Divider(),
+                            _buildStatementRow('Payment Progress:', '${_loan!.paymentProgress.toStringAsFixed(1)}%'),
+                            if (_loan!.balance > 0) ...[
+                              _buildStatementRow('Daily Payment:', currencyFormat.format(_loan!.dailyPayment)),
+                              _buildStatementRow('Days Remaining:', '${_loan!.daysRemaining} days'),
+                            ],
+                            if (_loan!.isOverdue)
+                              _buildStatementRow('Days Overdue:', '${_loan!.daysOverdue} days', valueColor: Colors.red),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Payment History
+                      Text(
+                        'Payment History',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      if (_paymentHistory.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).cardTheme.color,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.grey.shade300,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'No payments recorded yet',
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                          ),
+                        )
+                      else
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).cardTheme.color,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.grey.shade300,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              // Table Header
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Expanded(flex: 2, child: Text('Date', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                                    const Expanded(flex: 2, child: Text('Amount', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                                    const Expanded(flex: 2, child: Text('Method', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                                    const Expanded(flex: 1, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                                  ],
+                                ),
+                              ),
+                              // Payment Rows
+                              ..._paymentHistory.asMap().entries.map((entry) {
+                                final payment = entry.value;
+                                final isLast = entry.key == _paymentHistory.length - 1;
+
+                                Color statusColor;
+                                if (payment.status == 'completed') {
+                                  statusColor = Colors.green;
+                                } else if (payment.status == 'pending') {
+                                  statusColor = Colors.orange;
+                                } else {
+                                  statusColor = Colors.red;
+                                }
+
+                                return Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      bottom: isLast ? BorderSide.none : BorderSide(color: Colors.grey.shade200),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          DateFormat('MMM dd, yyyy').format(payment.paymentDate),
+                                          style: const TextStyle(fontSize: 11),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          currencyFormat.format(payment.amount),
+                                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          payment.paymentMethod.toUpperCase(),
+                                          style: const TextStyle(fontSize: 10),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 1,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: statusColor.withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Text(
+                                            payment.status == 'completed' ? 'PAID' : payment.status.toUpperCase(),
+                                            style: TextStyle(
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.bold,
+                                              color: statusColor,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }),
+                            ],
+                          ),
+                        ),
+
+                      const SizedBox(height: 24),
+
+                      // Footer
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Note:',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade700,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'This statement is generated automatically and is valid for reference purposes. For any queries, please contact MAN\'S CHOICE ENTERPRISE.',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Action Buttons
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border(top: BorderSide(color: Colors.grey.shade300)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => Get.back(),
+                        icon: const Icon(Icons.close),
+                        label: const Text('Close'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _downloadPDF(context),
+                        icon: const Icon(Icons.download),
+                        label: const Text('Download PDF'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatementRow(String label, String value, {Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontSize: 13, color: Colors.black87),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: valueColor ?? Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _downloadPDF(BuildContext context) async {
+    if (_loan == null) return;
+
+    try {
+      // Show loading indicator
+      Get.dialog(
+        const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Generating PDF...'),
+                ],
+              ),
+            ),
+          ),
+        ),
+        barrierDismissible: false,
+      );
+
+      final pdf = await _generatePDF();
+
+      // Save the PDF
+      final output = await getTemporaryDirectory();
+      final file = File('${output.path}/loan_statement_${_loan!.loanNumber}.pdf');
+      await file.writeAsBytes(await pdf.save());
+
+      // Close loading dialog
+      Get.back();
+
+      // Show share/preview dialog
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+        name: 'Loan_Statement_${_loan!.loanNumber}',
+      );
+
+      Get.snackbar(
+        'Success',
+        'Statement PDF generated successfully',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+    } catch (e) {
+      // Close loading dialog if open
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+
+      Get.snackbar(
+        'Error',
+        'Failed to generate PDF: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
+      );
+    }
+  }
+
+  Future<pw.Document> _generatePDF() async {
+    final pdf = pw.Document();
+    final currencyFormat = NumberFormat.currency(symbol: 'KES ', decimalDigits: 2);
+    final dateFormat = DateFormat('MMM dd, yyyy');
+    final now = DateTime.now();
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (pw.Context context) {
+          return [
+            // Header
+            pw.Container(
+              padding: const pw.EdgeInsets.all(20),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.blue800,
+                borderRadius: pw.BorderRadius.circular(8),
+              ),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: [
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text(
+                            'LOAN STATEMENT',
+                            style: pw.TextStyle(
+                              color: PdfColors.white,
+                              fontSize: 24,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                          pw.SizedBox(height: 4),
+                          pw.Text(
+                            'MAN\'S CHOICE ENTERPRISE',
+                            style: const pw.TextStyle(
+                              color: PdfColors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.end,
+                        children: [
+                          pw.Text(
+                            'Loan No: ${_loan!.loanNumber}',
+                            style: pw.TextStyle(
+                              color: PdfColors.white,
+                              fontSize: 12,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                          pw.SizedBox(height: 4),
+                          pw.Text(
+                            'Generated: ${DateFormat('MMM dd, yyyy HH:mm').format(now)}',
+                            style: const pw.TextStyle(
+                              color: PdfColors.white,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            pw.SizedBox(height: 24),
+
+            // Loan Summary
+            pw.Text(
+              'Loan Summary',
+              style: pw.TextStyle(
+                fontSize: 16,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.blue800,
+              ),
+            ),
+            pw.SizedBox(height: 12),
+            pw.Container(
+              padding: const pw.EdgeInsets.all(16),
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: PdfColors.grey400),
+                borderRadius: pw.BorderRadius.circular(8),
+              ),
+              child: pw.Column(
+                children: [
+                  _buildPDFRow('Loan Number:', _loan!.loanNumber),
+                  pw.Divider(),
+                  _buildPDFRow('Status:', _loan!.status.toUpperCase()),
+                  _buildPDFRow('Principal Amount:', currencyFormat.format(_loan!.principalAmount)),
+                  _buildPDFRow('Interest Rate:', '${_loan!.interestRate}%'),
+                  _buildPDFRow('Total Amount:', currencyFormat.format(_loan!.totalAmount)),
+                  pw.Divider(),
+                  if (_loan!.disbursementDate != null)
+                    _buildPDFRow('Disbursement Date:', dateFormat.format(_loan!.disbursementDate!)),
+                  if (_loan!.dueDate != null)
+                    _buildPDFRow('Due Date:', dateFormat.format(_loan!.dueDate!)),
+                  if (_loan!.durationDays != null)
+                    _buildPDFRow('Duration:', '${_loan!.durationDays} days'),
+                ],
+              ),
+            ),
+
+            pw.SizedBox(height: 24),
+
+            // Payment Summary
+            pw.Text(
+              'Payment Summary',
+              style: pw.TextStyle(
+                fontSize: 16,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.blue800,
+              ),
+            ),
+            pw.SizedBox(height: 12),
+            pw.Container(
+              padding: const pw.EdgeInsets.all(16),
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: PdfColors.grey400),
+                borderRadius: pw.BorderRadius.circular(8),
+              ),
+              child: pw.Column(
+                children: [
+                  _buildPDFRow('Total Amount:', currencyFormat.format(_loan!.totalAmount)),
+                  _buildPDFRow('Amount Paid:', currencyFormat.format(_loan!.amountPaid)),
+                  _buildPDFRow('Outstanding Balance:', currencyFormat.format(_loan!.balance)),
+                  pw.Divider(),
+                  _buildPDFRow('Payment Progress:', '${_loan!.paymentProgress.toStringAsFixed(1)}%'),
+                  if (_loan!.balance > 0) ...[
+                    _buildPDFRow('Daily Payment:', currencyFormat.format(_loan!.dailyPayment)),
+                    _buildPDFRow('Days Remaining:', '${_loan!.daysRemaining} days'),
+                  ],
+                  if (_loan!.isOverdue)
+                    _buildPDFRow('Days Overdue:', '${_loan!.daysOverdue} days'),
+                ],
+              ),
+            ),
+
+            pw.SizedBox(height: 24),
+
+            // Payment History
+            pw.Text(
+              'Payment History',
+              style: pw.TextStyle(
+                fontSize: 16,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.blue800,
+              ),
+            ),
+            pw.SizedBox(height: 12),
+
+            if (_paymentHistory.isEmpty)
+              pw.Container(
+                padding: const pw.EdgeInsets.all(24),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(color: PdfColors.grey400),
+                  borderRadius: pw.BorderRadius.circular(8),
+                ),
+                child: pw.Center(
+                  child: pw.Text(
+                    'No payments recorded yet',
+                    style: const pw.TextStyle(color: PdfColors.grey),
+                  ),
+                ),
+              )
+            else
+              pw.Table(
+                border: pw.TableBorder.all(color: PdfColors.grey400),
+                children: [
+                  // Header Row
+                  pw.TableRow(
+                    decoration: const pw.BoxDecoration(
+                      color: PdfColors.grey300,
+                    ),
+                    children: [
+                      _buildPDFTableCell('Date', isHeader: true),
+                      _buildPDFTableCell('Amount', isHeader: true),
+                      _buildPDFTableCell('Method', isHeader: true),
+                      _buildPDFTableCell('Status', isHeader: true),
+                    ],
+                  ),
+                  // Data Rows
+                  ..._paymentHistory.map((payment) {
+                    return pw.TableRow(
+                      children: [
+                        _buildPDFTableCell(DateFormat('MMM dd, yyyy').format(payment.paymentDate)),
+                        _buildPDFTableCell(currencyFormat.format(payment.amount)),
+                        _buildPDFTableCell(payment.paymentMethod.toUpperCase()),
+                        _buildPDFTableCell(
+                          payment.status == 'completed' ? 'PAID' : payment.status.toUpperCase(),
+                        ),
+                      ],
+                    );
+                  }),
+                ],
+              ),
+
+            pw.SizedBox(height: 24),
+
+            // Footer
+            pw.Container(
+              padding: const pw.EdgeInsets.all(16),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.grey200,
+                borderRadius: pw.BorderRadius.circular(8),
+              ),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    'Note:',
+                    style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold,
+                      fontSize: 11,
+                    ),
+                  ),
+                  pw.SizedBox(height: 4),
+                  pw.Text(
+                    'This statement is generated automatically and is valid for reference purposes. For any queries, please contact MAN\'S CHOICE ENTERPRISE.',
+                    style: const pw.TextStyle(
+                      fontSize: 10,
+                      color: PdfColors.grey700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ];
+        },
+      ),
+    );
+
+    return pdf;
+  }
+
+  pw.Widget _buildPDFRow(String label, String value) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 4),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(label, style: const pw.TextStyle(fontSize: 11)),
+          pw.Text(
+            value,
+            style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _buildPDFTableCell(String text, {bool isHeader = false}) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.all(8),
+      child: pw.Text(
+        text,
+        style: pw.TextStyle(
+          fontSize: 10,
+          fontWeight: isHeader ? pw.FontWeight.bold : pw.FontWeight.normal,
+        ),
+      ),
     );
   }
 

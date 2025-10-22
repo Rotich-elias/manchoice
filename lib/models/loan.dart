@@ -172,4 +172,53 @@ class Loan {
     if (items == null) return 0;
     return items!.fold(0, (sum, item) => sum + item.quantity);
   }
+
+  // Calculate daily payment based on actual days in the loan period
+  double get dailyPayment {
+    if (disbursementDate == null || dueDate == null) {
+      // Fallback: assume 30 days if dates not available
+      return balance / 30;
+    }
+
+    final actualDays = dueDate!.difference(disbursementDate!).inDays;
+    if (actualDays <= 0) return balance;
+
+    return balance / actualDays;
+  }
+
+  // Calculate expected payment by today
+  double get expectedPaymentByToday {
+    if (disbursementDate == null || dueDate == null || status == 'completed') {
+      return 0;
+    }
+
+    final now = DateTime.now();
+    if (now.isBefore(disbursementDate!)) return 0;
+    if (now.isAfter(dueDate!)) return totalAmount;
+
+    final totalDays = dueDate!.difference(disbursementDate!).inDays;
+    final daysPassed = now.difference(disbursementDate!).inDays;
+
+    if (totalDays <= 0) return totalAmount;
+
+    return (totalAmount / totalDays) * daysPassed;
+  }
+
+  // Get days remaining until due date
+  int get daysRemaining {
+    if (dueDate == null || status == 'completed') return 0;
+    final remaining = dueDate!.difference(DateTime.now()).inDays;
+    return remaining < 0 ? 0 : remaining;
+  }
+
+  // Check if payment is behind schedule
+  bool get isBehindSchedule {
+    return amountPaid < expectedPaymentByToday;
+  }
+
+  // Get amount behind schedule
+  double get amountBehind {
+    final behind = expectedPaymentByToday - amountPaid;
+    return behind > 0 ? behind : 0;
+  }
 }

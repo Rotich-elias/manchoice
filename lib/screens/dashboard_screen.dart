@@ -27,6 +27,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadActiveLoan();
   }
 
+  // Refresh data when returning to this screen
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reload loan data when user navigates back to this screen
+    _loadActiveLoan();
+  }
+
+  Future<void> _refreshData() async {
+    await Future.wait([
+      _loadUserData(),
+      _loadActiveLoan(),
+    ]);
+  }
+
   Future<void> _loadUserData() async {
     try {
       final user = await _authService.getCurrentUser();
@@ -108,50 +123,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               IconButton(
                 icon: const Icon(Icons.notifications_outlined),
-                onPressed: () {
-                  Get.snackbar(
-                    'Payment Reminders',
-                    'No payment reminders at this time',
-                    snackPosition: SnackPosition.BOTTOM,
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    colorText: Theme.of(context).colorScheme.onPrimary,
-                  );
-                },
+                onPressed: () => _showPaymentReminders(),
               ),
               // Notification badge (optional - shows count)
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
-                  child: const Text(
-                    '0',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+              if (_activeLoan != null && _activeLoan!.isBehindSchedule)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
                     ),
-                    textAlign: TextAlign.center,
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: const Text(
+                      '!',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ],
       ),
       drawer: _buildDrawer(context),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
+        child: RefreshIndicator(
+          onRefresh: _refreshData,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Welcome Card with user's name
@@ -378,6 +388,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );
@@ -827,6 +838,208 @@ class _DashboardScreenState extends State<DashboardScreen> {
               backgroundColor: Colors.red,
             ),
             child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPaymentReminders() {
+    final currencyFormat = NumberFormat.currency(symbol: 'KES ', decimalDigits: 2);
+
+    if (_activeLoan == null) {
+      Get.dialog(
+        AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.notifications, color: Colors.blue),
+              SizedBox(width: 12),
+              Text('Payment Reminders'),
+            ],
+          ),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.check_circle_outline, size: 64, color: Colors.green),
+              SizedBox(height: 16),
+              Text(
+                'No active loans',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'You don\'t have any active loans at the moment.',
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    final loan = _activeLoan!;
+    final isOverdue = loan.isOverdue;
+    final isBehind = loan.isBehindSchedule;
+
+    Get.dialog(
+      AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              isBehind || isOverdue ? Icons.warning_amber : Icons.notifications,
+              color: isBehind || isOverdue ? Colors.orange : Colors.blue,
+            ),
+            const SizedBox(width: 12),
+            const Text('Payment Summary'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Loan Info
+              Text(
+                'Loan: ${loan.loanNumber}',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              const Divider(),
+
+              // Total Amount
+              _buildReminderRow('Total Loan Amount:', currencyFormat.format(loan.totalAmount)),
+              _buildReminderRow('Amount Paid:', currencyFormat.format(loan.amountPaid)),
+              _buildReminderRow('Balance Remaining:', currencyFormat.format(loan.balance), highlight: true),
+
+              const Divider(),
+
+              // Daily Payment
+              _buildReminderRow('Daily Payment:', currencyFormat.format(loan.dailyPayment), highlight: true),
+              _buildReminderRow('Days Remaining:', '${loan.daysRemaining} days'),
+
+              if (loan.dueDate != null) ...[
+                const SizedBox(height: 4),
+                _buildReminderRow('Due Date:', DateFormat('MMM dd, yyyy').format(loan.dueDate!)),
+              ],
+
+              // Payment Schedule Status
+              if (isBehind) ...[
+                const Divider(),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.warning_amber, color: Colors.orange, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Behind Schedule',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text('Expected payment by today: ${currencyFormat.format(loan.expectedPaymentByToday)}'),
+                      Text('Amount behind: ${currencyFormat.format(loan.amountBehind)}'),
+                    ],
+                  ),
+                ),
+              ],
+
+              // Overdue Warning
+              if (isOverdue) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.error, color: Colors.red, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'OVERDUE',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text('This loan is ${loan.daysOverdue} days overdue'),
+                      const Text(
+                        'Please make a payment as soon as possible',
+                        style: TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Close'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              Get.toNamed('/my-loans');
+            },
+            child: const Text('Make Payment'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReminderRow(String label, String value, {bool highlight = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: highlight ? Colors.blue.shade700 : Colors.black87,
+              fontWeight: highlight ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: highlight ? Colors.blue.shade700 : Colors.black87,
+            ),
           ),
         ],
       ),

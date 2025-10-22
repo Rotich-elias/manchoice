@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/cart_item.dart';
 import '../models/customer_api.dart';
+import '../models/loan_item.dart';
 import '../services/cart_service.dart';
 import '../services/customer_repository.dart';
 import '../services/loan_repository.dart';
@@ -623,6 +624,13 @@ class CartScreen extends StatelessWidget {
 
       // Create loan with cart total and documents
       final loanRepo = LoanRepository();
+
+      // Convert cart items to loan items
+      final loanItems = cartService.items.map((item) => LoanItemRequest(
+        productId: int.parse(item.id),
+        quantity: item.quantity,
+      )).toList();
+
       final loan = await loanRepo.createLoan(
         customerId: cartService.customerId!,
         principalAmount: cartService.subtotal, // Send subtotal as principal, backend will add interest
@@ -630,6 +638,7 @@ class CartScreen extends StatelessWidget {
         durationDays: 30,
         purpose: 'Purchase of motorcycle parts and accessories',
         notes: 'Products: ${cartService.items.map((item) => '${item.name} (x${item.quantity})').join(', ')}',
+        items: loanItems,
         bikePhotoPath: cartService.bikePhotoPath,
         logbookPhotoPath: cartService.logbookPhotoPath,
         passportPhotoPath: cartService.passportPhotoPath,
