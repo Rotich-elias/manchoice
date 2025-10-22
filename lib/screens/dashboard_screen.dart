@@ -295,6 +295,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 12),
               _buildMenuCard(
                 context,
+                icon: Icons.assignment,
+                title: 'Part Requests',
+                subtitle: 'View your requested parts',
+                color: Colors.teal,
+                onTap: () => Get.toNamed('/part-requests'),
+              ),
+              const SizedBox(height: 12),
+              _buildMenuCard(
+                context,
                 icon: Icons.support_agent,
                 title: 'Support / Help',
                 subtitle: 'Get help and contact support',

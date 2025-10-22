@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/cart_item.dart';
+import '../models/customer_api.dart';
 import '../services/cart_service.dart';
+import '../services/customer_repository.dart';
 import '../services/loan_repository.dart';
 
 class CartScreen extends StatelessWidget {
@@ -427,7 +429,7 @@ class CartScreen extends StatelessWidget {
     );
   }
 
-  void _handleCheckout(BuildContext context, CartService cartService) {
+  Future<void> _handleCheckout(BuildContext context, CartService cartService) async {
     if (cartService.customerId == null) {
       Get.snackbar(
         'Profile Incomplete',
@@ -439,6 +441,121 @@ class CartScreen extends StatelessWidget {
       return;
     }
 
+    // Show loading dialog while checking credit limit
+    Get.dialog(
+      const Center(child: CircularProgressIndicator()),
+      barrierDismissible: false,
+    );
+
+    try {
+      // Fetch customer profile to check credit limit
+      final customerRepo = CustomerRepository();
+      final customer = await customerRepo.getMyProfile();
+
+      // Close loading dialog
+      Get.back();
+
+      if (customer == null) {
+        Get.snackbar(
+          'Error',
+          'Unable to fetch your profile. Please try again.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      // Check customer status
+      if (customer.status == 'blacklisted') {
+        Get.snackbar(
+          'Account Restricted',
+          'Your account has been blacklisted. Please contact admin.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 5),
+        );
+        return;
+      }
+
+      if (customer.status == 'inactive') {
+        Get.snackbar(
+          'Account Inactive',
+          'Your account is inactive. Please contact admin.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 5),
+        );
+        return;
+      }
+
+      // Check credit limit (only if credit_limit > 0)
+      if (customer.creditLimit > 0) {
+        final outstandingBalance = customer.outstandingBalance;
+        final availableCredit = customer.creditLimit - outstandingBalance;
+        final cartTotal = cartService.total;
+
+        if (cartTotal > availableCredit) {
+          Get.dialog(
+            AlertDialog(
+              title: Row(
+                children: const [
+                  Icon(Icons.warning_amber, color: Colors.orange, size: 28),
+                  SizedBox(width: 12),
+                  Text('Credit Limit Exceeded'),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Your cart total exceeds your available credit limit.',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildCreditInfoRow('Credit Limit:', 'KSh ${customer.creditLimit.toStringAsFixed(2)}'),
+                  _buildCreditInfoRow('Outstanding Balance:', 'KSh ${outstandingBalance.toStringAsFixed(2)}'),
+                  _buildCreditInfoRow('Available Credit:', 'KSh ${availableCredit.toStringAsFixed(2)}', highlight: true),
+                  const Divider(height: 24),
+                  _buildCreditInfoRow('Cart Total:', 'KSh ${cartTotal.toStringAsFixed(2)}', error: true),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Please reduce your cart total by KSh ${(cartTotal - availableCredit).toStringAsFixed(2)} or pay off existing loans.',
+                    style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Get.back(),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+          return;
+        }
+      }
+    } catch (e) {
+      // Close loading dialog if still open
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+
+      Get.snackbar(
+        'Error',
+        'Failed to verify credit limit: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    // If all checks pass, show checkout confirmation dialog
     Get.dialog(
       AlertDialog(
         title: const Text('Checkout'),
@@ -555,5 +672,32 @@ class CartScreen extends StatelessWidget {
         duration: const Duration(seconds: 3),
       );
     }
+  }
+
+  static Widget _buildCreditInfoRow(String label, String value, {bool highlight = false, bool error = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: highlight || error ? FontWeight.w600 : FontWeight.normal,
+              color: error ? Colors.red : (highlight ? Colors.green.shade700 : Colors.black87),
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: error ? Colors.red : (highlight ? Colors.green.shade700 : Colors.black87),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

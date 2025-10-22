@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/cart_item.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
+import '../services/part_request_repository.dart';
 import '../services/product_repository.dart';
 
 class ProductsScreen extends StatefulWidget {
@@ -276,13 +279,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         }
         // No items in cart - show "Request Part" FAB
         return FloatingActionButton.extended(
-          onPressed: () {
-            Get.snackbar(
-              'Request Part',
-              'Request unavailable part functionality will be implemented',
-              snackPosition: SnackPosition.BOTTOM,
-            );
-          },
+          onPressed: () => _showRequestPartDialog(context),
           icon: const Icon(Icons.add),
           label: const Text('Request Part'),
         );
@@ -633,6 +630,319 @@ class _ProductsScreenState extends State<ProductsScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showRequestPartDialog(BuildContext context) {
+    final TextEditingController partNameController = TextEditingController();
+    final TextEditingController descriptionController = TextEditingController();
+    final TextEditingController motorcycleModelController = TextEditingController();
+    final TextEditingController yearController = TextEditingController();
+    final TextEditingController quantityController = TextEditingController(text: '1');
+    final TextEditingController budgetController = TextEditingController();
+    final ImagePicker imagePicker = ImagePicker();
+    String urgency = 'medium';
+    File? selectedImage;
+
+    Get.dialog(
+      AlertDialog(
+        title: Row(
+          children: const [
+            Icon(Icons.assignment, color: Colors.orange),
+            SizedBox(width: 12),
+            Text('Request Part'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Can\'t find the part you need? Request it here and we\'ll source it for you.',
+                  style: TextStyle(fontSize: 13, color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+
+                // Part Name
+                TextField(
+                  controller: partNameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Part Name *',
+                    hintText: 'e.g., Brake Pads, Air Filter',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.settings),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Description
+                TextField(
+                  controller: descriptionController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: 'Description',
+                    hintText: 'Additional details about the part',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Motorcycle Model and Year
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: TextField(
+                        controller: motorcycleModelController,
+                        decoration: const InputDecoration(
+                          labelText: 'Motorcycle Model',
+                          hintText: 'e.g., Honda CB 125',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: yearController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Year',
+                          hintText: '2020',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Quantity and Budget
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: quantityController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Quantity *',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.numbers),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: budgetController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Budget (KSh)',
+                          hintText: 'Optional',
+                          border: OutlineInputBorder(),
+                          prefixText: 'KSh ',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Urgency
+                const Text('Urgency Level *', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                const SizedBox(height: 8),
+                StatefulBuilder(
+                  builder: (context, setState) {
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: RadioListTile<String>(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('Low', style: TextStyle(fontSize: 12)),
+                            value: 'low',
+                            groupValue: urgency,
+                            onChanged: (value) => setState(() => urgency = value!),
+                          ),
+                        ),
+                        Expanded(
+                          child: RadioListTile<String>(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('Medium', style: TextStyle(fontSize: 12)),
+                            value: 'medium',
+                            groupValue: urgency,
+                            onChanged: (value) => setState(() => urgency = value!),
+                          ),
+                        ),
+                        Expanded(
+                          child: RadioListTile<String>(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('High', style: TextStyle(fontSize: 12)),
+                            value: 'high',
+                            groupValue: urgency,
+                            onChanged: (value) => setState(() => urgency = value!),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 16),
+                // Image Upload Section
+                const Text('Attach Image (Optional)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                const SizedBox(height: 8),
+                StatefulBuilder(
+                  builder: (context, setState) {
+                    return Column(
+                      children: [
+                        if (selectedImage != null) ...[
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              selectedImage!,
+                              height: 150,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextButton.icon(
+                            onPressed: () => setState(() => selectedImage = null),
+                            icon: const Icon(Icons.delete, size: 18, color: Colors.red),
+                            label: const Text('Remove Image', style: TextStyle(color: Colors.red)),
+                          ),
+                        ] else ...[
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () async {
+                                    final XFile? image = await imagePicker.pickImage(
+                                      source: ImageSource.camera,
+                                      imageQuality: 70,
+                                    );
+                                    if (image != null) {
+                                      setState(() => selectedImage = File(image.path));
+                                    }
+                                  },
+                                  icon: const Icon(Icons.camera_alt),
+                                  label: const Text('Camera'),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () async {
+                                    final XFile? image = await imagePicker.pickImage(
+                                      source: ImageSource.gallery,
+                                      imageQuality: 70,
+                                    );
+                                    if (image != null) {
+                                      setState(() => selectedImage = File(image.path));
+                                    }
+                                  },
+                                  icon: const Icon(Icons.photo_library),
+                                  label: const Text('Gallery'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (partNameController.text.trim().isEmpty) {
+                Get.snackbar(
+                  'Error',
+                  'Please enter the part name',
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: Colors.red,
+                  colorText: Colors.white,
+                );
+                return;
+              }
+
+              if (quantityController.text.trim().isEmpty || int.tryParse(quantityController.text) == null || int.parse(quantityController.text) < 1) {
+                Get.snackbar(
+                  'Error',
+                  'Please enter a valid quantity',
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: Colors.red,
+                  colorText: Colors.white,
+                );
+                return;
+              }
+
+              Get.back(); // Close dialog
+              Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
+
+              try {
+                final partRequestRepo = PartRequestRepository();
+                final partRequest = await partRequestRepo.createRequest(
+                  partName: partNameController.text.trim(),
+                  description: descriptionController.text.trim().isEmpty ? null : descriptionController.text.trim(),
+                  motorcycleModel: motorcycleModelController.text.trim().isEmpty ? null : motorcycleModelController.text.trim(),
+                  year: yearController.text.trim().isEmpty ? null : yearController.text.trim(),
+                  quantity: int.parse(quantityController.text.trim()),
+                  budget: budgetController.text.trim().isEmpty ? null : double.tryParse(budgetController.text.trim()),
+                  urgency: urgency,
+                  imagePath: selectedImage?.path,
+                );
+
+                Get.back(); // Close loading
+
+                if (partRequest != null) {
+                  Get.snackbar(
+                    'Success',
+                    'Your part request has been submitted. We\'ll notify you when it\'s available.',
+                    snackPosition: SnackPosition.BOTTOM,
+                    backgroundColor: Colors.green,
+                    colorText: Colors.white,
+                    duration: const Duration(seconds: 4),
+                  );
+                } else {
+                  Get.snackbar(
+                    'Error',
+                    'Failed to submit part request. Please try again.',
+                    snackPosition: SnackPosition.BOTTOM,
+                    backgroundColor: Colors.red,
+                    colorText: Colors.white,
+                  );
+                }
+              } catch (e) {
+                Get.back(); // Close loading
+                Get.snackbar(
+                  'Error',
+                  e.toString().replaceAll('Exception: ', ''),
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: Colors.red,
+                  colorText: Colors.white,
+                  duration: const Duration(seconds: 5),
+                );
+              }
+            },
+            child: const Text('Submit Request'),
+          ),
+        ],
       ),
     );
   }

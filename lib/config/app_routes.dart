@@ -8,6 +8,7 @@ import 'package:manschoice/screens/signup_screen_simple.dart';
 import 'package:manschoice/screens/dashboard_screen.dart';
 import 'package:manschoice/screens/new_loan_application_screen.dart';
 import 'package:manschoice/screens/my_loans_screen.dart';
+import 'package:manschoice/screens/part_requests_screen.dart';
 import 'package:manschoice/screens/payments_screen.dart';
 import 'package:manschoice/screens/payment_history_screen.dart';
 import 'package:manschoice/screens/products_screen.dart';
@@ -28,6 +29,7 @@ class AppRoutes {
     GetPage(name: '/payment-history', page: () => const PaymentHistoryScreen()), // For viewing payment history
     GetPage(name: '/products', page: () => const ProductsScreen()),
     GetPage(name: '/cart', page: () => const CartScreen()),
+    GetPage(name: '/part-requests', page: () => const PartRequestsScreen()),
     GetPage(name: '/support', page: () => const SupportScreen()),
     GetPage(name: '/profile', page: () => const ProfileScreen(), binding: ProfileBinding()),
   ];

@@ -32,6 +32,7 @@ class ApiConfig {
   static const String loans = '/loans';
   static const String payments = '/payments';
   static const String products = '/products';
+  static const String partRequests = '/part-requests';
 
   static const String mpesaStkPush = '/mpesa/stk-push';
   static const String mpesaCheckStatus = '/mpesa/check-status';
