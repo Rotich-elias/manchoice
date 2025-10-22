@@ -100,57 +100,69 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
       final prefs = await SharedPreferences.getInstance();
 
       // For each document, check if customer has it saved and load it
-      if (customer.bikePhotoPath != null && customer.bikePhotoPath!.isNotEmpty && _bikePhoto == null) {
-        await _downloadAndCacheDocument(customer.bikePhotoPath!, 'bike_photo_path', (file) {
+      if (customer.bikePhotoUrl != null && customer.bikePhotoUrl!.isNotEmpty && _bikePhoto == null) {
+        await _downloadAndCacheDocument(customer.bikePhotoUrl!, 'bike_photo_path', (file) {
           if (mounted) setState(() => _bikePhoto = file);
         });
       }
 
-      if (customer.logbookPhotoPath != null && customer.logbookPhotoPath!.isNotEmpty && _logbookPhoto == null) {
-        await _downloadAndCacheDocument(customer.logbookPhotoPath!, 'logbook_photo_path', (file) {
+      if (customer.logbookPhotoUrl != null && customer.logbookPhotoUrl!.isNotEmpty && _logbookPhoto == null) {
+        await _downloadAndCacheDocument(customer.logbookPhotoUrl!, 'logbook_photo_path', (file) {
           if (mounted) setState(() => _logbookPhoto = file);
         });
       }
 
-      if (customer.passportPhotoPath != null && customer.passportPhotoPath!.isNotEmpty && _passportPhoto == null) {
-        await _downloadAndCacheDocument(customer.passportPhotoPath!, 'passport_photo_path', (file) {
+      if (customer.passportPhotoUrl != null && customer.passportPhotoUrl!.isNotEmpty && _passportPhoto == null) {
+        await _downloadAndCacheDocument(customer.passportPhotoUrl!, 'passport_photo_path', (file) {
           if (mounted) setState(() => _passportPhoto = file);
         });
       }
 
-      if (customer.idPhotoFrontPath != null && customer.idPhotoFrontPath!.isNotEmpty && _idPhotoFront == null) {
-        await _downloadAndCacheDocument(customer.idPhotoFrontPath!, 'id_photo_front_path', (file) {
+      if (customer.idPhotoFrontUrl != null && customer.idPhotoFrontUrl!.isNotEmpty && _idPhotoFront == null) {
+        await _downloadAndCacheDocument(customer.idPhotoFrontUrl!, 'id_photo_front_path', (file) {
           if (mounted) setState(() => _idPhotoFront = file);
         });
       }
 
-      if (customer.idPhotoBackPath != null && customer.idPhotoBackPath!.isNotEmpty && _idPhotoBack == null) {
-        await _downloadAndCacheDocument(customer.idPhotoBackPath!, 'id_photo_back_path', (file) {
+      if (customer.idPhotoBackUrl != null && customer.idPhotoBackUrl!.isNotEmpty && _idPhotoBack == null) {
+        await _downloadAndCacheDocument(customer.idPhotoBackUrl!, 'id_photo_back_path', (file) {
           if (mounted) setState(() => _idPhotoBack = file);
         });
       }
 
-      if (customer.nextOfKinIdFrontPath != null && customer.nextOfKinIdFrontPath!.isNotEmpty && _kinIdPhotoFront == null) {
-        await _downloadAndCacheDocument(customer.nextOfKinIdFrontPath!, 'kin_id_front_photo_path', (file) {
+      if (customer.nextOfKinIdFrontUrl != null && customer.nextOfKinIdFrontUrl!.isNotEmpty && _kinIdPhotoFront == null) {
+        await _downloadAndCacheDocument(customer.nextOfKinIdFrontUrl!, 'kin_id_front_photo_path', (file) {
           if (mounted) setState(() => _kinIdPhotoFront = file);
         });
       }
 
-      if (customer.nextOfKinIdBackPath != null && customer.nextOfKinIdBackPath!.isNotEmpty && _kinIdPhotoBack == null) {
-        await _downloadAndCacheDocument(customer.nextOfKinIdBackPath!, 'kin_id_back_photo_path', (file) {
+      if (customer.nextOfKinIdBackUrl != null && customer.nextOfKinIdBackUrl!.isNotEmpty && _kinIdPhotoBack == null) {
+        await _downloadAndCacheDocument(customer.nextOfKinIdBackUrl!, 'kin_id_back_photo_path', (file) {
           if (mounted) setState(() => _kinIdPhotoBack = file);
         });
       }
 
-      if (customer.guarantorIdFrontPath != null && customer.guarantorIdFrontPath!.isNotEmpty && _guarantorIdPhotoFront == null) {
-        await _downloadAndCacheDocument(customer.guarantorIdFrontPath!, 'guarantor_id_front_photo_path', (file) {
+      if (customer.guarantorIdFrontUrl != null && customer.guarantorIdFrontUrl!.isNotEmpty && _guarantorIdPhotoFront == null) {
+        await _downloadAndCacheDocument(customer.guarantorIdFrontUrl!, 'guarantor_id_front_photo_path', (file) {
           if (mounted) setState(() => _guarantorIdPhotoFront = file);
         });
       }
 
-      if (customer.guarantorIdBackPath != null && customer.guarantorIdBackPath!.isNotEmpty && _guarantorIdPhotoBack == null) {
-        await _downloadAndCacheDocument(customer.guarantorIdBackPath!, 'guarantor_id_back_photo_path', (file) {
+      if (customer.guarantorIdBackUrl != null && customer.guarantorIdBackUrl!.isNotEmpty && _guarantorIdPhotoBack == null) {
+        await _downloadAndCacheDocument(customer.guarantorIdBackUrl!, 'guarantor_id_back_photo_path', (file) {
           if (mounted) setState(() => _guarantorIdPhotoBack = file);
+        });
+      }
+
+      if (customer.nextOfKinPassportPhotoUrl != null && customer.nextOfKinPassportPhotoUrl!.isNotEmpty && _kinPassportPhoto == null) {
+        await _downloadAndCacheDocument(customer.nextOfKinPassportPhotoUrl!, 'kin_passport_photo_path', (file) {
+          if (mounted) setState(() => _kinPassportPhoto = file);
+        });
+      }
+
+      if (customer.guarantorPassportPhotoUrl != null && customer.guarantorPassportPhotoUrl!.isNotEmpty && _guarantorPassportPhoto == null) {
+        await _downloadAndCacheDocument(customer.guarantorPassportPhotoUrl!, 'guarantor_passport_photo_path', (file) {
+          if (mounted) setState(() => _guarantorPassportPhoto = file);
         });
       }
 

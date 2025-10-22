@@ -40,6 +40,18 @@ class CustomerApi {
   final String? nextOfKinIdBackPath;
   final String? guarantorIdFrontPath;
   final String? guarantorIdBackPath;
+  // Document Photo URLs
+  final String? bikePhotoUrl;
+  final String? logbookPhotoUrl;
+  final String? passportPhotoUrl;
+  final String? idPhotoFrontUrl;
+  final String? idPhotoBackUrl;
+  final String? nextOfKinIdFrontUrl;
+  final String? nextOfKinIdBackUrl;
+  final String? nextOfKinPassportPhotoUrl;
+  final String? guarantorIdFrontUrl;
+  final String? guarantorIdBackUrl;
+  final String? guarantorPassportPhotoUrl;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -81,6 +93,17 @@ class CustomerApi {
     this.nextOfKinIdBackPath,
     this.guarantorIdFrontPath,
     this.guarantorIdBackPath,
+    this.bikePhotoUrl,
+    this.logbookPhotoUrl,
+    this.passportPhotoUrl,
+    this.idPhotoFrontUrl,
+    this.idPhotoBackUrl,
+    this.nextOfKinIdFrontUrl,
+    this.nextOfKinIdBackUrl,
+    this.nextOfKinPassportPhotoUrl,
+    this.guarantorIdFrontUrl,
+    this.guarantorIdBackUrl,
+    this.guarantorPassportPhotoUrl,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -124,6 +147,17 @@ class CustomerApi {
       nextOfKinIdBackPath: json['next_of_kin_id_back_path'],
       guarantorIdFrontPath: json['guarantor_id_front_path'],
       guarantorIdBackPath: json['guarantor_id_back_path'],
+      bikePhotoUrl: json['bike_photo_url'],
+      logbookPhotoUrl: json['logbook_photo_url'],
+      passportPhotoUrl: json['passport_photo_url'],
+      idPhotoFrontUrl: json['id_photo_front_url'],
+      idPhotoBackUrl: json['id_photo_back_url'],
+      nextOfKinIdFrontUrl: json['next_of_kin_id_front_url'],
+      nextOfKinIdBackUrl: json['next_of_kin_id_back_url'],
+      nextOfKinPassportPhotoUrl: json['next_of_kin_passport_photo_url'],
+      guarantorIdFrontUrl: json['guarantor_id_front_url'],
+      guarantorIdBackUrl: json['guarantor_id_back_url'],
+      guarantorPassportPhotoUrl: json['guarantor_passport_photo_url'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
       deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at']) : null,
