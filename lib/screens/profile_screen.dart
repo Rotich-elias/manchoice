@@ -199,6 +199,32 @@ class ProfileScreen extends StatelessWidget {
 
                       const SizedBox(height: 24),
 
+                      // My Motorbike Section
+                      if (controller.customerProfile.value != null) ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'My Motorbike',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () {
+                                _showEditMotorcycleDialog(context, controller);
+                              },
+                              tooltip: 'Edit Motorbike Info',
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildMotorcycleCard(context, controller.customerProfile.value!),
+                        const SizedBox(height: 24),
+                      ],
+
                       // Account Settings
                       Text(
                         'Account Settings',
@@ -448,6 +474,410 @@ class ProfileScreen extends StatelessWidget {
               backgroundColor: Colors.red,
             ),
             child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMotorcycleCard(BuildContext context, customerProfile) {
+    final hasMotorcycleInfo = customerProfile.motorcycleModel != null ||
+        customerProfile.motorcycleNumberPlate != null ||
+        customerProfile.motorcycleChassisNumber != null;
+
+    if (!hasMotorcycleInfo) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            children: [
+              Icon(
+                Icons.motorcycle,
+                size: 64,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No motorcycle information',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Add your motorcycle details',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[500],
+                    ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  final controller = Get.find<ProfileController>();
+                  _showEditMotorcycleDialog(context, controller);
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Add Motorcycle Info'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            if (customerProfile.motorcycleModel != null) ...[
+              Row(
+                children: [
+                  Icon(
+                    Icons.motorcycle,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Model',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          customerProfile.motorcycleModel!,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (customerProfile.motorcycleNumberPlate != null) ...[
+              Row(
+                children: [
+                  Icon(
+                    Icons.pin,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Number Plate',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          customerProfile.motorcycleNumberPlate!,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (customerProfile.motorcycleChassisNumber != null) ...[
+              Row(
+                children: [
+                  Icon(
+                    Icons.qr_code,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Chassis Number',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          customerProfile.motorcycleChassisNumber!,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (customerProfile.motorcycleType != null) ...[
+              Row(
+                children: [
+                  Icon(
+                    Icons.category,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Type',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          customerProfile.motorcycleType!,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
+            Row(
+              children: [
+                if (customerProfile.motorcycleEngineCC != null)
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.speed,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Engine',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).colorScheme.secondary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${customerProfile.motorcycleEngineCC} CC',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (customerProfile.motorcycleColour != null)
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.palette,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Colour',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).colorScheme.secondary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                customerProfile.motorcycleColour!,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditMotorcycleDialog(BuildContext context, ProfileController controller) {
+    final customerProfile = controller.customerProfile.value;
+    final numberPlateController = TextEditingController(
+      text: customerProfile?.motorcycleNumberPlate ?? '',
+    );
+    final chassisController = TextEditingController(
+      text: customerProfile?.motorcycleChassisNumber ?? '',
+    );
+    final modelController = TextEditingController(
+      text: customerProfile?.motorcycleModel ?? '',
+    );
+    final typeController = TextEditingController(
+      text: customerProfile?.motorcycleType ?? '',
+    );
+    final engineCCController = TextEditingController(
+      text: customerProfile?.motorcycleEngineCC ?? '',
+    );
+    final colourController = TextEditingController(
+      text: customerProfile?.motorcycleColour ?? '',
+    );
+
+    Get.dialog(
+      AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.motorcycle, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 12),
+            const Text('Edit Motorcycle Info'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: modelController,
+                decoration: const InputDecoration(
+                  labelText: 'Model',
+                  hintText: 'e.g., Honda CB 125F',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.motorcycle),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: numberPlateController,
+                decoration: const InputDecoration(
+                  labelText: 'Number Plate',
+                  hintText: 'e.g., KAA 123A',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.pin),
+                ),
+                textCapitalization: TextCapitalization.characters,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: chassisController,
+                decoration: const InputDecoration(
+                  labelText: 'Chassis Number',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.qr_code),
+                ),
+                textCapitalization: TextCapitalization.characters,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: typeController,
+                decoration: const InputDecoration(
+                  labelText: 'Type',
+                  hintText: 'e.g., Sport, Cruiser, Commuter',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.category),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: engineCCController,
+                decoration: const InputDecoration(
+                  labelText: 'Engine CC',
+                  hintText: 'e.g., 125',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.speed),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: colourController,
+                decoration: const InputDecoration(
+                  labelText: 'Colour',
+                  hintText: 'e.g., Red, Black, Blue',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.palette),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              controller.updateMotorcycleInfo(
+                numberPlate: numberPlateController.text.trim().isNotEmpty
+                    ? numberPlateController.text.trim()
+                    : null,
+                chassisNumber: chassisController.text.trim().isNotEmpty
+                    ? chassisController.text.trim()
+                    : null,
+                model: modelController.text.trim().isNotEmpty
+                    ? modelController.text.trim()
+                    : null,
+                type: typeController.text.trim().isNotEmpty
+                    ? typeController.text.trim()
+                    : null,
+                engineCC: engineCCController.text.trim().isNotEmpty
+                    ? engineCCController.text.trim()
+                    : null,
+                colour: colourController.text.trim().isNotEmpty
+                    ? colourController.text.trim()
+                    : null,
+              );
+            },
+            child: const Text('Save'),
           ),
         ],
       ),

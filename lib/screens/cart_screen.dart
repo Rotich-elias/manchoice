@@ -625,7 +625,7 @@ class CartScreen extends StatelessWidget {
       final loanRepo = LoanRepository();
       final loan = await loanRepo.createLoan(
         customerId: cartService.customerId!,
-        principalAmount: cartService.total,
+        principalAmount: cartService.subtotal, // Send subtotal as principal, backend will add interest
         interestRate: cartService.interestRate * 100, // Convert to percentage
         durationDays: 30,
         purpose: 'Purchase of motorcycle parts and accessories',

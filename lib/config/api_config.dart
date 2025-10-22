@@ -3,7 +3,7 @@ class ApiConfig {
   static const bool isProduction = bool.fromEnvironment('dart.vm.product');
 
   // Base URLs
-  static const String _devBaseUrl = 'http://192.168.100.66:8000/api';
+  static const String _devBaseUrl = 'http://192.168.100.41:8000/api';
 
   // TODO: Update this with your production backend URL after deployment
   static const String _prodBaseUrl = 'https://your-backend-url.com/api';
@@ -43,7 +43,7 @@ class ApiConfig {
 
   // Headers
   static Map<String, String> get headers => {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
 }

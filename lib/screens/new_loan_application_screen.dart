@@ -50,6 +50,7 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
   void _setupListeners() {
     // Add listeners to all text controllers to update completion percentage
     _fullNameController.addListener(_calculateCompletionPercentage);
+    _emailController.addListener(_calculateCompletionPercentage);
     _phoneController.addListener(_calculateCompletionPercentage);
     _nationalIdController.addListener(_calculateCompletionPercentage);
     _workingStationController.addListener(_calculateCompletionPercentage);
@@ -343,6 +344,7 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
 
   void _preFillForm(CustomerApi customer) {
     _fullNameController.text = customer.name ?? '';
+    _emailController.text = customer.email ?? '';
     _phoneController.text = customer.phone ?? '';
     _nationalIdController.text = customer.idNumber ?? '';
     _workingStationController.text = customer.address ?? '';
@@ -362,10 +364,11 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
 
   void _calculateCompletionPercentage() {
     int filledFields = 0;
-    int totalFields = 27; // 16 text fields + 11 photos
+    int totalFields = 28; // 17 text fields + 11 photos
 
-    // Personal Info (4 fields)
+    // Personal Info (5 fields)
     if (_fullNameController.text.isNotEmpty) filledFields++;
+    if (_emailController.text.isNotEmpty) filledFields++;
     if (_phoneController.text.isNotEmpty) filledFields++;
     if (_nationalIdController.text.isNotEmpty) filledFields++;
     if (_workingStationController.text.isNotEmpty) filledFields++;
@@ -408,6 +411,7 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
 
   // Personal Information Controllers
   final _fullNameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _nationalIdController = TextEditingController();
   final _workingStationController = TextEditingController();
@@ -446,6 +450,7 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
   @override
   void dispose() {
     _fullNameController.dispose();
+    _emailController.dispose();
     _phoneController.dispose();
     _nationalIdController.dispose();
     _workingStationController.dispose();
@@ -601,6 +606,7 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
         customer = await customerRepo.updateCustomer(
           id: _existingCustomer!.id,
           name: _fullNameController.text,
+          email: _emailController.text,
           phone: _phoneController.text,
           idNumber: _nationalIdController.text,
           address: _workingStationController.text,
@@ -622,6 +628,7 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
         // Create new customer
         customer = await customerRepo.createCustomer(
           name: _fullNameController.text,
+          email: _emailController.text,
           phone: _phoneController.text,
           idNumber: _nationalIdController.text,
           address: _workingStationController.text,
@@ -1002,6 +1009,20 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
           icon: Icons.person,
           validator: (value) =>
               value?.isEmpty ?? true ? 'Full name is required' : null,
+        ),
+        const SizedBox(height: 16),
+        _buildTextField(
+          controller: _emailController,
+          label: 'Email Address',
+          icon: Icons.email,
+          keyboardType: TextInputType.emailAddress,
+          validator: (value) {
+            if (value?.isEmpty ?? true) return 'Email is required';
+            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
+              return 'Enter a valid email address';
+            }
+            return null;
+          },
         ),
         const SizedBox(height: 16),
         _buildTextField(
