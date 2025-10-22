@@ -23,12 +23,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
   final List<String> _categories = [
     'All',
-    'Fashion',
-    'Electronics',
-    'Small Appliances',
-    'Phone Accessories',
-    'Home',
-    'Other',
+    'Engine Parts',
+    'Body & Frame',
+    'Electrical & Lighting',
+    'Tires & Wheels',
+    'Accessories',
   ];
 
   @override

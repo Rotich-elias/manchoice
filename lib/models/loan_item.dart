@@ -25,10 +25,12 @@ class LoanItem {
 
   factory LoanItem.fromJson(Map<String, dynamic> json) {
     return LoanItem(
-      id: json['id'],
-      loanId: json['loan_id'],
-      productId: json['product_id'],
-      quantity: json['quantity'] ?? 1,
+      id: json['id'] is int ? json['id'] : int.parse(json['id'].toString()),
+      loanId: json['loan_id'] is int ? json['loan_id'] : int.parse(json['loan_id'].toString()),
+      productId: json['product_id'] is int ? json['product_id'] : int.parse(json['product_id'].toString()),
+      quantity: json['quantity'] != null
+          ? (json['quantity'] is int ? json['quantity'] : int.parse(json['quantity'].toString()))
+          : 1,
       unitPrice: double.parse(json['unit_price']?.toString() ?? '0'),
       subtotal: double.parse(json['subtotal']?.toString() ?? '0'),
       createdAt: DateTime.parse(json['created_at']),

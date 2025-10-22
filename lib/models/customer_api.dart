@@ -30,6 +30,16 @@ class CustomerApi {
   final String? guarantorName;
   final String? guarantorPhone;
   final String? guarantorRelationship;
+  // Document Photos (stored for reuse across loan applications)
+  final String? bikePhotoPath;
+  final String? logbookPhotoPath;
+  final String? passportPhotoPath;
+  final String? idPhotoFrontPath;
+  final String? idPhotoBackPath;
+  final String? nextOfKinIdFrontPath;
+  final String? nextOfKinIdBackPath;
+  final String? guarantorIdFrontPath;
+  final String? guarantorIdBackPath;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -62,6 +72,15 @@ class CustomerApi {
     this.guarantorName,
     this.guarantorPhone,
     this.guarantorRelationship,
+    this.bikePhotoPath,
+    this.logbookPhotoPath,
+    this.passportPhotoPath,
+    this.idPhotoFrontPath,
+    this.idPhotoBackPath,
+    this.nextOfKinIdFrontPath,
+    this.nextOfKinIdBackPath,
+    this.guarantorIdFrontPath,
+    this.guarantorIdBackPath,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -96,6 +115,15 @@ class CustomerApi {
       guarantorName: json['guarantor_name'],
       guarantorPhone: json['guarantor_phone'],
       guarantorRelationship: json['guarantor_relationship'],
+      bikePhotoPath: json['bike_photo_path'],
+      logbookPhotoPath: json['logbook_photo_path'],
+      passportPhotoPath: json['passport_photo_path'],
+      idPhotoFrontPath: json['id_photo_front_path'],
+      idPhotoBackPath: json['id_photo_back_path'],
+      nextOfKinIdFrontPath: json['next_of_kin_id_front_path'],
+      nextOfKinIdBackPath: json['next_of_kin_id_back_path'],
+      guarantorIdFrontPath: json['guarantor_id_front_path'],
+      guarantorIdBackPath: json['guarantor_id_back_path'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
       deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at']) : null,

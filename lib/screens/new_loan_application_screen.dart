@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 import '../services/customer_repository.dart';
 import '../services/cart_service.dart';
 import '../services/auth_service.dart';
@@ -78,16 +79,120 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
           _calculateCompletionPercentage();
           _isLoading = false;
         });
+
+        // Load documents from customer profile
+        await _loadCustomerDocuments(customer);
       } else {
         setState(() => _isLoading = false);
       }
 
-      // Load saved photos
+      // Load saved photos from local storage
       await _loadSavedPhotos();
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _loadCustomerDocuments(CustomerApi customer) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // For each document, check if customer has it saved and load it
+      if (customer.bikePhotoPath != null && customer.bikePhotoPath!.isNotEmpty && _bikePhoto == null) {
+        await _downloadAndCacheDocument(customer.bikePhotoPath!, 'bike_photo_path', (file) {
+          if (mounted) setState(() => _bikePhoto = file);
+        });
+      }
+
+      if (customer.logbookPhotoPath != null && customer.logbookPhotoPath!.isNotEmpty && _logbookPhoto == null) {
+        await _downloadAndCacheDocument(customer.logbookPhotoPath!, 'logbook_photo_path', (file) {
+          if (mounted) setState(() => _logbookPhoto = file);
+        });
+      }
+
+      if (customer.passportPhotoPath != null && customer.passportPhotoPath!.isNotEmpty && _passportPhoto == null) {
+        await _downloadAndCacheDocument(customer.passportPhotoPath!, 'passport_photo_path', (file) {
+          if (mounted) setState(() => _passportPhoto = file);
+        });
+      }
+
+      if (customer.idPhotoFrontPath != null && customer.idPhotoFrontPath!.isNotEmpty && _idPhotoFront == null) {
+        await _downloadAndCacheDocument(customer.idPhotoFrontPath!, 'id_photo_front_path', (file) {
+          if (mounted) setState(() => _idPhotoFront = file);
+        });
+      }
+
+      if (customer.idPhotoBackPath != null && customer.idPhotoBackPath!.isNotEmpty && _idPhotoBack == null) {
+        await _downloadAndCacheDocument(customer.idPhotoBackPath!, 'id_photo_back_path', (file) {
+          if (mounted) setState(() => _idPhotoBack = file);
+        });
+      }
+
+      if (customer.nextOfKinIdFrontPath != null && customer.nextOfKinIdFrontPath!.isNotEmpty && _kinIdPhotoFront == null) {
+        await _downloadAndCacheDocument(customer.nextOfKinIdFrontPath!, 'kin_id_front_photo_path', (file) {
+          if (mounted) setState(() => _kinIdPhotoFront = file);
+        });
+      }
+
+      if (customer.nextOfKinIdBackPath != null && customer.nextOfKinIdBackPath!.isNotEmpty && _kinIdPhotoBack == null) {
+        await _downloadAndCacheDocument(customer.nextOfKinIdBackPath!, 'kin_id_back_photo_path', (file) {
+          if (mounted) setState(() => _kinIdPhotoBack = file);
+        });
+      }
+
+      if (customer.guarantorIdFrontPath != null && customer.guarantorIdFrontPath!.isNotEmpty && _guarantorIdPhotoFront == null) {
+        await _downloadAndCacheDocument(customer.guarantorIdFrontPath!, 'guarantor_id_front_photo_path', (file) {
+          if (mounted) setState(() => _guarantorIdPhotoFront = file);
+        });
+      }
+
+      if (customer.guarantorIdBackPath != null && customer.guarantorIdBackPath!.isNotEmpty && _guarantorIdPhotoBack == null) {
+        await _downloadAndCacheDocument(customer.guarantorIdBackPath!, 'guarantor_id_back_photo_path', (file) {
+          if (mounted) setState(() => _guarantorIdPhotoBack = file);
+        });
+      }
+
+      if (mounted) {
+        setState(() {
+          _calculateCompletionPercentage();
+        });
+      }
+    } catch (e) {
+      // Error loading customer documents, continue without them
+      debugPrint('Error loading customer documents: $e');
+    }
+  }
+
+  Future<void> _downloadAndCacheDocument(String url, String cacheKey, Function(File) onSuccess) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null) return;
+
+      // Download the file from the server
+      final response = await http.get(
+        Uri.parse(url.startsWith('http') ? url : 'http://192.168.100.65:8000/storage/$url'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        // Save to local file
+        final dir = await getApplicationDocumentsDirectory();
+        final fileName = url.split('/').last;
+        final file = File('${dir.path}/$fileName');
+        await file.writeAsBytes(response.bodyBytes);
+
+        // Cache the path
+        await prefs.setString(cacheKey, file.path);
+
+        // Call success callback
+        onSuccess(file);
+      }
+    } catch (e) {
+      debugPrint('Error downloading document: $e');
     }
   }
 

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../config/api_config.dart';
 import '../models/loan.dart';
 import '../models/loan_item.dart';
@@ -72,32 +73,63 @@ class LoanRepository {
     String? guarantorPassportPhotoPath,
   }) async {
     try {
+      // Create FormData for multipart file upload
+      final formData = FormData.fromMap({
+        'customer_id': customerId,
+        'principal_amount': principalAmount,
+        if (interestRate != null) 'interest_rate': interestRate,
+        if (durationDays != null) 'duration_days': durationDays,
+        if (dueDate != null) 'due_date': dueDate.toIso8601String().split('T')[0],
+        if (purpose != null) 'purpose': purpose,
+        if (notes != null) 'notes': notes,
+      });
+
+      // Add loan items as JSON string if provided
+      if (items != null && items.isNotEmpty) {
+        for (int i = 0; i < items.length; i++) {
+          formData.fields.add(MapEntry('items[$i][product_id]', items[i].productId.toString()));
+          formData.fields.add(MapEntry('items[$i][quantity]', items[i].quantity.toString()));
+        }
+      }
+
+      // Add photo files (not paths)
+      if (bikePhotoPath != null) {
+        formData.files.add(MapEntry('bike_photo', await MultipartFile.fromFile(bikePhotoPath, filename: bikePhotoPath.split('/').last)));
+      }
+      if (logbookPhotoPath != null) {
+        formData.files.add(MapEntry('logbook_photo', await MultipartFile.fromFile(logbookPhotoPath, filename: logbookPhotoPath.split('/').last)));
+      }
+      if (passportPhotoPath != null) {
+        formData.files.add(MapEntry('passport_photo', await MultipartFile.fromFile(passportPhotoPath, filename: passportPhotoPath.split('/').last)));
+      }
+      if (idPhotoFrontPath != null) {
+        formData.files.add(MapEntry('id_photo_front', await MultipartFile.fromFile(idPhotoFrontPath, filename: idPhotoFrontPath.split('/').last)));
+      }
+      if (idPhotoBackPath != null) {
+        formData.files.add(MapEntry('id_photo_back', await MultipartFile.fromFile(idPhotoBackPath, filename: idPhotoBackPath.split('/').last)));
+      }
+      if (nextOfKinIdFrontPath != null) {
+        formData.files.add(MapEntry('next_of_kin_id_front', await MultipartFile.fromFile(nextOfKinIdFrontPath, filename: nextOfKinIdFrontPath.split('/').last)));
+      }
+      if (nextOfKinIdBackPath != null) {
+        formData.files.add(MapEntry('next_of_kin_id_back', await MultipartFile.fromFile(nextOfKinIdBackPath, filename: nextOfKinIdBackPath.split('/').last)));
+      }
+      if (nextOfKinPassportPhotoPath != null) {
+        formData.files.add(MapEntry('next_of_kin_passport_photo', await MultipartFile.fromFile(nextOfKinPassportPhotoPath, filename: nextOfKinPassportPhotoPath.split('/').last)));
+      }
+      if (guarantorIdFrontPath != null) {
+        formData.files.add(MapEntry('guarantor_id_front', await MultipartFile.fromFile(guarantorIdFrontPath, filename: guarantorIdFrontPath.split('/').last)));
+      }
+      if (guarantorIdBackPath != null) {
+        formData.files.add(MapEntry('guarantor_id_back', await MultipartFile.fromFile(guarantorIdBackPath, filename: guarantorIdBackPath.split('/').last)));
+      }
+      if (guarantorPassportPhotoPath != null) {
+        formData.files.add(MapEntry('guarantor_passport_photo', await MultipartFile.fromFile(guarantorPassportPhotoPath, filename: guarantorPassportPhotoPath.split('/').last)));
+      }
+
       final response = await _apiService.post(
         ApiConfig.loans,
-        data: {
-          'customer_id': customerId,
-          'principal_amount': principalAmount,
-          if (interestRate != null) 'interest_rate': interestRate,
-          if (durationDays != null) 'duration_days': durationDays,
-          if (dueDate != null) 'due_date': dueDate.toIso8601String().split('T')[0],
-          if (purpose != null) 'purpose': purpose,
-          if (notes != null) 'notes': notes,
-          // Products/items for this loan
-          if (items != null && items.isNotEmpty)
-            'items': items.map((item) => item.toJson()).toList(),
-          // Photo paths
-          if (bikePhotoPath != null) 'bike_photo_path': bikePhotoPath,
-          if (logbookPhotoPath != null) 'logbook_photo_path': logbookPhotoPath,
-          if (passportPhotoPath != null) 'passport_photo_path': passportPhotoPath,
-          if (idPhotoFrontPath != null) 'id_photo_front_path': idPhotoFrontPath,
-          if (idPhotoBackPath != null) 'id_photo_back_path': idPhotoBackPath,
-          if (nextOfKinIdFrontPath != null) 'next_of_kin_id_front_path': nextOfKinIdFrontPath,
-          if (nextOfKinIdBackPath != null) 'next_of_kin_id_back_path': nextOfKinIdBackPath,
-          if (nextOfKinPassportPhotoPath != null) 'next_of_kin_passport_photo_path': nextOfKinPassportPhotoPath,
-          if (guarantorIdFrontPath != null) 'guarantor_id_front_path': guarantorIdFrontPath,
-          if (guarantorIdBackPath != null) 'guarantor_id_back_path': guarantorIdBackPath,
-          if (guarantorPassportPhotoPath != null) 'guarantor_passport_photo_path': guarantorPassportPhotoPath,
-        },
+        data: formData,
       );
 
       if (response.data['success'] == true) {

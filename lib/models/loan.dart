@@ -80,8 +80,8 @@ class Loan {
 
   factory Loan.fromJson(Map<String, dynamic> json) {
     return Loan(
-      id: json['id'],
-      customerId: json['customer_id'],
+      id: json['id'] is int ? json['id'] : int.parse(json['id'].toString()),
+      customerId: json['customer_id'] is int ? json['customer_id'] : int.parse(json['customer_id'].toString()),
       loanNumber: json['loan_number'],
       principalAmount: double.parse(json['principal_amount']?.toString() ?? '0'),
       interestRate: double.parse(json['interest_rate']?.toString() ?? '0'),
@@ -93,10 +93,14 @@ class Loan {
           ? DateTime.parse(json['disbursement_date'])
           : null,
       dueDate: json['due_date'] != null ? DateTime.parse(json['due_date']) : null,
-      durationDays: json['duration_days'],
+      durationDays: json['duration_days'] != null
+          ? (json['duration_days'] is int ? json['duration_days'] : int.parse(json['duration_days'].toString()))
+          : null,
       purpose: json['purpose'],
       notes: json['notes'],
-      approvedBy: json['approved_by'],
+      approvedBy: json['approved_by'] != null
+          ? (json['approved_by'] is int ? json['approved_by'] : int.parse(json['approved_by'].toString()))
+          : null,
       approvedAt: json['approved_at'] != null ? DateTime.parse(json['approved_at']) : null,
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
