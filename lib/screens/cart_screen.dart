@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/cart_item.dart';
-import '../models/customer_api.dart';
 import '../models/loan_item.dart';
 import '../services/cart_service.dart';
 import '../services/customer_repository.dart';
@@ -19,13 +18,15 @@ class CartScreen extends StatelessWidget {
         title: const Text('Shopping Cart'),
         centerTitle: true,
         actions: [
-          Obx(() => cartService.itemCount > 0
-              ? IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => _showClearCartDialog(context, cartService),
-                  tooltip: 'Clear Cart',
-                )
-              : const SizedBox.shrink()),
+          Obx(
+            () => cartService.itemCount > 0
+                ? IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    onPressed: () => _showClearCartDialog(context, cartService),
+                    tooltip: 'Clear Cart',
+                  )
+                : const SizedBox.shrink(),
+          ),
         ],
       ),
       body: Obx(() {
@@ -94,9 +95,10 @@ class CartScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     ElevatedButton.icon(
                       onPressed: () {
-                        Get.toNamed('/new-loan-application', arguments: {
-                          'fromCart': true,
-                        });
+                        Get.toNamed(
+                          '/new-loan-application',
+                          arguments: {'fromCart': true},
+                        );
                       },
                       icon: const Icon(Icons.person_add),
                       label: const Text('Complete Profile Now'),
@@ -114,7 +116,8 @@ class CartScreen extends StatelessWidget {
               child: ListView.separated(
                 padding: const EdgeInsets.all(16),
                 itemCount: cartService.items.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final item = cartService.items[index];
                   return _buildCartItem(context, item, cartService);
@@ -138,22 +141,26 @@ class CartScreen extends StatelessWidget {
           Icon(
             Icons.shopping_cart_outlined,
             size: 120,
-            color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
+            color: Theme.of(
+              context,
+            ).colorScheme.secondary.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 24),
           Text(
             'Your Cart is Empty',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.secondary,
-                ),
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
           ),
           const SizedBox(height: 12),
           Text(
             'Add products to get started',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.7),
-                ),
+              color: Theme.of(
+                context,
+              ).colorScheme.secondary.withValues(alpha: 0.7),
+            ),
           ),
           const SizedBox(height: 32),
           ElevatedButton.icon(
@@ -186,7 +193,9 @@ class CartScreen extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -216,7 +225,9 @@ class CartScreen extends StatelessWidget {
                     item.category,
                     style: TextStyle(
                       fontSize: 13,
-                      color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.7),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.secondary.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -321,11 +332,7 @@ class CartScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Subtotal
-              _buildPriceRow(
-                'Subtotal',
-                cartService.subtotal,
-                isRegular: true,
-              ),
+              _buildPriceRow('Subtotal', cartService.subtotal, isRegular: true),
               const SizedBox(height: 8),
 
               // Interest
@@ -338,11 +345,7 @@ class CartScreen extends StatelessWidget {
               const Divider(height: 24),
 
               // Total
-              _buildPriceRow(
-                'Total',
-                cartService.total,
-                isRegular: false,
-              ),
+              _buildPriceRow('Total', cartService.total, isRegular: false),
               const SizedBox(height: 16),
 
               // Checkout Button
@@ -373,8 +376,12 @@ class CartScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPriceRow(String label, double amount,
-      {required bool isRegular, Color? color}) {
+  Widget _buildPriceRow(
+    String label,
+    double amount, {
+    required bool isRegular,
+    Color? color,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -406,10 +413,7 @@ class CartScreen extends StatelessWidget {
           'Are you sure you want to remove all items from your cart?',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               cartService.clearCart();
@@ -420,9 +424,7 @@ class CartScreen extends StatelessWidget {
                 snackPosition: SnackPosition.BOTTOM,
               );
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Clear'),
           ),
         ],
@@ -430,7 +432,10 @@ class CartScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _handleCheckout(BuildContext context, CartService cartService) async {
+  Future<void> _handleCheckout(
+    BuildContext context,
+    CartService cartService,
+  ) async {
     if (cartService.customerId == null) {
       Get.snackbar(
         'Profile Incomplete',
@@ -517,15 +522,32 @@ class CartScreen extends StatelessWidget {
                     style: TextStyle(fontSize: 14),
                   ),
                   const SizedBox(height: 16),
-                  _buildCreditInfoRow('Credit Limit:', 'KSh ${customer.creditLimit.toStringAsFixed(2)}'),
-                  _buildCreditInfoRow('Outstanding Balance:', 'KSh ${outstandingBalance.toStringAsFixed(2)}'),
-                  _buildCreditInfoRow('Available Credit:', 'KSh ${availableCredit.toStringAsFixed(2)}', highlight: true),
+                  _buildCreditInfoRow(
+                    'Credit Limit:',
+                    'KSh ${customer.creditLimit.toStringAsFixed(2)}',
+                  ),
+                  _buildCreditInfoRow(
+                    'Outstanding Balance:',
+                    'KSh ${outstandingBalance.toStringAsFixed(2)}',
+                  ),
+                  _buildCreditInfoRow(
+                    'Available Credit:',
+                    'KSh ${availableCredit.toStringAsFixed(2)}',
+                    highlight: true,
+                  ),
                   const Divider(height: 24),
-                  _buildCreditInfoRow('Cart Total:', 'KSh ${cartTotal.toStringAsFixed(2)}', error: true),
+                  _buildCreditInfoRow(
+                    'Cart Total:',
+                    'KSh ${cartTotal.toStringAsFixed(2)}',
+                    error: true,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Please reduce your cart total by KSh ${(cartTotal - availableCredit).toStringAsFixed(2)} or pay off existing loans.',
-                    style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ],
               ),
@@ -568,14 +590,13 @@ class CartScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Text('Items: ${cartService.itemCount}'),
             Text('Subtotal: KES ${cartService.subtotal.toStringAsFixed(0)}'),
-            Text('Interest: KES ${cartService.interestAmount.toStringAsFixed(0)}'),
+            Text(
+              'Interest: KES ${cartService.interestAmount.toStringAsFixed(0)}',
+            ),
             const Divider(height: 20),
             Text(
               'Total: KES ${cartService.total.toStringAsFixed(0)}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -585,10 +606,7 @@ class CartScreen extends StatelessWidget {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () => _confirmCheckout(cartService),
             child: const Text('Confirm'),
@@ -626,18 +644,24 @@ class CartScreen extends StatelessWidget {
       final loanRepo = LoanRepository();
 
       // Convert cart items to loan items
-      final loanItems = cartService.items.map((item) => LoanItemRequest(
-        productId: int.parse(item.id),
-        quantity: item.quantity,
-      )).toList();
+      final loanItems = cartService.items
+          .map(
+            (item) => LoanItemRequest(
+              productId: int.parse(item.id),
+              quantity: item.quantity,
+            ),
+          )
+          .toList();
 
       final loan = await loanRepo.createLoan(
         customerId: cartService.customerId!,
-        principalAmount: cartService.subtotal, // Send subtotal as principal, backend will add interest
+        principalAmount: cartService
+            .subtotal, // Send subtotal as principal, backend will add interest
         interestRate: cartService.interestRate * 100, // Convert to percentage
         durationDays: 30,
         purpose: 'Purchase of motorcycle parts and accessories',
-        notes: 'Products: ${cartService.items.map((item) => '${item.name} (x${item.quantity})').join(', ')}',
+        notes:
+            'Products: ${cartService.items.map((item) => '${item.name} (x${item.quantity})').join(', ')}',
         items: loanItems,
         bikePhotoPath: cartService.bikePhotoPath,
         logbookPhotoPath: cartService.logbookPhotoPath,
@@ -683,7 +707,12 @@ class CartScreen extends StatelessWidget {
     }
   }
 
-  static Widget _buildCreditInfoRow(String label, String value, {bool highlight = false, bool error = false}) {
+  static Widget _buildCreditInfoRow(
+    String label,
+    String value, {
+    bool highlight = false,
+    bool error = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -693,8 +722,12 @@ class CartScreen extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 13,
-              fontWeight: highlight || error ? FontWeight.w600 : FontWeight.normal,
-              color: error ? Colors.red : (highlight ? Colors.green.shade700 : Colors.black87),
+              fontWeight: highlight || error
+                  ? FontWeight.w600
+                  : FontWeight.normal,
+              color: error
+                  ? Colors.red
+                  : (highlight ? Colors.green.shade700 : Colors.black87),
             ),
           ),
           Text(
@@ -702,7 +735,9 @@ class CartScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: error ? Colors.red : (highlight ? Colors.green.shade700 : Colors.black87),
+              color: error
+                  ? Colors.red
+                  : (highlight ? Colors.green.shade700 : Colors.black87),
             ),
           ),
         ],

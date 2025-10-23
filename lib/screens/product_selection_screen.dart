@@ -8,10 +8,10 @@ class ProductSelectionScreen extends StatefulWidget {
   final double? initialAmount;
 
   const ProductSelectionScreen({
-    Key? key,
+    super.key,
     required this.customerId,
     this.initialAmount,
-  }) : super(key: key);
+  });
 
   @override
   _ProductSelectionScreenState createState() => _ProductSelectionScreenState();
@@ -22,13 +22,13 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
 
   List<Product> _products = [];
   List<Product> _filteredProducts = [];
-  List<LoanItemRequest> _selectedItems = [];
+  final List<LoanItemRequest> _selectedItems = [];
   List<String> _categories = [];
 
   String? _selectedCategory;
   bool _isLoading = true;
   bool _isLoadingCategories = true;
-  String _searchQuery = '';
+  final String _searchQuery = '';
   double _totalAmount = 0.0;
 
   @override
@@ -67,17 +67,21 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading products: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error loading products: $e')));
     }
   }
 
   void _filterProducts() {
     setState(() {
       _filteredProducts = _products.where((product) {
-        final matchesSearch = product.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            (product.description?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+        final matchesSearch =
+            product.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            (product.description?.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                ) ??
+                false);
         return matchesSearch;
       }).toList();
     });
@@ -196,16 +200,18 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
                       _loadProducts();
                     },
                   ),
-                  ..._categories.map((category) => _CategoryChip(
-                    label: category,
-                    isSelected: _selectedCategory == category,
-                    onTap: () {
-                      setState(() {
-                        _selectedCategory = category;
-                      });
-                      _loadProducts();
-                    },
-                  )),
+                  ..._categories.map(
+                    (category) => _CategoryChip(
+                      label: category,
+                      isSelected: _selectedCategory == category,
+                      onTap: () {
+                        setState(() {
+                          _selectedCategory = category;
+                        });
+                        _loadProducts();
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -216,55 +222,60 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredProducts.isEmpty
-                    ? const Center(child: Text('No products available'))
-                    : ListView.builder(
-                        itemCount: _filteredProducts.length,
-                        itemBuilder: (context, index) {
-                          final product = _filteredProducts[index];
-                          final isSelected = _selectedItems.any(
-                            (item) => item.productId == product.id,
-                          );
+                ? const Center(child: Text('No products available'))
+                : ListView.builder(
+                    itemCount: _filteredProducts.length,
+                    itemBuilder: (context, index) {
+                      final product = _filteredProducts[index];
+                      final isSelected = _selectedItems.any(
+                        (item) => item.productId == product.id,
+                      );
 
-                          return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            child: ListTile(
-                              leading: product.imageUrl != null
-                                  ? Image.network(
-                                      product.imageUrl!,
-                                      width: 50,
-                                      height: 50,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) =>
-                                          const Icon(Icons.image_not_supported),
-                                    )
-                                  : const Icon(Icons.inventory_2, size: 50),
-                              title: Text(product.name),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('KSh ${product.price.toStringAsFixed(2)}'),
-                                  Text(
-                                    'Stock: ${product.stockQuantity}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: product.stockQuantity < 10
-                                          ? Colors.orange
-                                          : Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              trailing: IconButton(
-                                icon: Icon(
-                                  isSelected ? Icons.check_circle : Icons.add_circle_outline,
-                                  color: isSelected ? Colors.green : null,
+                      return Card(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        child: ListTile(
+                          leading: product.imageUrl != null
+                              ? Image.network(
+                                  product.imageUrl!,
+                                  width: 50,
+                                  height: 50,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(Icons.image_not_supported),
+                                )
+                              : const Icon(Icons.inventory_2, size: 50),
+                          title: Text(product.name),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('KSh ${product.price.toStringAsFixed(2)}'),
+                              Text(
+                                'Stock: ${product.stockQuantity}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: product.stockQuantity < 10
+                                      ? Colors.orange
+                                      : Colors.grey,
                                 ),
-                                onPressed: () => _addProduct(product),
                               ),
+                            ],
+                          ),
+                          trailing: IconButton(
+                            icon: Icon(
+                              isSelected
+                                  ? Icons.check_circle
+                                  : Icons.add_circle_outline,
+                              color: isSelected ? Colors.green : null,
                             ),
-                          );
-                        },
-                      ),
+                            onPressed: () => _addProduct(product),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
           ),
 
           // Selected items summary
@@ -295,22 +306,39 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
                           final item = _selectedItems[index];
                           return ListTile(
                             dense: true,
-                            title: Text(item.product?.name ?? 'Product #${item.productId}'),
-                            subtitle: Text('KSh ${item.subtotal.toStringAsFixed(2)}'),
+                            title: Text(
+                              item.product?.name ??
+                                  'Product #${item.productId}',
+                            ),
+                            subtitle: Text(
+                              'KSh ${item.subtotal.toStringAsFixed(2)}',
+                            ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: const Icon(Icons.remove_circle_outline, size: 20),
-                                  onPressed: () => _updateQuantity(index, item.quantity - 1),
+                                  icon: const Icon(
+                                    Icons.remove_circle_outline,
+                                    size: 20,
+                                  ),
+                                  onPressed: () =>
+                                      _updateQuantity(index, item.quantity - 1),
                                 ),
                                 Text('${item.quantity}'),
                                 IconButton(
-                                  icon: const Icon(Icons.add_circle_outline, size: 20),
-                                  onPressed: () => _updateQuantity(index, item.quantity + 1),
+                                  icon: const Icon(
+                                    Icons.add_circle_outline,
+                                    size: 20,
+                                  ),
+                                  onPressed: () =>
+                                      _updateQuantity(index, item.quantity + 1),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    size: 20,
+                                    color: Colors.red,
+                                  ),
                                   onPressed: () => _removeProduct(index),
                                 ),
                               ],
@@ -345,7 +373,10 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
                   children: [
                     const Text(
                       'Total Amount:',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     Text(
                       'KSh ${_totalAmount.toStringAsFixed(2)}',
@@ -366,7 +397,9 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _selectedItems.isEmpty ? null : _proceedToLoanCreation,
+                    onPressed: _selectedItems.isEmpty
+                        ? null
+                        : _proceedToLoanCreation,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
@@ -415,10 +448,7 @@ class _QuantityDialog extends StatefulWidget {
   final Product product;
   final Function(int) onConfirm;
 
-  const _QuantityDialog({
-    required this.product,
-    required this.onConfirm,
-  });
+  const _QuantityDialog({required this.product, required this.onConfirm});
 
   @override
   _QuantityDialogState createState() => _QuantityDialogState();
@@ -449,7 +479,10 @@ class _QuantityDialogState extends State<_QuantityDialog> {
               ),
               Text(
                 '$quantity',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               IconButton(
                 icon: const Icon(Icons.add),
@@ -495,10 +528,7 @@ class _ProductSearchDelegate extends SearchDelegate<Product?> {
   @override
   List<Widget> buildActions(BuildContext context) {
     return [
-      IconButton(
-        icon: const Icon(Icons.clear),
-        onPressed: () => query = '',
-      ),
+      IconButton(icon: const Icon(Icons.clear), onPressed: () => query = ''),
     ];
   }
 
@@ -519,7 +549,8 @@ class _ProductSearchDelegate extends SearchDelegate<Product?> {
   Widget buildSuggestions(BuildContext context) {
     final results = products.where((product) {
       return product.name.toLowerCase().contains(query.toLowerCase()) ||
-          (product.description?.toLowerCase().contains(query.toLowerCase()) ?? false);
+          (product.description?.toLowerCase().contains(query.toLowerCase()) ??
+              false);
     }).toList();
 
     return ListView.builder(
@@ -538,7 +569,9 @@ class _ProductSearchDelegate extends SearchDelegate<Product?> {
                 )
               : const Icon(Icons.inventory_2),
           title: Text(product.name),
-          subtitle: Text('KSh ${product.price.toStringAsFixed(2)} • Stock: ${product.stockQuantity}'),
+          subtitle: Text(
+            'KSh ${product.price.toStringAsFixed(2)} • Stock: ${product.stockQuantity}',
+          ),
           onTap: () {
             onProductSelected(product);
             close(context, product);
