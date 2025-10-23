@@ -2,11 +2,15 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/cart_item.dart';
+import 'auth_service.dart';
 
 class CartService extends GetxController {
   final RxList<CartItem> _items = <CartItem>[].obs;
   final RxInt _loanId = 0.obs;
   final RxInt _customerId = 0.obs;
+  final AuthService _authService = AuthService();
+
+  String? _currentUserId;
 
   // Customer documents
   final RxString _bikePhotoPath = ''.obs;
@@ -47,7 +51,24 @@ class CartService extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _loadCart();
+    _initializeUser();
+  }
+
+  // Initialize user and load their cart
+  Future<void> _initializeUser() async {
+    final user = await _authService.getCurrentUser();
+    if (user != null) {
+      _currentUserId = user.id.toString();
+      await _loadCart();
+    }
+  }
+
+  // Get user-specific cart key
+  String _getCartKey() {
+    if (_currentUserId == null || _currentUserId!.isEmpty) {
+      return 'shopping_cart_guest'; // Guest cart (will be cleared on login)
+    }
+    return 'shopping_cart_user_$_currentUserId';
   }
 
   void setLoanContext({int? loanId, int? customerId}) {
@@ -187,7 +208,8 @@ class CartService extends GetxController {
         'guarantorIdPhotoBackPath': _guarantorIdPhotoBackPath.value,
         'guarantorPassportPhotoPath': _guarantorPassportPhotoPath.value,
       };
-      await prefs.setString('shopping_cart', jsonEncode(cartData));
+      // Use user-specific cart key
+      await prefs.setString(_getCartKey(), jsonEncode(cartData));
     } catch (e) {
       // Handle error silently
     }
@@ -196,7 +218,8 @@ class CartService extends GetxController {
   Future<void> _loadCart() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final cartString = prefs.getString('shopping_cart');
+      // Use user-specific cart key
+      final cartString = prefs.getString(_getCartKey());
 
       if (cartString != null) {
         final cartData = jsonDecode(cartString) as Map<String, dynamic>;
@@ -233,5 +256,32 @@ class CartService extends GetxController {
   int getItemQuantity(String itemId) {
     final item = _items.firstWhereOrNull((item) => item.id == itemId);
     return item?.quantity ?? 0;
+  }
+
+  // Call this when user logs in to switch to their cart
+  Future<void> switchToUserCart(String userId) async {
+    _currentUserId = userId;
+    _items.clear();
+    await _loadCart();
+  }
+
+  // Call this on logout to clear current cart data
+  Future<void> onLogout() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Remove current user's cart
+    if (_currentUserId != null) {
+      await prefs.remove(_getCartKey());
+    }
+
+    // Remove guest cart
+    await prefs.remove('shopping_cart_guest');
+
+    // Also remove old global cart key for migration
+    await prefs.remove('shopping_cart');
+
+    // Clear in-memory data
+    clearCart();
+    _currentUserId = null;
   }
 }

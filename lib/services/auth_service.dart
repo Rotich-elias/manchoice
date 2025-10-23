@@ -1,7 +1,9 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:get/get.dart';
 import '../config/api_config.dart';
 import '../models/user.dart';
 import 'api_service.dart';
+import 'cart_service.dart';
 
 class AuthService {
   final ApiService _apiService = ApiService();
@@ -54,13 +56,22 @@ class AuthService {
       if (response.data['success'] == true) {
         final data = response.data['data'];
         final token = data['access_token'];
+        final user = User.fromJson(data['user']);
 
         // Save token
         await _apiService.saveToken(token);
 
+        // Switch to user's cart (start with empty cart for new user)
+        try {
+          final cartService = Get.find<CartService>();
+          await cartService.switchToUserCart(user.id.toString());
+        } catch (e) {
+          // CartService might not be initialized, that's okay
+        }
+
         return {
           'success': true,
-          'user': User.fromJson(data['user']),
+          'user': user,
           'token': token,
         };
       }
@@ -97,13 +108,22 @@ class AuthService {
       if (response.data['success'] == true) {
         final data = response.data['data'];
         final token = data['access_token'];
+        final user = User.fromJson(data['user']);
 
         // Save token
         await _apiService.saveToken(token);
 
+        // Switch to user's cart
+        try {
+          final cartService = Get.find<CartService>();
+          await cartService.switchToUserCart(user.id.toString());
+        } catch (e) {
+          // CartService might not be initialized, that's okay
+        }
+
         return {
           'success': true,
-          'user': User.fromJson(data['user']),
+          'user': user,
           'token': token,
         };
       }
@@ -127,12 +147,30 @@ class AuthService {
       await _apiService.removeToken();
       // Clear all stored photo paths
       await _clearStoredPhotoPaths();
+
+      // Clear cart data for current user
+      try {
+        final cartService = Get.find<CartService>();
+        await cartService.onLogout();
+      } catch (e) {
+        // CartService might not be initialized, that's okay
+      }
+
       return true;
     } catch (e) {
       // Even if the request fails, remove token locally
       await _apiService.removeToken();
       // Clear all stored photo paths
       await _clearStoredPhotoPaths();
+
+      // Clear cart data for current user
+      try {
+        final cartService = Get.find<CartService>();
+        await cartService.onLogout();
+      } catch (e) {
+        // CartService might not be initialized, that's okay
+      }
+
       return false;
     }
   }
