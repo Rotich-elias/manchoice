@@ -30,7 +30,7 @@ class AppRoutes {
     GetPage(name: '/products', page: () => const ProductsScreen()),
     GetPage(name: '/cart', page: () => const CartScreen()),
     GetPage(name: '/part-requests', page: () => const PartRequestsScreen()),
-    GetPage(name: '/support', page: () => const SupportScreen()),
+    GetPage(name: '/support', page: () => SupportScreen()),
     GetPage(name: '/profile', page: () => const ProfileScreen(), binding: ProfileBinding()),
   ];
 }

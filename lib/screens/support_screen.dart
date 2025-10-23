@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../services/support_ticket_repository.dart';
+import 'support_tickets_screen.dart';
 
 class SupportScreen extends StatelessWidget {
-  const SupportScreen({super.key});
+  SupportScreen({super.key});
+
+  final SupportTicketRepository _supportRepository = SupportTicketRepository();
 
   @override
   Widget build(BuildContext context) {
@@ -110,6 +114,17 @@ class SupportScreen extends StatelessWidget {
               Card(
                 child: Column(
                   children: [
+                    ListTile(
+                      leading: Icon(
+                        Icons.confirmation_number_outlined,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      title: const Text('My Support Tickets'),
+                      subtitle: const Text('View your submitted tickets'),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () => Get.to(() => const SupportTicketsScreen()),
+                    ),
+                    const Divider(height: 1),
                     ListTile(
                       leading: const Icon(Icons.help_outline),
                       title: const Text('FAQs'),
@@ -385,40 +400,119 @@ class SupportScreen extends StatelessWidget {
 
   void _showReportProblemDialog(BuildContext context) {
     final problemController = TextEditingController();
+    final subjectController = TextEditingController();
+    final RxString selectedPriority = 'medium'.obs;
+    final RxBool isSubmitting = false.obs;
 
     Get.dialog(
       AlertDialog(
         title: const Text('Report a Problem'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Please describe the issue you\'re experiencing:'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: problemController,
-              maxLines: 4,
-              decoration: const InputDecoration(
-                hintText: 'Describe the problem...',
-                border: OutlineInputBorder(),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Subject:'),
+              const SizedBox(height: 8),
+              TextField(
+                controller: subjectController,
+                decoration: const InputDecoration(
+                  hintText: 'Brief summary of the issue',
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              const Text('Please describe the issue you\'re experiencing:'),
+              const SizedBox(height: 8),
+              TextField(
+                controller: problemController,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  hintText: 'Describe the problem...',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('Priority:'),
+              const SizedBox(height: 8),
+              Obx(() => DropdownButtonFormField<String>(
+                value: selectedPriority.value,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'low', child: Text('Low')),
+                  DropdownMenuItem(value: 'medium', child: Text('Medium')),
+                  DropdownMenuItem(value: 'high', child: Text('High')),
+                  DropdownMenuItem(value: 'urgent', child: Text('Urgent')),
+                ],
+                onChanged: (value) {
+                  if (value != null) selectedPriority.value = value;
+                },
+              )),
+            ],
+          ),
         ),
         actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              Get.back();
-              Get.snackbar(
-                'Report Submitted',
-                'Thank you for reporting. We\'ll look into it.',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: Colors.green,
-                colorText: Colors.white,
-              );
-            },
-            child: const Text('Submit'),
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancel'),
           ),
+          Obx(() => ElevatedButton(
+            onPressed: isSubmitting.value
+                ? null
+                : () async {
+                    if (subjectController.text.isEmpty ||
+                        problemController.text.isEmpty) {
+                      Get.snackbar(
+                        'Error',
+                        'Please fill in all fields',
+                        snackPosition: SnackPosition.BOTTOM,
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                      );
+                      return;
+                    }
+
+                    isSubmitting.value = true;
+
+                    try {
+                      final response = await _supportRepository.submitTicket(
+                        type: 'bug',
+                        subject: subjectController.text,
+                        message: problemController.text,
+                        priority: selectedPriority.value,
+                      );
+
+                      Get.back();
+                      Get.snackbar(
+                        'Report Submitted',
+                        'Ticket ${response['data']['ticket_number']} created. We\'ll investigate the issue.',
+                        snackPosition: SnackPosition.BOTTOM,
+                        backgroundColor: Colors.green,
+                        colorText: Colors.white,
+                        duration: const Duration(seconds: 4),
+                      );
+                    } catch (e) {
+                      Get.snackbar(
+                        'Error',
+                        'Failed to submit report: ${e.toString()}',
+                        snackPosition: SnackPosition.BOTTOM,
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                      );
+                    } finally {
+                      isSubmitting.value = false;
+                    }
+                  },
+            child: isSubmitting.value
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Submit'),
+          )),
         ],
       ),
     );
@@ -426,66 +520,120 @@ class SupportScreen extends StatelessWidget {
 
   void _showFeedbackDialog(BuildContext context) {
     final feedbackController = TextEditingController();
-    int rating = 5;
+    final subjectController = TextEditingController();
+    final RxInt rating = 5.obs;
+    final RxBool isSubmitting = false.obs;
 
     Get.dialog(
-      StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: const Text('Send Feedback'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('How would you rate our service?'),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(5, (index) {
-                    return IconButton(
-                      icon: Icon(
-                        index < rating ? Icons.star : Icons.star_border,
-                        color: Colors.amber,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          rating = index + 1;
-                        });
-                      },
-                    );
-                  }),
+      AlertDialog(
+        title: const Text('Send Feedback'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Subject:'),
+              const SizedBox(height: 8),
+              TextField(
+                controller: subjectController,
+                decoration: const InputDecoration(
+                  hintText: 'What is your feedback about?',
+                  border: OutlineInputBorder(),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: feedbackController,
-                  maxLines: 4,
-                  decoration: const InputDecoration(
-                    hintText: 'Your feedback...',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Get.back(),
-                child: const Text('Cancel'),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  Get.back();
-                  Get.snackbar(
-                    'Thank You!',
-                    'Your feedback helps us improve our service',
-                    snackPosition: SnackPosition.BOTTOM,
-                    backgroundColor: Colors.green,
-                    colorText: Colors.white,
+              const SizedBox(height: 16),
+              const Text('How would you rate our service?'),
+              const SizedBox(height: 8),
+              Obx(() => Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  return IconButton(
+                    icon: Icon(
+                      index < rating.value ? Icons.star : Icons.star_border,
+                      color: Colors.amber,
+                    ),
+                    onPressed: () {
+                      rating.value = index + 1;
+                    },
                   );
-                },
-                child: const Text('Submit'),
+                }),
+              )),
+              const SizedBox(height: 16),
+              const Text('Your feedback:'),
+              const SizedBox(height: 8),
+              TextField(
+                controller: feedbackController,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  hintText: 'Tell us what you think...',
+                  border: OutlineInputBorder(),
+                ),
               ),
             ],
-          );
-        },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancel'),
+          ),
+          Obx(() => ElevatedButton(
+            onPressed: isSubmitting.value
+                ? null
+                : () async {
+                    if (subjectController.text.isEmpty ||
+                        feedbackController.text.isEmpty) {
+                      Get.snackbar(
+                        'Error',
+                        'Please fill in all fields',
+                        snackPosition: SnackPosition.BOTTOM,
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                      );
+                      return;
+                    }
+
+                    isSubmitting.value = true;
+
+                    try {
+                      final message = '${feedbackController.text}\n\nRating: ${rating.value}/5 stars';
+                      final response = await _supportRepository.submitTicket(
+                        type: 'feedback',
+                        subject: subjectController.text,
+                        message: message,
+                        priority: 'low',
+                      );
+
+                      Get.back();
+                      Get.snackbar(
+                        'Thank You!',
+                        'Ticket ${response['data']['ticket_number']} created. Your feedback helps us improve!',
+                        snackPosition: SnackPosition.BOTTOM,
+                        backgroundColor: Colors.green,
+                        colorText: Colors.white,
+                        duration: const Duration(seconds: 4),
+                      );
+                    } catch (e) {
+                      Get.snackbar(
+                        'Error',
+                        'Failed to submit feedback: ${e.toString()}',
+                        snackPosition: SnackPosition.BOTTOM,
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                      );
+                    } finally {
+                      isSubmitting.value = false;
+                    }
+                  },
+            child: isSubmitting.value
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Submit'),
+          )),
+        ],
       ),
     );
   }
