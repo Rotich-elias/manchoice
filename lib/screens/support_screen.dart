@@ -78,27 +78,27 @@ class SupportScreen extends StatelessWidget {
                 context,
                 icon: Icons.phone,
                 title: 'Call Us',
-                subtitle: '+254 721 237 811',
+                subtitle: '+254 011 0846 828',
                 color: Colors.green,
-                onTap: () => _makePhoneCall('+254721237811'),
+                onTap: () => _makePhoneCall('+254110846828'),
               ),
               const SizedBox(height: 12),
               _buildContactCard(
                 context,
                 icon: Icons.email,
                 title: 'Email Us',
-                subtitle: 'support@manschoice.co.ke',
+                subtitle: 'manchoiceenterprise@gmail.com',
                 color: Colors.blue,
-                onTap: () => _sendEmail('support@manschoice.co.ke'),
+                onTap: () => _sendEmail('manchoiceenterprise@gmail.com'),
               ),
               const SizedBox(height: 12),
               _buildContactCard(
                 context,
                 icon: Icons.chat,
                 title: 'WhatsApp',
-                subtitle: '+254 721 237 811',
+                subtitle: '+254 0110 846 828',
                 color: Colors.green.shade700,
-                onTap: () => _openWhatsApp('+254721237811'),
+                onTap: () => _openWhatsApp('+2540110846828'),
               ),
               const SizedBox(height: 24),
 
@@ -191,18 +191,81 @@ class SupportScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Card(
-                child: ListTile(
-                  leading: const Icon(Icons.location_on),
-                  title: const Text('Our Office'),
-                  subtitle: const Text('Nairobi CBD, Kenya\nTom Mboya Street'),
-                  trailing: const Icon(Icons.map_outlined),
-                  onTap: () {
-                    Get.snackbar(
-                      'Location',
-                      'Map integration will be implemented',
-                      snackPosition: SnackPosition.BOTTOM,
-                    );
-                  },
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: const Icon(
+                        Icons.location_city,
+                        color: Colors.blue,
+                      ),
+                      title: const Text('Main Office'),
+                      subtitle: const Text('Eldoret'),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        Get.snackbar(
+                          'Main Office',
+                          'Eldoret - Main Office',
+                          snackPosition: SnackPosition.BOTTOM,
+                        );
+                      },
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.store, color: Colors.green),
+                      title: const Text('Iten Branch'),
+                      subtitle: const Text('Iten'),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        Get.snackbar(
+                          'Iten Branch',
+                          'Visit our Iten branch',
+                          snackPosition: SnackPosition.BOTTOM,
+                        );
+                      },
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.store, color: Colors.orange),
+                      title: const Text('Eldama Ravine Branch'),
+                      subtitle: const Text('Eldama Ravine'),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        Get.snackbar(
+                          'Eldama Ravine Branch',
+                          'Visit our Eldama Ravine branch',
+                          snackPosition: SnackPosition.BOTTOM,
+                        );
+                      },
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.store, color: Colors.purple),
+                      title: const Text('Kapsabet Branch'),
+                      subtitle: const Text('Kapsabet'),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        Get.snackbar(
+                          'Kapsabet Branch',
+                          'Visit our Kapsabit branch',
+                          snackPosition: SnackPosition.BOTTOM,
+                        );
+                      },
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.store, color: Colors.teal),
+                      title: const Text('Chepkorio Branch'),
+                      subtitle: const Text('Chepkorio'),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        Get.snackbar(
+                          'Chepkorio Branch',
+                          'Visit our Chepkorio branch',
+                          snackPosition: SnackPosition.BOTTOM,
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -435,84 +498,85 @@ class SupportScreen extends StatelessWidget {
               const SizedBox(height: 16),
               const Text('Priority:'),
               const SizedBox(height: 8),
-              Obx(() => DropdownButtonFormField<String>(
-                value: selectedPriority.value,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
+              Obx(
+                () => DropdownButtonFormField<String>(
+                  value: selectedPriority.value,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'low', child: Text('Low')),
+                    DropdownMenuItem(value: 'medium', child: Text('Medium')),
+                    DropdownMenuItem(value: 'high', child: Text('High')),
+                    DropdownMenuItem(value: 'urgent', child: Text('Urgent')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) selectedPriority.value = value;
+                  },
                 ),
-                items: const [
-                  DropdownMenuItem(value: 'low', child: Text('Low')),
-                  DropdownMenuItem(value: 'medium', child: Text('Medium')),
-                  DropdownMenuItem(value: 'high', child: Text('High')),
-                  DropdownMenuItem(value: 'urgent', child: Text('Urgent')),
-                ],
-                onChanged: (value) {
-                  if (value != null) selectedPriority.value = value;
-                },
-              )),
+              ),
             ],
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+          Obx(
+            () => ElevatedButton(
+              onPressed: isSubmitting.value
+                  ? null
+                  : () async {
+                      if (subjectController.text.isEmpty ||
+                          problemController.text.isEmpty) {
+                        Get.snackbar(
+                          'Error',
+                          'Please fill in all fields',
+                          snackPosition: SnackPosition.BOTTOM,
+                          backgroundColor: Colors.red,
+                          colorText: Colors.white,
+                        );
+                        return;
+                      }
+
+                      isSubmitting.value = true;
+
+                      try {
+                        final response = await _supportRepository.submitTicket(
+                          type: 'bug',
+                          subject: subjectController.text,
+                          message: problemController.text,
+                          priority: selectedPriority.value,
+                        );
+
+                        Get.back();
+                        Get.snackbar(
+                          'Report Submitted',
+                          'Ticket ${response['data']['ticket_number']} created. We\'ll investigate the issue.',
+                          snackPosition: SnackPosition.BOTTOM,
+                          backgroundColor: Colors.green,
+                          colorText: Colors.white,
+                          duration: const Duration(seconds: 4),
+                        );
+                      } catch (e) {
+                        Get.snackbar(
+                          'Error',
+                          'Failed to submit report: ${e.toString()}',
+                          snackPosition: SnackPosition.BOTTOM,
+                          backgroundColor: Colors.red,
+                          colorText: Colors.white,
+                        );
+                      } finally {
+                        isSubmitting.value = false;
+                      }
+                    },
+              child: isSubmitting.value
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Submit'),
+            ),
           ),
-          Obx(() => ElevatedButton(
-            onPressed: isSubmitting.value
-                ? null
-                : () async {
-                    if (subjectController.text.isEmpty ||
-                        problemController.text.isEmpty) {
-                      Get.snackbar(
-                        'Error',
-                        'Please fill in all fields',
-                        snackPosition: SnackPosition.BOTTOM,
-                        backgroundColor: Colors.red,
-                        colorText: Colors.white,
-                      );
-                      return;
-                    }
-
-                    isSubmitting.value = true;
-
-                    try {
-                      final response = await _supportRepository.submitTicket(
-                        type: 'bug',
-                        subject: subjectController.text,
-                        message: problemController.text,
-                        priority: selectedPriority.value,
-                      );
-
-                      Get.back();
-                      Get.snackbar(
-                        'Report Submitted',
-                        'Ticket ${response['data']['ticket_number']} created. We\'ll investigate the issue.',
-                        snackPosition: SnackPosition.BOTTOM,
-                        backgroundColor: Colors.green,
-                        colorText: Colors.white,
-                        duration: const Duration(seconds: 4),
-                      );
-                    } catch (e) {
-                      Get.snackbar(
-                        'Error',
-                        'Failed to submit report: ${e.toString()}',
-                        snackPosition: SnackPosition.BOTTOM,
-                        backgroundColor: Colors.red,
-                        colorText: Colors.white,
-                      );
-                    } finally {
-                      isSubmitting.value = false;
-                    }
-                  },
-            child: isSubmitting.value
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Submit'),
-          )),
         ],
       ),
     );
@@ -544,20 +608,22 @@ class SupportScreen extends StatelessWidget {
               const SizedBox(height: 16),
               const Text('How would you rate our service?'),
               const SizedBox(height: 8),
-              Obx(() => Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (index) {
-                  return IconButton(
-                    icon: Icon(
-                      index < rating.value ? Icons.star : Icons.star_border,
-                      color: Colors.amber,
-                    ),
-                    onPressed: () {
-                      rating.value = index + 1;
-                    },
-                  );
-                }),
-              )),
+              Obx(
+                () => Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (index) {
+                    return IconButton(
+                      icon: Icon(
+                        index < rating.value ? Icons.star : Icons.star_border,
+                        color: Colors.amber,
+                      ),
+                      onPressed: () {
+                        rating.value = index + 1;
+                      },
+                    );
+                  }),
+                ),
+              ),
               const SizedBox(height: 16),
               const Text('Your feedback:'),
               const SizedBox(height: 8),
@@ -573,66 +639,66 @@ class SupportScreen extends StatelessWidget {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+          Obx(
+            () => ElevatedButton(
+              onPressed: isSubmitting.value
+                  ? null
+                  : () async {
+                      if (subjectController.text.isEmpty ||
+                          feedbackController.text.isEmpty) {
+                        Get.snackbar(
+                          'Error',
+                          'Please fill in all fields',
+                          snackPosition: SnackPosition.BOTTOM,
+                          backgroundColor: Colors.red,
+                          colorText: Colors.white,
+                        );
+                        return;
+                      }
+
+                      isSubmitting.value = true;
+
+                      try {
+                        final message =
+                            '${feedbackController.text}\n\nRating: ${rating.value}/5 stars';
+                        final response = await _supportRepository.submitTicket(
+                          type: 'feedback',
+                          subject: subjectController.text,
+                          message: message,
+                          priority: 'low',
+                        );
+
+                        Get.back();
+                        Get.snackbar(
+                          'Thank You!',
+                          'Ticket ${response['data']['ticket_number']} created. Your feedback helps us improve!',
+                          snackPosition: SnackPosition.BOTTOM,
+                          backgroundColor: Colors.green,
+                          colorText: Colors.white,
+                          duration: const Duration(seconds: 4),
+                        );
+                      } catch (e) {
+                        Get.snackbar(
+                          'Error',
+                          'Failed to submit feedback: ${e.toString()}',
+                          snackPosition: SnackPosition.BOTTOM,
+                          backgroundColor: Colors.red,
+                          colorText: Colors.white,
+                        );
+                      } finally {
+                        isSubmitting.value = false;
+                      }
+                    },
+              child: isSubmitting.value
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Submit'),
+            ),
           ),
-          Obx(() => ElevatedButton(
-            onPressed: isSubmitting.value
-                ? null
-                : () async {
-                    if (subjectController.text.isEmpty ||
-                        feedbackController.text.isEmpty) {
-                      Get.snackbar(
-                        'Error',
-                        'Please fill in all fields',
-                        snackPosition: SnackPosition.BOTTOM,
-                        backgroundColor: Colors.red,
-                        colorText: Colors.white,
-                      );
-                      return;
-                    }
-
-                    isSubmitting.value = true;
-
-                    try {
-                      final message = '${feedbackController.text}\n\nRating: ${rating.value}/5 stars';
-                      final response = await _supportRepository.submitTicket(
-                        type: 'feedback',
-                        subject: subjectController.text,
-                        message: message,
-                        priority: 'low',
-                      );
-
-                      Get.back();
-                      Get.snackbar(
-                        'Thank You!',
-                        'Ticket ${response['data']['ticket_number']} created. Your feedback helps us improve!',
-                        snackPosition: SnackPosition.BOTTOM,
-                        backgroundColor: Colors.green,
-                        colorText: Colors.white,
-                        duration: const Duration(seconds: 4),
-                      );
-                    } catch (e) {
-                      Get.snackbar(
-                        'Error',
-                        'Failed to submit feedback: ${e.toString()}',
-                        snackPosition: SnackPosition.BOTTOM,
-                        backgroundColor: Colors.red,
-                        colorText: Colors.white,
-                      );
-                    } finally {
-                      isSubmitting.value = false;
-                    }
-                  },
-            child: isSubmitting.value
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Submit'),
-          )),
         ],
       ),
     );

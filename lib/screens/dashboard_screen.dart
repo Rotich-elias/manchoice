@@ -3,8 +3,10 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../services/auth_service.dart';
 import '../services/loan_repository.dart';
+import '../services/product_repository.dart';
 import '../models/user.dart';
 import '../models/loan.dart';
+import '../models/product.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -16,15 +18,19 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final AuthService _authService = AuthService();
   final LoanRepository _loanRepository = LoanRepository();
+  final ProductRepository _productRepository = ProductRepository();
 
   User? _currentUser;
   Loan? _activeLoan;
+  List<Product> _featuredProducts = [];
+  bool _loadingProducts = false;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
     _loadActiveLoan();
+    _loadFeaturedProducts();
   }
 
   // Refresh data when returning to this screen
@@ -39,6 +45,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await Future.wait([
       _loadUserData(),
       _loadActiveLoan(),
+      _loadFeaturedProducts(),
     ]);
   }
 
@@ -70,7 +77,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
 
       // If no active loan, try approved
-      final approvedLoans = await _loanRepository.getAllLoans(status: 'approved');
+      final approvedLoans = await _loanRepository.getAllLoans(
+        status: 'approved',
+      );
       if (approvedLoans.isNotEmpty && mounted) {
         setState(() {
           _activeLoan = approvedLoans.first;
@@ -87,6 +96,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (mounted) {
         setState(() {
           _activeLoan = null;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadFeaturedProducts() async {
+    if (_loadingProducts) return;
+
+    setState(() => _loadingProducts = true);
+
+    try {
+      // Load first 6 available products
+      final products = await _productRepository.getAllProducts(
+        available: true,
+        inStock: true,
+      );
+
+      if (mounted) {
+        setState(() {
+          _featuredProducts = products.take(6).toList();
+          _loadingProducts = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _featuredProducts = [];
+          _loadingProducts = false;
         });
       }
     }
@@ -162,149 +199,166 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Welcome Card with user's name
-              Card(
-                elevation: 4,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20.0),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Theme.of(context).colorScheme.primary,
-                        Theme.of(context).colorScheme.secondary,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Welcome Card with user's name
+                Card(
+                  elevation: 4,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20.0),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).colorScheme.primary,
+                          Theme.of(context).colorScheme.secondary,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.asset(
-                            'lib/assets/images/logo.jpg',
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.contain,
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.asset(
+                              'lib/assets/images/logo.jpg',
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.contain,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Welcome Back,',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge
-                                  ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onPrimary
-                                        .withValues(alpha: 0.9),
-                                  ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              userName,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineSmall
-                                  ?.copyWith(
-                                    color:
-                                        Theme.of(context).colorScheme.onPrimary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'MAN\'S CHOICE ENTERPRISE',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onPrimary
-                                        .withValues(alpha: 0.8),
-                                  ),
-                            ),
-                          ],
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Welcome Back,',
+                                style: Theme.of(context).textTheme.bodyLarge
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary
+                                          .withValues(alpha: 0.9),
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                userName,
+                                style: Theme.of(context).textTheme.headlineSmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'MAN\'S CHOICE ENTERPRISE',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary
+                                          .withValues(alpha: 0.8),
+                                    ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              // Active Loan Summary (if exists)
-              if (_activeLoan != null) ...[
-                _buildLoanSummaryCard(context),
+                // Active Loan Summary (if exists)
+                if (_activeLoan != null) ...[
+                  _buildLoanSummaryCard(context),
+                  const SizedBox(height: 24),
+                ],
+
+                // Main Menu Section
+                Text(
+                  'Main Menu',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Menu Cards
+                _buildMenuCard(
+                  context,
+                  icon: Icons.receipt_long,
+                  title: 'My Loans',
+                  subtitle: 'View loan status and payment history',
+                  color: Colors.blue,
+                  onTap: () => Get.toNamed('/my-loans'),
+                ),
+                const SizedBox(height: 12),
+                _buildMenuCard(
+                  context,
+                  icon: Icons.payment,
+                  title: 'My Payments / Installments',
+                  subtitle: 'View and manage your payments',
+                  color: Colors.green,
+                  onTap: () => Get.toNamed('/payment-history'),
+                ),
+                const SizedBox(height: 12),
+                _buildMenuCard(
+                  context,
+                  icon: Icons.shopping_bag,
+                  title: 'Products (Spares)',
+                  subtitle: 'Browse available spare parts',
+                  color: Colors.orange,
+                  onTap: () => Get.toNamed('/products'),
+                ),
+                const SizedBox(height: 12),
+                _buildMenuCard(
+                  context,
+                  icon: Icons.support_agent,
+                  title: 'Support / Help',
+                  subtitle: 'Get help and contact support',
+                  color: Colors.red,
+                  onTap: () => Get.toNamed('/support'),
+                ),
+                const SizedBox(height: 24),
+
+                // Featured Products Section
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Featured Products',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => Get.toNamed('/products'),
+                      child: const Text('View All'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _buildFeaturedProductsCarousel(context),
                 const SizedBox(height: 24),
               ],
-
-              // Main Menu Section
-              Text(
-                'Main Menu',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-              ),
-              const SizedBox(height: 16),
-
-              // Menu Cards
-              _buildMenuCard(
-                context,
-                icon: Icons.receipt_long,
-                title: 'My Loans',
-                subtitle: 'View loan status and payment history',
-                color: Colors.blue,
-                onTap: () => Get.toNamed('/my-loans'),
-              ),
-              const SizedBox(height: 12),
-              _buildMenuCard(
-                context,
-                icon: Icons.payment,
-                title: 'My Payments / Installments',
-                subtitle: 'View and manage your payments',
-                color: Colors.green,
-                onTap: () => Get.toNamed('/payment-history'),
-              ),
-              const SizedBox(height: 12),
-              _buildMenuCard(
-                context,
-                icon: Icons.shopping_bag,
-                title: 'Products (Spares)',
-                subtitle: 'Browse available spare parts',
-                color: Colors.orange,
-                onTap: () => Get.toNamed('/products'),
-              ),
-              const SizedBox(height: 12),
-              _buildMenuCard(
-                context,
-                icon: Icons.support_agent,
-                title: 'Support / Help',
-                subtitle: 'Get help and contact support',
-                color: Colors.red,
-                onTap: () => Get.toNamed('/support'),
-              ),
-            ],
+            ),
           ),
-        ),
         ),
       ),
     );
@@ -343,15 +397,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Text(
                   userName,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Text(
                   userPhone,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
+                    color: Colors.white.withValues(alpha: 0.9),
+                  ),
                 ),
               ],
             ),
@@ -430,10 +484,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text(
-              'Logout',
-              style: TextStyle(color: Colors.red),
-            ),
+            title: const Text('Logout', style: TextStyle(color: Colors.red)),
             onTap: () {
               Get.back();
               _handleLogout(context);
@@ -447,7 +498,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildLoanSummaryCard(BuildContext context) {
     if (_activeLoan == null) return const SizedBox.shrink();
 
-    final currencyFormat = NumberFormat.currency(symbol: 'KES ', decimalDigits: 2);
+    final currencyFormat = NumberFormat.currency(
+      symbol: 'KES ',
+      decimalDigits: 2,
+    );
     final dateFormat = DateFormat('MMM dd, yyyy');
 
     return Card(
@@ -457,10 +511,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Colors.green.shade600,
-              Colors.green.shade800,
-            ],
+            colors: [Colors.green.shade600, Colors.green.shade800],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -493,13 +544,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         Text(
                           'Active Loan',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
                                 color: Colors.white.withValues(alpha: 0.9),
                               ),
                         ),
                         Text(
                           _activeLoan!.loanNumber,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -509,7 +562,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
@@ -531,16 +587,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text(
               'Outstanding Balance',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.85),
-                  ),
+                color: Colors.white.withValues(alpha: 0.85),
+              ),
             ),
             const SizedBox(height: 4),
             Text(
               currencyFormat.format(_activeLoan!.balance),
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 16),
 
@@ -561,15 +617,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Text(
                   '${_activeLoan!.paymentProgress.toStringAsFixed(1)}% paid',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.85),
-                      ),
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
                 ),
                 Text(
                   currencyFormat.format(_activeLoan!.amountPaid),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.85),
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -588,17 +644,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Text(
                         'Next Payment Due',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.white.withValues(alpha: 0.85),
-                            ),
+                          color: Colors.white.withValues(alpha: 0.85),
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.calendar_today, color: Colors.white, size: 14),
+                          const Icon(
+                            Icons.calendar_today,
+                            color: Colors.white,
+                            size: 14,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             dateFormat.format(_activeLoan!.dueDate!),
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -616,7 +677,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.green.shade700,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
                   ),
                 ),
               ],
@@ -650,11 +714,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  icon,
-                  size: 32,
-                  color: color,
-                ),
+                child: Icon(icon, size: 32, color: color),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -664,15 +724,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.secondary,
-                          ),
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
                     ),
                   ],
                 ),
@@ -695,19 +755,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         title: const Text('Logout'),
         content: const Text('Are you sure you want to logout?'),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
               Get.back(); // Close dialog
 
               // Show loading
               Get.dialog(
-                const Center(
-                  child: CircularProgressIndicator(),
-                ),
+                const Center(child: CircularProgressIndicator()),
                 barrierDismissible: false,
               );
 
@@ -725,9 +780,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 colorText: Colors.white,
               );
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Logout'),
           ),
         ],
@@ -736,7 +789,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _showPaymentReminders() {
-    final currencyFormat = NumberFormat.currency(symbol: 'KES ', decimalDigits: 2);
+    final currencyFormat = NumberFormat.currency(
+      symbol: 'KES ',
+      decimalDigits: 2,
+    );
 
     if (_activeLoan == null) {
       Get.dialog(
@@ -765,10 +821,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () => Get.back(),
-              child: const Text('Close'),
-            ),
+            TextButton(onPressed: () => Get.back(), child: const Text('Close')),
           ],
         ),
       );
@@ -799,25 +852,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Loan Info
               Text(
                 'Loan: ${loan.loanNumber}',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
               const SizedBox(height: 16),
               const Divider(),
 
               // Total Amount
-              _buildReminderRow('Total Loan Amount:', currencyFormat.format(loan.totalAmount)),
-              _buildReminderRow('Amount Paid:', currencyFormat.format(loan.amountPaid)),
-              _buildReminderRow('Balance Remaining:', currencyFormat.format(loan.balance), highlight: true),
+              _buildReminderRow(
+                'Total Loan Amount:',
+                currencyFormat.format(loan.totalAmount),
+              ),
+              _buildReminderRow(
+                'Amount Paid:',
+                currencyFormat.format(loan.amountPaid),
+              ),
+              _buildReminderRow(
+                'Balance Remaining:',
+                currencyFormat.format(loan.balance),
+                highlight: true,
+              ),
 
               const Divider(),
 
               // Daily Payment
-              _buildReminderRow('Daily Payment:', currencyFormat.format(loan.dailyPayment), highlight: true),
-              _buildReminderRow('Days Remaining:', '${loan.daysRemaining} days'),
+              _buildReminderRow(
+                'Daily Payment:',
+                currencyFormat.format(loan.dailyPayment),
+                highlight: true,
+              ),
+              _buildReminderRow(
+                'Days Remaining:',
+                '${loan.daysRemaining} days',
+              ),
 
               if (loan.dueDate != null) ...[
                 const SizedBox(height: 4),
-                _buildReminderRow('Due Date:', DateFormat('MMM dd, yyyy').format(loan.dueDate!)),
+                _buildReminderRow(
+                  'Due Date:',
+                  DateFormat('MMM dd, yyyy').format(loan.dueDate!),
+                ),
               ],
 
               // Payment Schedule Status
@@ -835,7 +911,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       const Row(
                         children: [
-                          Icon(Icons.warning_amber, color: Colors.orange, size: 20),
+                          Icon(
+                            Icons.warning_amber,
+                            color: Colors.orange,
+                            size: 20,
+                          ),
                           SizedBox(width: 8),
                           Text(
                             'Behind Schedule',
@@ -847,8 +927,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Text('Expected payment by today: ${currencyFormat.format(loan.expectedPaymentByToday)}'),
-                      Text('Amount behind: ${currencyFormat.format(loan.amountBehind)}'),
+                      Text(
+                        'Expected payment by today: ${currencyFormat.format(loan.expectedPaymentByToday)}',
+                      ),
+                      Text(
+                        'Amount behind: ${currencyFormat.format(loan.amountBehind)}',
+                      ),
                     ],
                   ),
                 ),
@@ -894,10 +978,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Close'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Close')),
           ElevatedButton(
             onPressed: () {
               Get.back();
@@ -910,7 +991,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildReminderRow(String label, String value, {bool highlight = false}) {
+  Widget _buildReminderRow(
+    String label,
+    String value, {
+    bool highlight = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -937,6 +1022,176 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Widget _buildFeaturedProductsCarousel(BuildContext context) {
+    if (_loadingProducts) {
+      return const SizedBox(
+        height: 200,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_featuredProducts.isEmpty) {
+      return Card(
+        child: Container(
+          height: 150,
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.inventory_2_outlined, size: 48, color: Colors.grey.shade400),
+              const SizedBox(height: 8),
+              Text(
+                'No products available',
+                style: TextStyle(color: Colors.grey.shade600),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 200,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _featuredProducts.length,
+        itemBuilder: (context, index) {
+          final product = _featuredProducts[index];
+          return _buildProductCard(context, product);
+        },
+      ),
+    );
+  }
+
+  Widget _buildProductCard(BuildContext context, Product product) {
+    final currencyFormat = NumberFormat.currency(symbol: 'KES ', decimalDigits: 2);
+
+    return Card(
+      margin: const EdgeInsets.only(right: 12),
+      child: InkWell(
+        onTap: () {
+          Get.toNamed('/products');
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: 160,
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Product Image/Icon
+              Container(
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: product.imageUrl != null && product.imageUrl!.isNotEmpty
+                      ? Image.network(
+                          product.imageUrl!.startsWith('http')
+                              ? product.imageUrl!
+                              : 'http://192.168.100.65:8000/storage/${product.imageUrl}',
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: 80,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Center(
+                              child: Icon(
+                                Icons.shopping_bag,
+                                size: 48,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withValues(alpha: 0.7),
+                              ),
+                            );
+                          },
+                        )
+                      : Center(
+                          child: Icon(
+                            Icons.shopping_bag,
+                            size: 48,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withValues(alpha: 0.7),
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Product Name
+              Text(
+                product.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const Spacer(),
+              // Product Price
+              Row(
+                children: [
+                  if (product.hasDiscount) ...[
+                    Text(
+                      currencyFormat.format(product.originalPrice),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        decoration: TextDecoration.lineThrough,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
+                  Expanded(
+                    child: Text(
+                      currencyFormat.format(product.price),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: product.hasDiscount ? Colors.red : Colors.black87,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              // Stock indicator
+              if (!product.isInStock)
+                Container(
+                  margin: const EdgeInsets.only(top: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade100,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    'Out of Stock',
+                    style: TextStyle(fontSize: 10, color: Colors.red),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showAboutDialog(BuildContext context) {
     Get.dialog(
       AlertDialog(
@@ -958,15 +1213,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               'For support, contact us at:',
               style: Theme.of(context).textTheme.bodySmall,
             ),
-            const Text('info@manschoice.co.ke'),
-            const Text('+254 700 000 000'),
+            const Text('manchoiceenterprise@gmail.com'),
+            const Text('+254 0110 846 828'),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Close'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Close')),
         ],
       ),
     );
