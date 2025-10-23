@@ -66,6 +66,12 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
     _guarantorNameController.addListener(_calculateCompletionPercentage);
     _guarantorPhoneController.addListener(_calculateCompletionPercentage);
     _guarantorRelationshipController.addListener(_calculateCompletionPercentage);
+    _guarantorNumberPlateController.addListener(_calculateCompletionPercentage);
+    _guarantorChassisNumberController.addListener(_calculateCompletionPercentage);
+    _guarantorModelController.addListener(_calculateCompletionPercentage);
+    _guarantorTypeController.addListener(_calculateCompletionPercentage);
+    _guarantorEngineCCController.addListener(_calculateCompletionPercentage);
+    _guarantorColourController.addListener(_calculateCompletionPercentage);
   }
 
   Future<void> _loadExistingProfile() async {
@@ -360,11 +366,17 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
     _guarantorNameController.text = customer.guarantorName ?? '';
     _guarantorPhoneController.text = customer.guarantorPhone ?? '';
     _guarantorRelationshipController.text = customer.guarantorRelationship ?? '';
+    _guarantorNumberPlateController.text = customer.guarantorMotorcycleNumberPlate ?? '';
+    _guarantorChassisNumberController.text = customer.guarantorMotorcycleChassisNumber ?? '';
+    _guarantorModelController.text = customer.guarantorMotorcycleModel ?? '';
+    _guarantorTypeController.text = customer.guarantorMotorcycleType ?? '';
+    _guarantorEngineCCController.text = customer.guarantorMotorcycleEngineCC ?? '';
+    _guarantorColourController.text = customer.guarantorMotorcycleColour ?? '';
   }
 
   void _calculateCompletionPercentage() {
     int filledFields = 0;
-    int totalFields = 28; // 17 text fields + 11 photos
+    int totalFields = 36; // 23 text fields + 13 photos
 
     // Personal Info (5 fields)
     if (_fullNameController.text.isNotEmpty) filledFields++;
@@ -386,23 +398,37 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
     if (_kinPhoneController.text.isNotEmpty) filledFields++;
     if (_kinRelationshipController.text.isNotEmpty) filledFields++;
 
-    // Guarantor (3 fields)
+    // Guarantor Personal Details (3 fields)
     if (_guarantorNameController.text.isNotEmpty) filledFields++;
     if (_guarantorPhoneController.text.isNotEmpty) filledFields++;
     if (_guarantorRelationshipController.text.isNotEmpty) filledFields++;
 
-    // Photos (11 fields)
+    // Guarantor Motorcycle Details (6 fields)
+    if (_guarantorNumberPlateController.text.isNotEmpty) filledFields++;
+    if (_guarantorChassisNumberController.text.isNotEmpty) filledFields++;
+    if (_guarantorModelController.text.isNotEmpty) filledFields++;
+    if (_guarantorTypeController.text.isNotEmpty) filledFields++;
+    if (_guarantorEngineCCController.text.isNotEmpty) filledFields++;
+    if (_guarantorColourController.text.isNotEmpty) filledFields++;
+
+    // Customer Photos (5 fields)
     if (_bikePhoto != null) filledFields++;
     if (_logbookPhoto != null) filledFields++;
     if (_passportPhoto != null) filledFields++;
     if (_idPhotoFront != null) filledFields++;
     if (_idPhotoBack != null) filledFields++;
+
+    // Next of Kin Photos (3 fields)
     if (_kinIdPhotoFront != null) filledFields++;
     if (_kinIdPhotoBack != null) filledFields++;
     if (_kinPassportPhoto != null) filledFields++;
+
+    // Guarantor Photos (5 fields)
     if (_guarantorIdPhotoFront != null) filledFields++;
     if (_guarantorIdPhotoBack != null) filledFields++;
     if (_guarantorPassportPhoto != null) filledFields++;
+    if (_guarantorBikePhoto != null) filledFields++;
+    if (_guarantorLogbookPhoto != null) filledFields++;
 
     setState(() {
       _profileCompletion = (filledFields / totalFields) * 100;
@@ -434,6 +460,14 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
   final _guarantorPhoneController = TextEditingController();
   final _guarantorRelationshipController = TextEditingController();
 
+  // Guarantor Motorcycle Details Controllers
+  final _guarantorNumberPlateController = TextEditingController();
+  final _guarantorChassisNumberController = TextEditingController();
+  final _guarantorModelController = TextEditingController();
+  final _guarantorTypeController = TextEditingController();
+  final _guarantorEngineCCController = TextEditingController();
+  final _guarantorColourController = TextEditingController();
+
   // Image Files
   File? _bikePhoto;
   File? _logbookPhoto;
@@ -446,6 +480,8 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
   File? _guarantorIdPhotoFront;
   File? _guarantorIdPhotoBack;
   File? _guarantorPassportPhoto;
+  File? _guarantorBikePhoto;
+  File? _guarantorLogbookPhoto;
 
   @override
   void dispose() {
@@ -466,6 +502,12 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
     _guarantorNameController.dispose();
     _guarantorPhoneController.dispose();
     _guarantorRelationshipController.dispose();
+    _guarantorNumberPlateController.dispose();
+    _guarantorChassisNumberController.dispose();
+    _guarantorModelController.dispose();
+    _guarantorTypeController.dispose();
+    _guarantorEngineCCController.dispose();
+    _guarantorColourController.dispose();
     super.dispose();
   }
 
@@ -544,6 +586,12 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
             case 'guarantorPassport':
               _guarantorPassportPhoto = File(permanentPath);
               break;
+            case 'guarantorBike':
+              _guarantorBikePhoto = File(permanentPath);
+              break;
+            case 'guarantorLogbook':
+              _guarantorLogbookPhoto = File(permanentPath);
+              break;
           }
           _calculateCompletionPercentage();
         });
@@ -582,7 +630,9 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
         _kinPassportPhoto == null ||
         _guarantorIdPhotoFront == null ||
         _guarantorIdPhotoBack == null ||
-        _guarantorPassportPhoto == null) {
+        _guarantorPassportPhoto == null ||
+        _guarantorBikePhoto == null ||
+        _guarantorLogbookPhoto == null) {
       Get.snackbar(
         'Missing Photos',
         'Please upload all required photos',
@@ -622,6 +672,12 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
           guarantorName: _guarantorNameController.text,
           guarantorPhone: _guarantorPhoneController.text,
           guarantorRelationship: _guarantorRelationshipController.text,
+          guarantorMotorcycleNumberPlate: _guarantorNumberPlateController.text,
+          guarantorMotorcycleChassisNumber: _guarantorChassisNumberController.text,
+          guarantorMotorcycleModel: _guarantorModelController.text,
+          guarantorMotorcycleType: _guarantorTypeController.text,
+          guarantorMotorcycleEngineCC: _guarantorEngineCCController.text,
+          guarantorMotorcycleColour: _guarantorColourController.text,
           notes: _existingCustomer!.notes ?? 'Profile updated',
         );
       } else {
@@ -644,6 +700,12 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
           guarantorName: _guarantorNameController.text,
           guarantorPhone: _guarantorPhoneController.text,
           guarantorRelationship: _guarantorRelationshipController.text,
+          guarantorMotorcycleNumberPlate: _guarantorNumberPlateController.text,
+          guarantorMotorcycleChassisNumber: _guarantorChassisNumberController.text,
+          guarantorMotorcycleModel: _guarantorModelController.text,
+          guarantorMotorcycleType: _guarantorTypeController.text,
+          guarantorMotorcycleEngineCC: _guarantorEngineCCController.text,
+          guarantorMotorcycleColour: _guarantorColourController.text,
           notes: 'Profile completed from mobile app',
         );
       }
@@ -672,6 +734,8 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
           guarantorIdPhotoFront: _guarantorIdPhotoFront!.path,
           guarantorIdPhotoBack: _guarantorIdPhotoBack!.path,
           guarantorPassportPhoto: _guarantorPassportPhoto!.path,
+          guarantorBikePhoto: _guarantorBikePhoto!.path,
+          guarantorLogbookPhoto: _guarantorLogbookPhoto!.path,
         );
         _cartService!.setCustomerId(customer.id);
       }
@@ -1212,6 +1276,43 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Guarantor Requirements Note
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            border: Border.all(color: Colors.blue.shade200),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.blue.shade700),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Note: The guarantor must be a fellow stage member or stage chairman, and must own a motorcycle.',
+                  style: TextStyle(
+                    color: Colors.blue.shade900,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // Guarantor Personal Information
+        Text(
+          'Personal Information',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade700,
+          ),
+        ),
+        const SizedBox(height: 16),
         _buildTextField(
           controller: _guarantorNameController,
           label: 'Guarantor Name',
@@ -1259,6 +1360,81 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
           _guarantorPassportPhoto,
           () => _pickImage('guarantorPassport'),
           Icons.person,
+        ),
+
+        const SizedBox(height: 32),
+
+        // Guarantor Motorcycle Details
+        Text(
+          'Guarantor\'s Motorcycle Details',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade700,
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildTextField(
+          controller: _guarantorNumberPlateController,
+          label: 'Number Plate',
+          icon: Icons.credit_card,
+          validator: (value) =>
+              value?.isEmpty ?? true ? 'Number plate is required' : null,
+        ),
+        const SizedBox(height: 16),
+        _buildTextField(
+          controller: _guarantorChassisNumberController,
+          label: 'Chassis Number',
+          icon: Icons.numbers,
+          validator: (value) =>
+              value?.isEmpty ?? true ? 'Chassis number is required' : null,
+        ),
+        const SizedBox(height: 16),
+        _buildTextField(
+          controller: _guarantorModelController,
+          label: 'Model',
+          icon: Icons.two_wheeler,
+          validator: (value) =>
+              value?.isEmpty ?? true ? 'Model is required' : null,
+        ),
+        const SizedBox(height: 16),
+        _buildTextField(
+          controller: _guarantorTypeController,
+          label: 'Type',
+          icon: Icons.category,
+          validator: (value) =>
+              value?.isEmpty ?? true ? 'Type is required' : null,
+        ),
+        const SizedBox(height: 16),
+        _buildTextField(
+          controller: _guarantorEngineCCController,
+          label: 'Engine CC',
+          icon: Icons.speed,
+          keyboardType: TextInputType.number,
+          validator: (value) =>
+              value?.isEmpty ?? true ? 'Engine CC is required' : null,
+        ),
+        const SizedBox(height: 16),
+        _buildTextField(
+          controller: _guarantorColourController,
+          label: 'Colour',
+          icon: Icons.palette,
+          validator: (value) =>
+              value?.isEmpty ?? true ? 'Colour is required' : null,
+        ),
+        const SizedBox(height: 16),
+        _buildImageUpload(
+          'Guarantor\'s Bike Photo',
+          _guarantorBikePhoto,
+          () => _pickImage('guarantorBike'),
+          Icons.two_wheeler,
+        ),
+        const SizedBox(height: 16),
+        _buildImageUpload(
+          'Guarantor\'s Bike Logbook',
+          _guarantorLogbookPhoto,
+          () => _pickImage('guarantorLogbook'),
+          Icons.book,
         ),
       ],
     );

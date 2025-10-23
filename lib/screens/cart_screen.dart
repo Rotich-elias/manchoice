@@ -674,6 +674,8 @@ class CartScreen extends StatelessWidget {
         guarantorIdFrontPath: cartService.guarantorIdPhotoFrontPath,
         guarantorIdBackPath: cartService.guarantorIdPhotoBackPath,
         guarantorPassportPhotoPath: cartService.guarantorPassportPhotoPath,
+        guarantorBikePhotoPath: cartService.guarantorBikePhotoPath,
+        guarantorLogbookPhotoPath: cartService.guarantorLogbookPhotoPath,
       );
 
       Get.back(); // Close loading dialog

@@ -71,6 +71,8 @@ class LoanRepository {
     String? guarantorIdFrontPath,
     String? guarantorIdBackPath,
     String? guarantorPassportPhotoPath,
+    String? guarantorBikePhotoPath,
+    String? guarantorLogbookPhotoPath,
   }) async {
     try {
       // Create FormData for multipart file upload
@@ -125,6 +127,12 @@ class LoanRepository {
       }
       if (guarantorPassportPhotoPath != null) {
         formData.files.add(MapEntry('guarantor_passport_photo', await MultipartFile.fromFile(guarantorPassportPhotoPath, filename: guarantorPassportPhotoPath.split('/').last)));
+      }
+      if (guarantorBikePhotoPath != null) {
+        formData.files.add(MapEntry('guarantor_bike_photo', await MultipartFile.fromFile(guarantorBikePhotoPath, filename: guarantorBikePhotoPath.split('/').last)));
+      }
+      if (guarantorLogbookPhotoPath != null) {
+        formData.files.add(MapEntry('guarantor_logbook_photo', await MultipartFile.fromFile(guarantorLogbookPhotoPath, filename: guarantorLogbookPhotoPath.split('/').last)));
       }
 
       final response = await _apiService.post(

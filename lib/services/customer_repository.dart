@@ -77,6 +77,13 @@ class CustomerRepository {
     String? guarantorName,
     String? guarantorPhone,
     String? guarantorRelationship,
+    // Guarantor motorcycle details
+    String? guarantorMotorcycleNumberPlate,
+    String? guarantorMotorcycleChassisNumber,
+    String? guarantorMotorcycleModel,
+    String? guarantorMotorcycleType,
+    String? guarantorMotorcycleEngineCC,
+    String? guarantorMotorcycleColour,
   }) async {
     try {
       final response = await _apiService.post(
@@ -105,6 +112,13 @@ class CustomerRepository {
           if (guarantorName != null) 'guarantor_name': guarantorName,
           if (guarantorPhone != null) 'guarantor_phone': guarantorPhone,
           if (guarantorRelationship != null) 'guarantor_relationship': guarantorRelationship,
+          // Guarantor motorcycle details
+          if (guarantorMotorcycleNumberPlate != null) 'guarantor_motorcycle_number_plate': guarantorMotorcycleNumberPlate,
+          if (guarantorMotorcycleChassisNumber != null) 'guarantor_motorcycle_chassis_number': guarantorMotorcycleChassisNumber,
+          if (guarantorMotorcycleModel != null) 'guarantor_motorcycle_model': guarantorMotorcycleModel,
+          if (guarantorMotorcycleType != null) 'guarantor_motorcycle_type': guarantorMotorcycleType,
+          if (guarantorMotorcycleEngineCC != null) 'guarantor_motorcycle_engine_cc': guarantorMotorcycleEngineCC,
+          if (guarantorMotorcycleColour != null) 'guarantor_motorcycle_colour': guarantorMotorcycleColour,
         },
       );
 
@@ -144,6 +158,13 @@ class CustomerRepository {
     String? guarantorName,
     String? guarantorPhone,
     String? guarantorRelationship,
+    // Guarantor motorcycle details
+    String? guarantorMotorcycleNumberPlate,
+    String? guarantorMotorcycleChassisNumber,
+    String? guarantorMotorcycleModel,
+    String? guarantorMotorcycleType,
+    String? guarantorMotorcycleEngineCC,
+    String? guarantorMotorcycleColour,
   }) async {
     try {
       final response = await _apiService.put(
@@ -173,6 +194,13 @@ class CustomerRepository {
           if (guarantorName != null) 'guarantor_name': guarantorName,
           if (guarantorPhone != null) 'guarantor_phone': guarantorPhone,
           if (guarantorRelationship != null) 'guarantor_relationship': guarantorRelationship,
+          // Guarantor motorcycle details
+          if (guarantorMotorcycleNumberPlate != null) 'guarantor_motorcycle_number_plate': guarantorMotorcycleNumberPlate,
+          if (guarantorMotorcycleChassisNumber != null) 'guarantor_motorcycle_chassis_number': guarantorMotorcycleChassisNumber,
+          if (guarantorMotorcycleModel != null) 'guarantor_motorcycle_model': guarantorMotorcycleModel,
+          if (guarantorMotorcycleType != null) 'guarantor_motorcycle_type': guarantorMotorcycleType,
+          if (guarantorMotorcycleEngineCC != null) 'guarantor_motorcycle_engine_cc': guarantorMotorcycleEngineCC,
+          if (guarantorMotorcycleColour != null) 'guarantor_motorcycle_colour': guarantorMotorcycleColour,
         },
       );
 

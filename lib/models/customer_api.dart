@@ -30,6 +30,13 @@ class CustomerApi {
   final String? guarantorName;
   final String? guarantorPhone;
   final String? guarantorRelationship;
+  // Guarantor Motorcycle Details
+  final String? guarantorMotorcycleNumberPlate;
+  final String? guarantorMotorcycleChassisNumber;
+  final String? guarantorMotorcycleModel;
+  final String? guarantorMotorcycleType;
+  final String? guarantorMotorcycleEngineCC;
+  final String? guarantorMotorcycleColour;
   // Document Photos (stored for reuse across loan applications)
   final String? bikePhotoPath;
   final String? logbookPhotoPath;
@@ -40,6 +47,8 @@ class CustomerApi {
   final String? nextOfKinIdBackPath;
   final String? guarantorIdFrontPath;
   final String? guarantorIdBackPath;
+  final String? guarantorBikePhotoPath;
+  final String? guarantorLogbookPhotoPath;
   // Document Photo URLs
   final String? bikePhotoUrl;
   final String? logbookPhotoUrl;
@@ -52,6 +61,8 @@ class CustomerApi {
   final String? guarantorIdFrontUrl;
   final String? guarantorIdBackUrl;
   final String? guarantorPassportPhotoUrl;
+  final String? guarantorBikePhotoUrl;
+  final String? guarantorLogbookPhotoUrl;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -84,6 +95,12 @@ class CustomerApi {
     this.guarantorName,
     this.guarantorPhone,
     this.guarantorRelationship,
+    this.guarantorMotorcycleNumberPlate,
+    this.guarantorMotorcycleChassisNumber,
+    this.guarantorMotorcycleModel,
+    this.guarantorMotorcycleType,
+    this.guarantorMotorcycleEngineCC,
+    this.guarantorMotorcycleColour,
     this.bikePhotoPath,
     this.logbookPhotoPath,
     this.passportPhotoPath,
@@ -93,6 +110,8 @@ class CustomerApi {
     this.nextOfKinIdBackPath,
     this.guarantorIdFrontPath,
     this.guarantorIdBackPath,
+    this.guarantorBikePhotoPath,
+    this.guarantorLogbookPhotoPath,
     this.bikePhotoUrl,
     this.logbookPhotoUrl,
     this.passportPhotoUrl,
@@ -104,6 +123,8 @@ class CustomerApi {
     this.guarantorIdFrontUrl,
     this.guarantorIdBackUrl,
     this.guarantorPassportPhotoUrl,
+    this.guarantorBikePhotoUrl,
+    this.guarantorLogbookPhotoUrl,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -138,6 +159,12 @@ class CustomerApi {
       guarantorName: json['guarantor_name'],
       guarantorPhone: json['guarantor_phone'],
       guarantorRelationship: json['guarantor_relationship'],
+      guarantorMotorcycleNumberPlate: json['guarantor_motorcycle_number_plate'],
+      guarantorMotorcycleChassisNumber: json['guarantor_motorcycle_chassis_number'],
+      guarantorMotorcycleModel: json['guarantor_motorcycle_model'],
+      guarantorMotorcycleType: json['guarantor_motorcycle_type'],
+      guarantorMotorcycleEngineCC: json['guarantor_motorcycle_engine_cc'],
+      guarantorMotorcycleColour: json['guarantor_motorcycle_colour'],
       bikePhotoPath: json['bike_photo_path'],
       logbookPhotoPath: json['logbook_photo_path'],
       passportPhotoPath: json['passport_photo_path'],
@@ -147,6 +174,8 @@ class CustomerApi {
       nextOfKinIdBackPath: json['next_of_kin_id_back_path'],
       guarantorIdFrontPath: json['guarantor_id_front_path'],
       guarantorIdBackPath: json['guarantor_id_back_path'],
+      guarantorBikePhotoPath: json['guarantor_bike_photo_path'],
+      guarantorLogbookPhotoPath: json['guarantor_logbook_photo_path'],
       bikePhotoUrl: json['bike_photo_url'],
       logbookPhotoUrl: json['logbook_photo_url'],
       passportPhotoUrl: json['passport_photo_url'],
@@ -158,6 +187,8 @@ class CustomerApi {
       guarantorIdFrontUrl: json['guarantor_id_front_url'],
       guarantorIdBackUrl: json['guarantor_id_back_url'],
       guarantorPassportPhotoUrl: json['guarantor_passport_photo_url'],
+      guarantorBikePhotoUrl: json['guarantor_bike_photo_url'],
+      guarantorLogbookPhotoUrl: json['guarantor_logbook_photo_url'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
       deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at']) : null,
