@@ -17,6 +17,7 @@ class _MyLoansScreenState extends State<MyLoansScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   String _filterStatus = 'all'; // all, pending, approved, active, completed
+  Loan? _activeLoan;
 
   @override
   void initState() {
@@ -37,8 +38,25 @@ class _MyLoansScreenState extends State<MyLoansScreen> {
         status: _filterStatus == 'all' ? null : _filterStatus,
       );
 
+      // Find active loan for quick overview
+      Loan? activeLoan;
+      try {
+        final activeLoans = await _loanRepository.getAllLoans(status: 'active');
+        if (activeLoans.isNotEmpty) {
+          activeLoan = activeLoans.first;
+        } else {
+          final approvedLoans = await _loanRepository.getAllLoans(status: 'approved');
+          if (approvedLoans.isNotEmpty) {
+            activeLoan = approvedLoans.first;
+          }
+        }
+      } catch (e) {
+        // Ignore errors loading active loan
+      }
+
       setState(() {
         _loans = loans;
+        _activeLoan = activeLoan;
         _isLoading = false;
       });
     } catch (e) {
@@ -64,6 +82,10 @@ class _MyLoansScreenState extends State<MyLoansScreen> {
       ),
       body: Column(
         children: [
+          // Quick Overview Section
+          if (_activeLoan != null && !_isLoading)
+            _buildQuickOverview(),
+
           // Filter Chips
           _buildFilterChips(),
           const Divider(height: 1),
@@ -601,6 +623,126 @@ class _MyLoansScreenState extends State<MyLoansScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuickOverview() {
+    if (_activeLoan == null) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Quick Overview',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  context,
+                  icon: Icons.account_balance_wallet,
+                  title: 'Total Loan',
+                  value: 'KES ${NumberFormat('#,##0.00').format(_activeLoan!.totalAmount)}',
+                  color: Colors.blue,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatCard(
+                  context,
+                  icon: Icons.pending_actions,
+                  title: 'Balance',
+                  value: 'KES ${NumberFormat('#,##0.00').format(_activeLoan!.balance)}',
+                  color: Colors.orange,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  context,
+                  icon: Icons.check_circle,
+                  title: 'Paid',
+                  value: 'KES ${NumberFormat('#,##0.00').format(_activeLoan!.amountPaid)}',
+                  color: Colors.green,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatCard(
+                  context,
+                  icon: Icons.calendar_today,
+                  title: 'Next Due',
+                  value: _activeLoan!.dueDate != null
+                      ? DateFormat('MMM dd').format(_activeLoan!.dueDate!)
+                      : 'N/A',
+                  color: Colors.red,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String value,
+    required Color color,
+  }) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              size: 32,
+              color: color,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+            ),
+          ],
+        ),
       ),
     );
   }

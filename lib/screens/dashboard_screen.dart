@@ -278,15 +278,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 12),
               _buildMenuCard(
                 context,
-                icon: Icons.person_add,
-                title: 'Application Form',
-                subtitle: 'Fill application form to apply for financing',
-                color: Colors.orange,
-                onTap: () => Get.toNamed('/new-loan-application'),
-              ),
-              const SizedBox(height: 12),
-              _buildMenuCard(
-                context,
                 icon: Icons.payment,
                 title: 'My Payments / Installments',
                 subtitle: 'View and manage your payments',
@@ -305,86 +296,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 12),
               _buildMenuCard(
                 context,
-                icon: Icons.assignment,
-                title: 'Part Requests',
-                subtitle: 'View your requested parts',
-                color: Colors.teal,
-                onTap: () => Get.toNamed('/part-requests'),
-              ),
-              const SizedBox(height: 12),
-              _buildMenuCard(
-                context,
                 icon: Icons.support_agent,
                 title: 'Support / Help',
                 subtitle: 'Get help and contact support',
                 color: Colors.red,
                 onTap: () => Get.toNamed('/support'),
-              ),
-              const SizedBox(height: 24),
-
-              // Quick Stats Section
-              Text(
-                'Quick Overview',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      context,
-                      icon: Icons.account_balance_wallet,
-                      title: 'Total Loan',
-                      value: _activeLoan != null
-                          ? 'KES ${NumberFormat('#,##0.00').format(_activeLoan!.totalAmount)}'
-                          : 'KES 0',
-                      color: Colors.blue,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard(
-                      context,
-                      icon: Icons.pending_actions,
-                      title: 'Balance',
-                      value: _activeLoan != null
-                          ? 'KES ${NumberFormat('#,##0.00').format(_activeLoan!.balance)}'
-                          : 'KES 0',
-                      color: Colors.orange,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      context,
-                      icon: Icons.check_circle,
-                      title: 'Paid',
-                      value: _activeLoan != null
-                          ? 'KES ${NumberFormat('#,##0.00').format(_activeLoan!.amountPaid)}'
-                          : 'KES 0',
-                      color: Colors.green,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard(
-                      context,
-                      icon: Icons.calendar_today,
-                      title: 'Next Due',
-                      value: _activeLoan != null && _activeLoan!.dueDate != null
-                          ? DateFormat('MMM dd').format(_activeLoan!.dueDate!)
-                          : 'N/A',
-                      color: Colors.red,
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
@@ -461,6 +377,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onTap: () {
               Get.back();
               Get.toNamed('/my-loans');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.person_add),
+            title: const Text('Application Form'),
+            onTap: () {
+              Get.back();
+              Get.toNamed('/new-loan-application');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.assignment),
+            title: const Text('Part Requests'),
+            onTap: () {
+              Get.back();
+              Get.toNamed('/part-requests');
             },
           ),
           ListTile(
@@ -752,47 +684,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String value,
-    required Color color,
-  }) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 32,
-              color: color,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.secondary,
-                  ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-            ),
-          ],
         ),
       ),
     );

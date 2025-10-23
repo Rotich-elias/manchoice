@@ -104,36 +104,11 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // Animated gradient background
-          AnimatedBuilder(
-            animation: _particleController,
-            builder: (context, child) {
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color.lerp(
-                        const Color(0xFF1A237E),
-                        const Color(0xFF0D47A1),
-                        _particleController.value,
-                      )!,
-                      Color.lerp(
-                        const Color(0xFF0D47A1),
-                        const Color(0xFF01579B),
-                        _particleController.value,
-                      )!,
-                      Color.lerp(
-                        const Color(0xFF01579B),
-                        const Color(0xFF006064),
-                        _particleController.value,
-                      )!,
-                    ],
-                  ),
-                ),
-              );
-            },
+          // White background
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+            ),
           ),
 
           // Particle/Grid effect background
@@ -221,47 +196,16 @@ class _SplashScreenState extends State<SplashScreen>
                           opacity: _fadeAnimation,
                           child: Column(
                             children: [
-                              // Main title with glow
-                              AnimatedBuilder(
-                                animation: _glowController,
-                                builder: (context, child) {
-                                  return ShaderMask(
-                                    shaderCallback: (bounds) => LinearGradient(
-                                      colors: [
-                                        Colors.white,
-                                        Colors.cyan.withValues(
-                                          alpha: 0.5 + 0.5 * _glowAnimation.value,
-                                        ),
-                                        Colors.white,
-                                      ],
-                                      stops: const [0.0, 0.5, 1.0],
-                                    ).createShader(bounds),
-                                    child: Text(
-                                      'MAN\'S CHOICE',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 36,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 6,
-                                        color: Colors.white,
-                                        shadows: [
-                                          Shadow(
-                                            color: Colors.cyan.withValues(
-                                              alpha: 0.8 * _glowAnimation.value,
-                                            ),
-                                            blurRadius: 20 * _glowAnimation.value,
-                                          ),
-                                          Shadow(
-                                            color: Colors.blue.withValues(
-                                              alpha: 0.6 * _glowAnimation.value,
-                                            ),
-                                            blurRadius: 30 * _glowAnimation.value,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
+                              // Main title
+                              Text(
+                                'MAN\'S CHOICE',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 6,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                               ),
                               const SizedBox(height: 8),
 
@@ -273,7 +217,7 @@ class _SplashScreenState extends State<SplashScreen>
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 8,
-                                  color: Colors.white.withValues(alpha: 0.9),
+                                  color: Theme.of(context).colorScheme.secondary,
                                 ),
                               ),
 
@@ -290,19 +234,12 @@ class _SplashScreenState extends State<SplashScreen>
                                       gradient: LinearGradient(
                                         colors: [
                                           Colors.transparent,
-                                          Colors.cyan.withValues(alpha: 0.8),
-                                          Colors.white,
-                                          Colors.cyan.withValues(alpha: 0.8),
+                                          Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                                          Theme.of(context).colorScheme.primary,
+                                          Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
                                           Colors.transparent,
                                         ],
                                       ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.cyan.withValues(alpha: 0.5),
-                                          blurRadius: 10,
-                                          spreadRadius: 2,
-                                        ),
-                                      ],
                                     ),
                                   );
                                 },
@@ -317,7 +254,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontStyle: FontStyle.italic,
-                                  color: Colors.white.withValues(alpha: 0.8),
+                                  color: Colors.grey[600],
                                   letterSpacing: 1,
                                 ),
                               ),
@@ -332,17 +269,10 @@ class _SplashScreenState extends State<SplashScreen>
                                 ),
                                 decoration: BoxDecoration(
                                   border: Border.all(
-                                    color: Colors.cyan.withValues(alpha: 0.5),
+                                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
                                     width: 1,
                                   ),
                                   borderRadius: BorderRadius.circular(20),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.cyan.withValues(alpha: 0.3),
-                                      blurRadius: 10,
-                                      spreadRadius: 1,
-                                    ),
-                                  ],
                                 ),
                                 child: Text(
                                   'CREDIT MANAGEMENT SYSTEM',
@@ -350,7 +280,7 @@ class _SplashScreenState extends State<SplashScreen>
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 2,
-                                    color: Colors.cyan.withValues(alpha: 0.9),
+                                    color: Theme.of(context).colorScheme.primary,
                                   ),
                                 ),
                               ),
@@ -374,7 +304,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 children: [
                                   Icon(
                                     Icons.lock_clock,
-                                    color: Colors.cyan.withValues(alpha: 0.8),
+                                    color: Theme.of(context).colorScheme.primary,
                                     size: 16,
                                   ),
                                   const SizedBox(width: 8),
@@ -384,7 +314,7 @@ class _SplashScreenState extends State<SplashScreen>
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
                                       letterSpacing: 2,
-                                      color: Colors.cyan.withValues(alpha: 0.9),
+                                      color: Theme.of(context).colorScheme.primary,
                                     ),
                                   ),
                                 ],
@@ -401,12 +331,8 @@ class _SplashScreenState extends State<SplashScreen>
                                       Container(
                                         height: 4,
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withValues(alpha: 0.1),
+                                          color: Colors.grey[300],
                                           borderRadius: BorderRadius.circular(2),
-                                          border: Border.all(
-                                            color: Colors.cyan.withValues(alpha: 0.3),
-                                            width: 0.5,
-                                          ),
                                         ),
                                       ),
                                       // Progress
@@ -415,21 +341,8 @@ class _SplashScreenState extends State<SplashScreen>
                                         child: Container(
                                           height: 4,
                                           decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                Colors.cyan.withValues(alpha: 0.8),
-                                                Colors.cyan,
-                                                Colors.white,
-                                              ],
-                                            ),
+                                            color: Theme.of(context).colorScheme.primary,
                                             borderRadius: BorderRadius.circular(2),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.cyan.withValues(alpha: 0.6),
-                                                blurRadius: 8,
-                                                spreadRadius: 1,
-                                              ),
-                                            ],
                                           ),
                                         ),
                                       ),
@@ -450,7 +363,7 @@ class _SplashScreenState extends State<SplashScreen>
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
                                       letterSpacing: 2,
-                                      color: Colors.cyan.withValues(alpha: 0.7),
+                                      color: Theme.of(context).colorScheme.primary,
                                     ),
                                   );
                                 },
@@ -470,7 +383,7 @@ class _SplashScreenState extends State<SplashScreen>
                           style: TextStyle(
                             fontSize: 9,
                             letterSpacing: 1.5,
-                            color: Colors.white.withValues(alpha: 0.4),
+                            color: Colors.grey[400],
                           ),
                         ),
                       ),
@@ -501,13 +414,13 @@ class ParticlePainter extends CustomPainter {
       ..strokeWidth = 1
       ..style = PaintingStyle.fill;
 
-    // Draw moving particles
+    // Draw moving particles with subtle colors for white background
     for (int i = 0; i < 50; i++) {
       final x = (random.nextDouble() * size.width + animationValue * 50) % size.width;
       final y = (random.nextDouble() * size.height + animationValue * 30) % size.height;
-      final opacity = 0.1 + random.nextDouble() * 0.3;
+      final opacity = 0.05 + random.nextDouble() * 0.1;
 
-      paint.color = Colors.cyan.withValues(alpha: opacity);
+      paint.color = Colors.blue.withValues(alpha: opacity);
       canvas.drawCircle(
         Offset(x, y),
         1 + random.nextDouble() * 2,
@@ -515,9 +428,9 @@ class ParticlePainter extends CustomPainter {
       );
     }
 
-    // Draw grid lines
+    // Draw subtle grid lines
     paint
-      ..color = Colors.cyan.withValues(alpha: 0.05)
+      ..color = Colors.grey.withValues(alpha: 0.05)
       ..style = PaintingStyle.stroke;
 
     // Horizontal lines
