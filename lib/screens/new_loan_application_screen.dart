@@ -173,6 +173,18 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
         });
       }
 
+      if (customer.guarantorBikePhotoUrl != null && customer.guarantorBikePhotoUrl!.isNotEmpty && _guarantorBikePhoto == null) {
+        await _downloadAndCacheDocument(customer.guarantorBikePhotoUrl!, 'guarantor_bike_photo_path', (file) {
+          if (mounted) setState(() => _guarantorBikePhoto = file);
+        });
+      }
+
+      if (customer.guarantorLogbookPhotoUrl != null && customer.guarantorLogbookPhotoUrl!.isNotEmpty && _guarantorLogbookPhoto == null) {
+        await _downloadAndCacheDocument(customer.guarantorLogbookPhotoUrl!, 'guarantor_logbook_photo_path', (file) {
+          if (mounted) setState(() => _guarantorLogbookPhoto = file);
+        });
+      }
+
       if (mounted) {
         setState(() {
           _calculateCompletionPercentage();
@@ -230,6 +242,8 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
       final guarantorIdFrontPath = prefs.getString('guarantor_id_front_photo_path');
       final guarantorIdBackPath = prefs.getString('guarantor_id_back_photo_path');
       final guarantorPassportPath = prefs.getString('guarantor_passport_photo_path');
+      final guarantorBikePath = prefs.getString('guarantor_bike_photo_path');
+      final guarantorLogbookPath = prefs.getString('guarantor_logbook_photo_path');
 
       if (mounted) {
         setState(() {
@@ -266,6 +280,12 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
           if (guarantorPassportPath != null && File(guarantorPassportPath).existsSync()) {
             _guarantorPassportPhoto = File(guarantorPassportPath);
           }
+          if (guarantorBikePath != null && File(guarantorBikePath).existsSync()) {
+            _guarantorBikePhoto = File(guarantorBikePath);
+          }
+          if (guarantorLogbookPath != null && File(guarantorLogbookPath).existsSync()) {
+            _guarantorLogbookPhoto = File(guarantorLogbookPath);
+          }
           _calculateCompletionPercentage();
         });
       }
@@ -290,6 +310,8 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
       await prefs.remove('guarantor_id_front_photo_path');
       await prefs.remove('guarantor_id_back_photo_path');
       await prefs.remove('guarantor_passport_photo_path');
+      await prefs.remove('guarantor_bike_photo_path');
+      await prefs.remove('guarantor_logbook_photo_path');
     } catch (e) {
       // Silently fail if clearing fails
     }

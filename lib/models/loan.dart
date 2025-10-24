@@ -12,6 +12,10 @@ class Loan {
   final double totalAmount;
   final double amountPaid;
   final double balance;
+  final double depositAmount;
+  final double depositPaid;
+  final bool depositRequired;
+  final DateTime? depositPaidAt;
   final String status; // pending, approved, active, completed, defaulted, cancelled, rejected
   final DateTime? disbursementDate;
   final DateTime? dueDate;
@@ -40,6 +44,8 @@ class Loan {
   final String? guarantorIdFrontPath;
   final String? guarantorIdBackPath;
   final String? guarantorPassportPhotoPath;
+  final String? guarantorBikePhotoPath;
+  final String? guarantorLogbookPhotoPath;
 
   Loan({
     required this.id,
@@ -50,6 +56,10 @@ class Loan {
     required this.totalAmount,
     required this.amountPaid,
     required this.balance,
+    this.depositAmount = 0,
+    this.depositPaid = 0,
+    this.depositRequired = true,
+    this.depositPaidAt,
     required this.status,
     this.disbursementDate,
     this.dueDate,
@@ -76,6 +86,8 @@ class Loan {
     this.guarantorIdFrontPath,
     this.guarantorIdBackPath,
     this.guarantorPassportPhotoPath,
+    this.guarantorBikePhotoPath,
+    this.guarantorLogbookPhotoPath,
   });
 
   factory Loan.fromJson(Map<String, dynamic> json) {
@@ -88,6 +100,10 @@ class Loan {
       totalAmount: double.parse(json['total_amount']?.toString() ?? '0'),
       amountPaid: double.parse(json['amount_paid']?.toString() ?? '0'),
       balance: double.parse(json['balance']?.toString() ?? '0'),
+      depositAmount: double.parse(json['deposit_amount']?.toString() ?? '0'),
+      depositPaid: double.parse(json['deposit_paid']?.toString() ?? '0'),
+      depositRequired: json['deposit_required'] ?? true,
+      depositPaidAt: json['deposit_paid_at'] != null ? DateTime.parse(json['deposit_paid_at']) : null,
       status: json['status'],
       disbursementDate: json['disbursement_date'] != null
           ? DateTime.parse(json['disbursement_date'])
@@ -113,6 +129,19 @@ class Loan {
       items: json['items'] != null
           ? (json['items'] as List).map((e) => LoanItem.fromJson(e)).toList()
           : null,
+      bikePhotoPath: json['bike_photo_path'],
+      logbookPhotoPath: json['logbook_photo_path'],
+      passportPhotoPath: json['passport_photo_path'],
+      idPhotoFrontPath: json['id_photo_front_path'],
+      idPhotoBackPath: json['id_photo_back_path'],
+      nextOfKinIdFrontPath: json['next_of_kin_id_front_path'],
+      nextOfKinIdBackPath: json['next_of_kin_id_back_path'],
+      nextOfKinPassportPhotoPath: json['next_of_kin_passport_photo_path'],
+      guarantorIdFrontPath: json['guarantor_id_front_path'],
+      guarantorIdBackPath: json['guarantor_id_back_path'],
+      guarantorPassportPhotoPath: json['guarantor_passport_photo_path'],
+      guarantorBikePhotoPath: json['guarantor_bike_photo_path'],
+      guarantorLogbookPhotoPath: json['guarantor_logbook_photo_path'],
     );
   }
 
@@ -171,6 +200,25 @@ class Loan {
   int get productCount {
     if (items == null) return 0;
     return items!.fold(0, (sum, item) => sum + item.quantity);
+  }
+
+  // Check if deposit is fully paid
+  bool get isDepositPaid {
+    if (!depositRequired) return true;
+    return depositPaid >= depositAmount;
+  }
+
+  // Get remaining deposit amount
+  double get remainingDeposit {
+    if (!depositRequired) return 0;
+    final remaining = depositAmount - depositPaid;
+    return remaining > 0 ? remaining : 0;
+  }
+
+  // Get deposit progress percentage
+  double get depositProgress {
+    if (depositAmount == 0) return 0;
+    return (depositPaid / depositAmount) * 100;
   }
 
   // Calculate daily payment based on actual days in the loan period

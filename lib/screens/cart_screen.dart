@@ -681,13 +681,14 @@ class CartScreen extends StatelessWidget {
       Get.back(); // Close loading dialog
 
       if (loan != null) {
-        Get.offAllNamed('/dashboard');
+        // Navigate to deposit payment screen
+        Get.offAllNamed('/deposit-payment', arguments: loan);
 
         Get.snackbar(
-          'Checkout Successful',
-          'Your loan application has been created and submitted for approval',
+          'Loan Created Successfully',
+          'Please pay the 10% deposit to proceed with your loan',
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
+          backgroundColor: Colors.blue,
           colorText: Colors.white,
           duration: const Duration(seconds: 3),
         );
