@@ -14,6 +14,7 @@ import 'package:manschoice/screens/payment_history_screen.dart';
 import 'package:manschoice/screens/products_screen.dart';
 import 'package:manschoice/screens/cart_screen.dart';
 import 'package:manschoice/screens/support_screen.dart';
+import 'package:manschoice/screens/registration_fee_payment_screen.dart';
 
 class AppRoutes {
   static final routes = <GetPage>[
@@ -21,6 +22,7 @@ class AppRoutes {
     GetPage(name: '/login', page: () => const LoginScreen()),
     GetPage(name: '/signup', page: () => const SignupScreenSimple()),
     GetPage(name: '/signup-full', page: () => const SignupScreen()), // Full loan application form
+    GetPage(name: '/registration-fee', page: () => const RegistrationFeePaymentScreen()),
     GetPage(name: '/dashboard', page: () => const DashboardScreen()),
     GetPage(name: '/loan-application', page: () => const NewLoanApplicationScreen()), // Unified loan application
     GetPage(name: '/new-loan-application', page: () => const NewLoanApplicationScreen()), // Keep both routes for compatibility

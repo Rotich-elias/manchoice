@@ -61,16 +61,16 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
         if (!mounted) return;
 
         if (result['success'] == true) {
-          // Registration successful - navigate to dashboard
-          Get.offAllNamed('/dashboard');
+          // Registration successful - navigate to registration fee payment
+          Get.offAllNamed('/registration-fee');
 
           Get.snackbar(
-            'Welcome!',
-            'Account created successfully',
+            'Account Created!',
+            'Please pay the registration fee to activate your account',
             snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.green,
+            backgroundColor: Colors.blue,
             colorText: Colors.white,
-            duration: const Duration(seconds: 2),
+            duration: const Duration(seconds: 3),
           );
         } else {
           // Show error message
