@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/cart_item.dart';
+import '../models/deposit.dart';
+import '../models/loan.dart';
 import '../models/loan_item.dart';
 import '../services/cart_service.dart';
 import '../services/customer_repository.dart';
+import '../services/deposit_repository.dart';
 import '../services/loan_repository.dart';
 
 class CartScreen extends StatelessWidget {
@@ -618,9 +621,274 @@ class CartScreen extends StatelessWidget {
 
   Future<void> _confirmCheckout(CartService cartService) async {
     try {
-      Get.back(); // Close dialog
+      Get.back(); // Close confirmation dialog
 
-      // Show loading indicator
+      // Calculate deposit amount (10% of total including interest)
+      final totalAmount = cartService.total;
+      final depositAmount = totalAmount * 0.10;
+
+      // Show deposit payment dialog FIRST before creating loan
+      await _showDepositPaymentDialog(cartService, depositAmount);
+
+    } catch (e) {
+      // Check if this is a structured popup response
+      if (e is Map<String, dynamic> && e['show_popup'] == true) {
+        _showPopupDialog(e);
+      } else {
+        // Regular error handling
+        Get.snackbar(
+          'Checkout Failed',
+          'Failed to process checkout: ${e.toString()}',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
+      }
+    }
+  }
+
+  Future<void> _showDepositPaymentDialog(CartService cartService, double depositAmount) async {
+    final phoneController = TextEditingController();
+    bool isProcessing = false;
+
+    await Get.dialog(
+      AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.payment, color: Colors.blue),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Deposit Payment Required',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: StatefulBuilder(
+          builder: (context, setState) {
+            return SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'To proceed with your loan application, please pay the deposit amount (10% of total loan).',
+                    style: TextStyle(fontSize: 14, height: 1.5),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Cart Subtotal:'),
+                            Text(
+                              'KES ${cartService.subtotal.toStringAsFixed(2)}',
+                              style: const TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Interest (30%):'),
+                            Text(
+                              'KES ${cartService.interestAmount.toStringAsFixed(2)}',
+                              style: const TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                        const Divider(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Total Loan:',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              'KES ${cartService.total.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: Colors.blue.shade300, width: 2),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Deposit Required (10%):',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                              Text(
+                                'KES ${depositAmount.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'M-PESA Phone Number',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      hintText: '0712345678',
+                      prefixIcon: const Icon(Icons.phone),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                    ),
+                    enabled: !isProcessing,
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.amber.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.amber.shade900, size: 20),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            'You will receive an M-PESA prompt on your phone. Enter your PIN to complete payment.',
+                            style: TextStyle(fontSize: 12, height: 1.4),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isProcessing) ...[
+                    const SizedBox(height: 16),
+                    const Center(
+                      child: Column(
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 8),
+                          Text(
+                            'Processing payment...',
+                            style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: isProcessing
+                ? null
+                : () {
+                    phoneController.dispose();
+                    Get.back(); // Close dialog without creating loan - cart remains intact
+                  },
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: isProcessing
+                ? null
+                : () async {
+                    // Validate phone number
+                    final phone = phoneController.text.trim();
+                    if (phone.isEmpty) {
+                      Get.snackbar(
+                        'Error',
+                        'Please enter your phone number',
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                      );
+                      return;
+                    }
+
+                    final phoneRegex = RegExp(r'^0[0-9]{9}$');
+                    if (!phoneRegex.hasMatch(phone)) {
+                      Get.snackbar(
+                        'Error',
+                        'Invalid phone number. Use format: 0712345678',
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                      );
+                      return;
+                    }
+
+                    // Process payment
+                    await _processDepositAndCreateLoan(
+                      cartService,
+                      depositAmount,
+                      phone,
+                      phoneController,
+                    );
+                  },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text('Pay Deposit'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  Future<void> _processDepositAndCreateLoan(
+    CartService cartService,
+    double depositAmount,
+    String phoneNumber,
+    TextEditingController phoneController,
+  ) async {
+    Loan? createdLoan;
+
+    try {
+      // Close deposit dialog
+      Get.back();
+
+      // Step 1: Create loan first (deposit will be 0 initially)
       Get.dialog(
         const Center(
           child: Card(
@@ -678,57 +946,335 @@ class CartScreen extends StatelessWidget {
         guarantorLogbookPhotoPath: cartService.guarantorLogbookPhotoPath,
       );
 
-      Get.back(); // Close loading dialog
-
-      if (loan != null) {
-        cartService.clearCart();
-
-        // Check if we need to show info popup (for new users with credit_limit = 0)
-        // The backend sends show_info_popup in the response
-        // We need to get the full response, not just the loan object
-        // For now, show the popup if it's a new user scenario
-
-        // Show success snackbar first
-        Get.snackbar(
-          'Loan Created Successfully',
-          'Your application has been submitted',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 2),
-        );
-
-        // Small delay then show popup if needed
-        Future.delayed(const Duration(milliseconds: 500), () {
-          // Check loan status to determine if we should show popup
-          if (loan.status == 'awaiting_registration_fee' || loan.status == 'pending') {
-            _showSuccessInfoPopup();
-          } else {
-            // Navigate to deposit payment for approved loans
-            Get.offAllNamed('/deposit-payment', arguments: loan);
-          }
-        });
-      } else {
+      if (loan == null) {
         throw Exception('Failed to create loan application');
+      }
+
+      // Store the created loan
+      createdLoan = loan;
+
+      // Step 2: Now record deposit payment for the created loan
+      Get.back(); // Close loan creation dialog
+      Get.dialog(
+        const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Processing deposit payment...'),
+                  SizedBox(height: 8),
+                  Text(
+                    'Please check your phone for M-PESA prompt',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        barrierDismissible: false,
+      );
+
+      // Initiate M-PESA deposit payment via API
+      final depositRepo = DepositRepository();
+      final paymentResponse = await depositRepo.initiateMpesaPayment(
+        loanId: loan.id,
+        phoneNumber: phoneNumber,
+        amount: depositAmount,
+      );
+
+      final transactionId = paymentResponse['transaction_id'];
+
+      // Step 3: Verify payment (simulate for now, in production poll for real status)
+      await Future.delayed(const Duration(seconds: 3)); // Simulate M-PESA processing
+
+      final verificationResponse = await depositRepo.verifyPayment(transactionId);
+
+      Get.back(); // Close payment processing dialog
+
+      if (verificationResponse['deposit'] != null) {
+        // Payment successful!
+        cartService.clearCart();
+        phoneController.dispose();
+
+        // Show success dialog with actual deposit amount
+        final Deposit deposit = verificationResponse['deposit'] as Deposit;
+        _showLoanCreatedSuccessDialog(loan, deposit.amount);
+      } else {
+        throw Exception('Deposit payment verification failed');
       }
     } catch (e) {
       Get.back(); // Close loading dialog
 
-      // Check if this is a structured popup response
-      if (e is Map<String, dynamic> && e['show_popup'] == true) {
-        _showPopupDialog(e);
+      // IMPORTANT: If loan was created but deposit failed, rollback the loan
+      if (createdLoan != null) {
+        try {
+          final loanRepo = LoanRepository();
+          await loanRepo.deleteLoan(createdLoan.id);
+          // Don't clear cart - allow user to try again
+          Get.snackbar(
+            'Payment Failed',
+            'Deposit payment failed. Your cart has been preserved. Please try again.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.orange,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 5),
+          );
+        } catch (deleteError) {
+          // If we can't delete the loan, show a different message
+          Get.snackbar(
+            'Error',
+            'Payment failed and loan cleanup encountered an issue. Please contact support.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 5),
+          );
+        }
       } else {
-        // Regular error handling
-        Get.snackbar(
-          'Checkout Failed',
-          'Failed to create loan application: ${e.toString()}',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 3),
-        );
+        // Loan wasn't created yet, just show error
+        // Check if this is a structured popup response
+        if (e is Map<String, dynamic> && e['show_popup'] == true) {
+          _showPopupDialog(e);
+        } else {
+          // Regular error handling
+          Get.snackbar(
+            'Checkout Failed',
+            'Failed to process checkout: ${e.toString()}',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 3),
+          );
+        }
       }
+
+      // Dispose phone controller
+      phoneController.dispose();
     }
+  }
+
+  void _showLoanCreatedSuccessDialog(Loan loan, double depositPaid) {
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: Colors.green.shade50,
+        title: Row(
+          children: [
+            const Text(
+              '✅',
+              style: TextStyle(fontSize: 28),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Loan Application Submitted!',
+                style: TextStyle(
+                  color: Colors.green.shade900,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Congratulations! Your loan application has been submitted successfully.',
+              style: TextStyle(
+                fontSize: 16,
+                height: 1.5,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green.shade300, width: 2),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.green.shade700, size: 20),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Deposit Paid',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Amount:'),
+                      Text(
+                        'KES ${depositPaid.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade900,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Loan Number:'),
+                      Text(
+                        loan.loanNumber,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'What\'s Next?',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '1. Our admin team will review your application\n'
+              '2. Your loan limit will be set based on your documents\n'
+              '3. Once approved, your loan will be disbursed\n'
+              '4. You will receive a notification\n\n'
+              'Thank you for choosing us!',
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Get.back(); // Close dialog
+              Get.offAllNamed('/my-loans'); // Navigate to my loans
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green.shade700,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text('View My Loans'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  void _showRegistrationFeeRequiredPopup(Loan loan) {
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: Colors.orange.shade50,
+        title: Row(
+          children: [
+            const Text(
+              '💰',
+              style: TextStyle(fontSize: 28),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Registration Fee Required',
+                style: TextStyle(
+                  color: Colors.orange.shade900,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Almost there!\n\n'
+              'Your loan application has been created successfully. However, you need to pay the KES 300 registration fee first.\n\n'
+              'Once the registration fee is paid, you can proceed to pay the deposit and our admin team will review your application.\n\n'
+              'Please complete the registration payment to continue.',
+              style: TextStyle(
+                fontSize: 16,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange.shade300),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.payment, size: 20, color: Colors.orange.shade700),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Registration Fee: KES 300',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.orange.shade900,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Get.back(); // Close dialog
+              Get.offAllNamed('/my-loans'); // Navigate to my loans
+            },
+            child: Text(
+              'View My Loans',
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Get.back(); // Close dialog
+              // TODO: Navigate to registration fee payment screen
+              Get.offAllNamed('/home'); // For now go to home
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange.shade700,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text('Pay Registration Fee'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
   }
 
   void _showSuccessInfoPopup() {
@@ -760,9 +1306,11 @@ class CartScreen extends StatelessWidget {
           children: [
             const Text(
               'Your loan application has been submitted successfully!\n\n'
-              'Our admin team will review your application and set your loan limit.\n\n'
-              'You will be notified once your application is approved and you can proceed with the payment.\n\n'
-              'Thank you for choosing us!',
+              'Next Steps:\n'
+              '1. Pay the deposit (10% of loan amount)\n'
+              '2. Our admin team will review your application\n'
+              '3. Once approved, your loan will be disbursed\n\n'
+              'Please proceed to deposit payment to continue.',
               style: TextStyle(
                 fontSize: 16,
                 height: 1.5,
@@ -774,19 +1322,19 @@ class CartScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(color: Colors.green.shade300),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.access_time, size: 20, color: Colors.grey),
+                  Icon(Icons.payment, size: 20, color: Colors.green.shade700),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Usually within 24-48 hours',
+                      'Deposit: 10% of total loan amount',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey.shade700,
-                        fontWeight: FontWeight.w500,
+                        color: Colors.green.shade900,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
