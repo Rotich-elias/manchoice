@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
+import 'package:dio/dio.dart';
 import '../config/api_config.dart';
 import '../models/user.dart';
 import 'api_service.dart';
@@ -131,6 +132,30 @@ class AuthService {
       return {
         'success': false,
         'message': response.data['message'] ?? 'Login failed',
+      };
+    } on DioException catch (e) {
+      // Handle 402 Payment Required - Registration fee not verified
+      if (e.response?.statusCode == 402) {
+        final responseData = e.response?.data;
+        print('AuthService - 402 Response: $responseData');
+        if (responseData != null && responseData['requires_registration_fee'] == true) {
+          final result = {
+            'success': false,
+            'requires_registration_fee': true,
+            'registration_fee_status': responseData['registration_fee_status'],
+            'payment_status': responseData['data']?['payment_status'],
+            'user_phone': responseData['data']?['user']?['phone'],
+            'message': responseData['message'],
+          };
+          print('AuthService - Returning: $result');
+          return result;
+        }
+      }
+
+      // Handle other errors
+      return {
+        'success': false,
+        'message': e.response?.data?['message'] ?? e.message ?? 'Login failed',
       };
     } catch (e) {
       return {

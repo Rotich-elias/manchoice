@@ -47,6 +47,37 @@ class RegistrationFeeRepository {
     }
   }
 
+  // Submit manual payment with transaction ID
+  Future<Map<String, dynamic>> submitManualPayment({
+    required String phoneNumber,
+    required String transactionId,
+    required double amount,
+  }) async {
+    try {
+      final response = await _apiService.post(
+        '/registration-fee/manual',
+        data: {
+          'phone_number': phoneNumber,
+          'mpesa_code': transactionId,
+          'amount': amount,
+        },
+      );
+
+      if (response.data['success'] == true) {
+        return {
+          'status': response.data['data']['status'],
+          'registration_fee': response.data['data']['registration_fee'] != null
+              ? RegistrationFee.fromJson(response.data['data']['registration_fee'])
+              : null,
+          'message': response.data['message'],
+        };
+      }
+      throw Exception(response.data['message'] ?? 'Failed to submit payment');
+    } catch (e) {
+      throw Exception('Failed to submit payment: $e');
+    }
+  }
+
   // Verify M-PESA payment
   Future<Map<String, dynamic>> verifyPayment(String transactionId) async {
     try {

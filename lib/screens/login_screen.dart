@@ -49,6 +49,14 @@ class _LoginScreenState extends State<LoginScreen> {
             colorText: Colors.white,
             duration: const Duration(seconds: 2),
           );
+        } else if (result['requires_registration_fee'] == true) {
+          // User needs to pay or verify registration fee
+          // Navigate to registration fee status screen
+          Get.offAllNamed('/registration-fee-status', arguments: {
+            'status': result['registration_fee_status'],
+            'payment_status': result['payment_status'],
+            'user_phone': result['user_phone'],
+          });
         } else {
           // Show error message
           Get.snackbar(
