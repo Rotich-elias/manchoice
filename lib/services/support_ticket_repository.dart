@@ -1,5 +1,4 @@
 import '../models/support_ticket.dart';
-import '../config/api_config.dart';
 import 'api_service.dart';
 
 class SupportTicketRepository {

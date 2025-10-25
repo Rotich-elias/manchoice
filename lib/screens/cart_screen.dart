@@ -681,32 +681,282 @@ class CartScreen extends StatelessWidget {
       Get.back(); // Close loading dialog
 
       if (loan != null) {
-        // Navigate to deposit payment screen
-        Get.offAllNamed('/deposit-payment', arguments: loan);
+        cartService.clearCart();
 
+        // Check if we need to show info popup (for new users with credit_limit = 0)
+        // The backend sends show_info_popup in the response
+        // We need to get the full response, not just the loan object
+        // For now, show the popup if it's a new user scenario
+
+        // Show success snackbar first
         Get.snackbar(
           'Loan Created Successfully',
-          'Please pay the 10% deposit to proceed with your loan',
+          'Your application has been submitted',
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.blue,
+          backgroundColor: Colors.green,
           colorText: Colors.white,
-          duration: const Duration(seconds: 3),
+          duration: const Duration(seconds: 2),
         );
 
-        cartService.clearCart();
+        // Small delay then show popup if needed
+        Future.delayed(const Duration(milliseconds: 500), () {
+          // Check loan status to determine if we should show popup
+          if (loan.status == 'awaiting_registration_fee' || loan.status == 'pending') {
+            _showSuccessInfoPopup();
+          } else {
+            // Navigate to deposit payment for approved loans
+            Get.offAllNamed('/deposit-payment', arguments: loan);
+          }
+        });
       } else {
         throw Exception('Failed to create loan application');
       }
     } catch (e) {
       Get.back(); // Close loading dialog
-      Get.snackbar(
-        'Checkout Failed',
-        'Failed to create loan application: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 3),
-      );
+
+      // Check if this is a structured popup response
+      if (e is Map<String, dynamic> && e['show_popup'] == true) {
+        _showPopupDialog(e);
+      } else {
+        // Regular error handling
+        Get.snackbar(
+          'Checkout Failed',
+          'Failed to create loan application: ${e.toString()}',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
+      }
+    }
+  }
+
+  void _showSuccessInfoPopup() {
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: Colors.green.shade50,
+        title: Row(
+          children: [
+            const Text(
+              '✅',
+              style: TextStyle(fontSize: 28),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Application Submitted',
+                style: TextStyle(
+                  color: Colors.green.shade900,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Your loan application has been submitted successfully!\n\n'
+              'Our admin team will review your application and set your loan limit.\n\n'
+              'You will be notified once your application is approved and you can proceed with the payment.\n\n'
+              'Thank you for choosing us!',
+              style: TextStyle(
+                fontSize: 16,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.access_time, size: 20, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Usually within 24-48 hours',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade700,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Get.back(); // Close dialog
+              Get.offAllNamed('/my-loans'); // Navigate to my loans
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green.shade700,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text('View My Applications'),
+          ),
+          TextButton(
+            onPressed: () {
+              Get.back(); // Close dialog
+              Get.offAllNamed('/home'); // Go to home
+            },
+            child: Text(
+              'Go Home',
+              style: TextStyle(color: Colors.green.shade900),
+            ),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  void _showPopupDialog(Map<String, dynamic> popupData) {
+    final popupType = popupData['popup_type'] ?? 'info';
+    final popupTitle = popupData['popup_title'] ?? 'Information';
+    final popupIcon = popupData['popup_icon'] ?? 'ℹ️';
+    final popupMessage = popupData['popup_message'] ?? popupData['message'] ?? '';
+    final estimatedWait = popupData['estimated_wait'];
+    final actionButtonText = popupData['action_button_text'];
+    final actionRequired = popupData['action_required'];
+
+    // Determine color based on popup type
+    Color backgroundColor;
+    Color titleColor;
+    switch (popupType) {
+      case 'warning':
+        backgroundColor = Colors.orange.shade50;
+        titleColor = Colors.orange.shade900;
+        break;
+      case 'error':
+        backgroundColor = Colors.red.shade50;
+        titleColor = Colors.red.shade900;
+        break;
+      default: // info
+        backgroundColor = Colors.blue.shade50;
+        titleColor = Colors.blue.shade900;
+    }
+
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: backgroundColor,
+        title: Row(
+          children: [
+            Text(
+              popupIcon,
+              style: const TextStyle(fontSize: 28),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                popupTitle,
+                style: TextStyle(
+                  color: titleColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              popupMessage,
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.5,
+              ),
+            ),
+            if (estimatedWait != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.access_time, size: 20, color: Colors.grey),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        estimatedWait,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          if (actionButtonText != null && actionRequired != null)
+            ElevatedButton(
+              onPressed: () {
+                Get.back(); // Close dialog
+                _handlePopupAction(actionRequired, popupData);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: titleColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: Text(actionButtonText),
+            ),
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text(
+              'OK',
+              style: TextStyle(color: titleColor),
+            ),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  void _handlePopupAction(String actionRequired, Map<String, dynamic> popupData) {
+    switch (actionRequired) {
+      case 'pay_registration_fee':
+        // Navigate to registration fee payment
+        Get.toNamed('/registration-fee-payment', arguments: {
+          'amount': popupData['registration_fee_amount'],
+        });
+        break;
+      case 'wait_for_review':
+        // Navigate to my applications/loans screen
+        Get.offAllNamed('/my-loans');
+        break;
+      case 'wait_for_admin_approval':
+        // Navigate to loan status screen
+        Get.offAllNamed('/my-loans');
+        break;
+      default:
+        Get.offAllNamed('/home');
     }
   }
 

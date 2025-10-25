@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../models/deposit.dart';
 import 'api_service.dart';
 
@@ -55,6 +56,12 @@ class DepositRepository {
         };
       }
       throw Exception(response.data['message'] ?? 'Failed to initiate payment');
+    } on DioException catch (e) {
+      // Pass through the full response data for popup handling
+      if (e.response?.data != null) {
+        throw e.response!.data;
+      }
+      throw Exception('Failed to initiate M-PESA payment: ${e.message}');
     } catch (e) {
       throw Exception('Failed to initiate M-PESA payment: $e');
     }

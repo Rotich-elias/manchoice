@@ -144,6 +144,12 @@ class LoanRepository {
         return Loan.fromJson(response.data['data']);
       }
       return null;
+    } on DioException catch (e) {
+      // Pass through the full response data for popup handling
+      if (e.response?.data != null) {
+        throw e.response!.data;
+      }
+      throw Exception('Failed to create loan: ${e.message}');
     } catch (e) {
       throw Exception('Failed to create loan: $e');
     }

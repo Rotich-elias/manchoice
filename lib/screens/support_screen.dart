@@ -500,7 +500,7 @@ class SupportScreen extends StatelessWidget {
               const SizedBox(height: 8),
               Obx(
                 () => DropdownButtonFormField<String>(
-                  value: selectedPriority.value,
+                  initialValue: selectedPriority.value,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                   ),
