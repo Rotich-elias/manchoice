@@ -13,9 +13,14 @@ class RegistrationFeeStatusScreen extends StatelessWidget {
     final String? userPhone = args['user_phone'];
 
     // Debug logging
-    print('RegistrationFeeStatusScreen - Status: $status');
-    print('RegistrationFeeStatusScreen - User Phone: $userPhone');
-    print('RegistrationFeeStatusScreen - Payment Status: $paymentStatus');
+    print('========== RegistrationFeeStatusScreen ==========');
+    print('Raw arguments: $args');
+    print('Status: "$status" (type: ${status.runtimeType})');
+    print('User Phone: $userPhone');
+    print('Payment Status: $paymentStatus');
+    print('Status == "rejected": ${status == 'rejected'}');
+    print('Status == "not_submitted": ${status == 'not_submitted'}');
+    print('================================================');
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -240,6 +245,9 @@ class RegistrationFeeStatusScreen extends StatelessWidget {
   }
 
   Widget _buildActionButtons(String status, String? userPhone) {
+    print('_buildActionButtons called with status: "$status", userPhone: $userPhone');
+    print('Should show button: ${status == 'not_submitted' || status == 'rejected'}');
+
     return Column(
       children: [
         if (status == 'not_submitted' || status == 'rejected') ...[
@@ -247,6 +255,7 @@ class RegistrationFeeStatusScreen extends StatelessWidget {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
+                print('Retry Payment button clicked!');
                 // Pass user phone to pre-fill the form
                 Get.offAllNamed('/registration-fee', arguments: {
                   'phone': userPhone,
@@ -296,23 +305,24 @@ class RegistrationFeeStatusScreen extends StatelessWidget {
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
-            child: OutlinedButton(
+            child: OutlinedButton.icon(
               onPressed: () {
-                Get.offAllNamed('/registration-fee');
+                Get.toNamed('/support');
               },
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: Colors.blue.shade700),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(
-                'Check Payment Status',
+              icon: const Icon(Icons.support_agent),
+              label: const Text(
+                'Contact Us',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade700,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: Colors.blue.shade700),
+                foregroundColor: Colors.blue.shade700,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
             ),

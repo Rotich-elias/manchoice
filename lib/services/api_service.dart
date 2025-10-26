@@ -82,6 +82,11 @@ class ApiService {
       await loadToken();
       return await _dio.get(path, queryParameters: queryParameters);
     } on DioException catch (e) {
+      // For 402 Payment Required, rethrow the original exception
+      // so that calling code can handle registration fee requirements
+      if (e.response?.statusCode == 402) {
+        rethrow;
+      }
       throw _handleError(e);
     }
   }
@@ -96,6 +101,11 @@ class ApiService {
       await loadToken();
       return await _dio.post(path, data: data, queryParameters: queryParameters);
     } on DioException catch (e) {
+      // For 402 Payment Required, rethrow the original exception
+      // so that auth_service can handle registration fee requirements
+      if (e.response?.statusCode == 402) {
+        rethrow;
+      }
       throw _handleError(e);
     }
   }

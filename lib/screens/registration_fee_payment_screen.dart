@@ -206,7 +206,7 @@ class _RegistrationFeePaymentScreenState
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
-                      'You can close this screen and continue later',
+                      'Please login again once your payment is verified',
                       style: TextStyle(fontSize: 13),
                       textAlign: TextAlign.center,
                     ),
@@ -220,7 +220,7 @@ class _RegistrationFeePaymentScreenState
           ElevatedButton(
             onPressed: () {
               Get.back(); // Close dialog
-              Get.offAllNamed('/home'); // Go to home
+              Get.offAllNamed('/login'); // Go to login screen
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue.shade700,

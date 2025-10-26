@@ -36,8 +36,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (!mounted) return;
 
+        print('LoginScreen - Login result: $result');
+        print('LoginScreen - success: ${result['success']}');
+        print('LoginScreen - requires_registration_fee: ${result['requires_registration_fee']}');
+
         if (result['success'] == true) {
           // Navigate to dashboard and clear navigation stack
+          print('LoginScreen - Navigating to dashboard');
           Get.offAllNamed('/dashboard');
 
           // Show success message
@@ -52,6 +57,11 @@ class _LoginScreenState extends State<LoginScreen> {
         } else if (result['requires_registration_fee'] == true) {
           // User needs to pay or verify registration fee
           // Navigate to registration fee status screen
+          print('LoginScreen - Navigating to registration fee status screen');
+          print('LoginScreen - Status: ${result['registration_fee_status']}');
+          print('LoginScreen - Payment status: ${result['payment_status']}');
+          print('LoginScreen - User phone: ${result['user_phone']}');
+
           Get.offAllNamed('/registration-fee-status', arguments: {
             'status': result['registration_fee_status'],
             'payment_status': result['payment_status'],
@@ -59,6 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
           });
         } else {
           // Show error message
+          print('LoginScreen - Showing error message: ${result['message']}');
           Get.snackbar(
             'Login Failed',
             result['message'] ?? 'Invalid credentials',

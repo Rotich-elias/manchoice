@@ -135,9 +135,15 @@ class AuthService {
       };
     } on DioException catch (e) {
       // Handle 402 Payment Required - Registration fee not verified
+      print('AuthService - DioException caught. Status: ${e.response?.statusCode}');
+      print('AuthService - Response data: ${e.response?.data}');
+
       if (e.response?.statusCode == 402) {
         final responseData = e.response?.data;
         print('AuthService - 402 Response: $responseData');
+        print('AuthService - requires_registration_fee value: ${responseData?['requires_registration_fee']}');
+        print('AuthService - registration_fee_status value: ${responseData?['registration_fee_status']}');
+
         if (responseData != null && responseData['requires_registration_fee'] == true) {
           final result = {
             'success': false,
@@ -147,17 +153,21 @@ class AuthService {
             'user_phone': responseData['data']?['user']?['phone'],
             'message': responseData['message'],
           };
-          print('AuthService - Returning: $result');
+          print('AuthService - Returning registration fee result: $result');
           return result;
+        } else {
+          print('AuthService - 402 but requires_registration_fee is not true or responseData is null');
         }
       }
 
       // Handle other errors
+      print('AuthService - Returning error result');
       return {
         'success': false,
         'message': e.response?.data?['message'] ?? e.message ?? 'Login failed',
       };
     } catch (e) {
+      print('AuthService - General exception: $e');
       return {
         'success': false,
         'message': e.toString(),
