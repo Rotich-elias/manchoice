@@ -67,6 +67,39 @@ class DepositRepository {
     }
   }
 
+  // Submit manual deposit payment with M-PESA code
+  Future<Map<String, dynamic>> submitManualPayment({
+    required int loanId,
+    required String phoneNumber,
+    required String mpesaCode,
+    required double amount,
+  }) async {
+    try {
+      final response = await _apiService.post(
+        '/deposits/manual',
+        data: {
+          'loan_id': loanId,
+          'phone_number': phoneNumber,
+          'mpesa_code': mpesaCode,
+          'amount': amount,
+        },
+      );
+
+      if (response.data['success'] == true) {
+        return {
+          'deposit': response.data['data']['deposit'] != null
+              ? Deposit.fromJson(response.data['data']['deposit'])
+              : null,
+          'status': response.data['data']['status'],
+          'message': response.data['message'],
+        };
+      }
+      throw Exception(response.data['message'] ?? 'Failed to submit payment');
+    } catch (e) {
+      throw Exception('Failed to submit payment: $e');
+    }
+  }
+
   // Verify M-PESA deposit payment
   Future<Map<String, dynamic>> verifyPayment(String transactionId) async {
     try {

@@ -15,11 +15,10 @@ class DepositPaymentScreen extends StatefulWidget {
 class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
-  final TextEditingController _transactionCodeController = TextEditingController();
   final DepositRepository _depositRepository = DepositRepository();
 
   bool _isLoading = false;
-  bool _isSubmitting = false;
+  bool _isProcessing = false;
   bool _payPartial = false;
 
   Loan? _loan;
@@ -28,6 +27,10 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
   double _remainingDeposit = 0;
   bool _isDepositPaid = false;
   List<Deposit> _deposits = [];
+
+  String? _transactionId;
+  Timer? _verificationTimer;
+  int _verificationAttempts = 0;
 
   @override
   void initState() {
@@ -42,7 +45,7 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
   void dispose() {
     _phoneController.dispose();
     _amountController.dispose();
-    _transactionCodeController.dispose();
+    _verificationTimer?.cancel();
     super.dispose();
   }
 
@@ -80,8 +83,7 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
     }
   }
 
-  Future<void> _submitPayment() async {
-    // Validate phone number
+  Future<void> _initiatePayment() async {
     if (_phoneController.text.isEmpty) {
       Get.snackbar(
         'Error',
@@ -103,94 +105,127 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
       return;
     }
 
-    // Validate transaction code
-    if (_transactionCodeController.text.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Please enter the M-PESA transaction code',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-      return;
-    }
+    if (_payPartial) {
+      if (_amountController.text.isEmpty) {
+        Get.snackbar(
+          'Error',
+          'Please enter payment amount',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
 
-    if (_transactionCodeController.text.length < 8) {
-      Get.snackbar(
-        'Error',
-        'Transaction code seems too short. Please verify.',
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
-      );
-      return;
-    }
+      final amount = double.tryParse(_amountController.text);
+      if (amount == null || amount <= 0) {
+        Get.snackbar(
+          'Error',
+          'Please enter a valid amount',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
 
-    // Validate amount
-    final paymentAmount = _payPartial
-        ? double.tryParse(_amountController.text)
-        : _remainingDeposit;
-
-    if (paymentAmount == null || paymentAmount <= 0) {
-      Get.snackbar(
-        'Error',
-        'Please enter a valid amount',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-      return;
-    }
-
-    if (paymentAmount > _remainingDeposit) {
-      Get.snackbar(
-        'Error',
-        'Amount exceeds remaining deposit',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-      return;
+      if (amount > _remainingDeposit) {
+        Get.snackbar(
+          'Error',
+          'Amount exceeds remaining deposit',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
     }
 
     setState(() {
-      _isSubmitting = true;
+      _isProcessing = true;
     });
 
     try {
-      final result = await _depositRepository.submitManualPayment(
+      final result = await _depositRepository.initiateMpesaPayment(
         loanId: _loan!.id,
         phoneNumber: _phoneController.text,
-        mpesaCode: _transactionCodeController.text,
-        amount: paymentAmount,
+        amount: _payPartial ? double.parse(_amountController.text) : null,
       );
 
       setState(() {
-        _isSubmitting = false;
+        _transactionId = result['transaction_id'];
+        _isProcessing = false;
       });
 
       Get.snackbar(
-        'Payment Submitted',
-        result['message'] ?? 'Your payment has been submitted for verification',
+        'Payment Initiated',
+        result['message'] ?? 'Check your phone to complete payment',
         backgroundColor: Colors.green,
         colorText: Colors.white,
         duration: const Duration(seconds: 5),
       );
 
-      // Navigate to deposit status screen
-      Get.offNamed('/deposit-status', arguments: {
-        'status': result['status'] ?? 'pending_verification',
-        'deposit': result['deposit'],
-        'loan': _loan,
-        'deposit_amount': paymentAmount,
-      });
+      // Start polling for payment verification
+      _startPaymentVerification();
     } catch (e) {
       setState(() {
-        _isSubmitting = false;
+        _isProcessing = false;
       });
       Get.snackbar(
         'Error',
         e.toString(),
         backgroundColor: Colors.red,
         colorText: Colors.white,
-        duration: const Duration(seconds: 5),
       );
+    }
+  }
+
+  void _startPaymentVerification() {
+    _verificationAttempts = 0;
+    _verificationTimer?.cancel();
+    _verificationTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      _verifyPayment();
+      _verificationAttempts++;
+
+      // Stop after 12 attempts (60 seconds)
+      if (_verificationAttempts >= 12) {
+        timer.cancel();
+        Get.snackbar(
+          'Verification Timeout',
+          'Payment verification timed out. You can manually verify later.',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+        );
+      }
+    });
+  }
+
+  Future<void> _verifyPayment() async {
+    if (_transactionId == null) return;
+
+    try {
+      final result = await _depositRepository.verifyPayment(_transactionId!);
+      if (result['is_deposit_fully_paid'] == true) {
+        _verificationTimer?.cancel();
+        setState(() {
+          _isDepositPaid = true;
+        });
+        await _loadDepositStatus(); // Refresh status
+        _showSuccessDialog();
+      } else {
+        // Partial payment successful, refresh status
+        await _loadDepositStatus();
+        _verificationTimer?.cancel();
+        Get.snackbar(
+          'Partial Payment Successful',
+          'Payment recorded. Remaining deposit: KES ${_remainingDeposit.toStringAsFixed(2)}',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        setState(() {
+          _transactionId = null;
+          _amountController.clear();
+        });
+      }
+    } catch (e) {
+      // Silently fail during verification polling
     }
   }
 
@@ -448,7 +483,7 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
                           ),
                         ),
                         keyboardType: TextInputType.number,
-                        enabled: !_isSubmitting && !_isDepositPaid,
+                        enabled: !_isProcessing && !_isDepositPaid,
                       ),
                       const SizedBox(height: 16),
                     ],
@@ -466,30 +501,46 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
                       ),
                       keyboardType: TextInputType.phone,
                       maxLength: 10,
-                      enabled: !_isSubmitting && !_isDepositPaid,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // M-PESA Transaction Code Input
-                    TextField(
-                      controller: _transactionCodeController,
-                      decoration: InputDecoration(
-                        labelText: 'M-PESA Transaction Code',
-                        hintText: 'e.g., SH12XYZ789',
-                        prefixIcon: const Icon(Icons.receipt),
-                        helperText: 'Found in your M-PESA confirmation SMS',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      textCapitalization: TextCapitalization.characters,
-                      enabled: !_isSubmitting && !_isDepositPaid,
+                      enabled: !_isProcessing && !_isDepositPaid,
                     ),
                     const SizedBox(height: 24),
 
+                    // Payment Status
+                    if (_transactionId != null) ...[
+                      Card(
+                        color: Colors.orange.shade50,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            children: [
+                              const CircularProgressIndicator(),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Waiting for payment...',
+                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Transaction: $_transactionId',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+
                     // Pay Button
                     ElevatedButton(
-                      onPressed: _isSubmitting || _isDepositPaid ? null : _submitPayment,
+                      onPressed: _isProcessing || _isDepositPaid ? null : _initiatePayment,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.all(16),
                         backgroundColor: Colors.green,
@@ -498,7 +549,7 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: _isSubmitting
+                      child: _isProcessing
                           ? const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -511,13 +562,13 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
                                   ),
                                 ),
                                 SizedBox(width: 12),
-                                Text('Submitting...'),
+                                Text('Processing...'),
                               ],
                             )
                           : Text(
                               _payPartial
-                                  ? 'Submit Payment (KES ${_amountController.text.isEmpty ? "0.00" : _amountController.text})'
-                                  : 'Submit Full Deposit (KES ${_remainingDeposit.toStringAsFixed(2)})',
+                                  ? 'Pay KES ${_amountController.text.isEmpty ? "0.00" : _amountController.text}'
+                                  : 'Pay Full Deposit (KES ${_remainingDeposit.toStringAsFixed(2)})',
                               style: const TextStyle(fontSize: 18),
                             ),
                     ),
