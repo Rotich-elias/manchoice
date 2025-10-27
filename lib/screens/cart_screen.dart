@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/cart_item.dart';
-import '../models/deposit.dart';
 import '../models/loan.dart';
 import '../models/loan_item.dart';
 import '../services/cart_service.dart';
 import '../services/customer_repository.dart';
-import '../services/deposit_repository.dart';
 import '../services/loan_repository.dart';
 
 class CartScreen extends StatelessWidget {
@@ -581,54 +579,14 @@ class CartScreen extends StatelessWidget {
       return;
     }
 
-    // If all checks pass, show checkout confirmation dialog
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Checkout'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Order Summary:'),
-            const SizedBox(height: 12),
-            Text('Items: ${cartService.itemCount}'),
-            Text('Subtotal: KES ${cartService.subtotal.toStringAsFixed(0)}'),
-            Text(
-              'Interest: KES ${cartService.interestAmount.toStringAsFixed(0)}',
-            ),
-            const Divider(height: 20),
-            Text(
-              'Total: KES ${cartService.total.toStringAsFixed(0)}',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'A loan application will be created with these products and submitted to admin for approval.',
-              style: TextStyle(fontSize: 13),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () => _confirmCheckout(cartService),
-            child: const Text('Confirm'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _confirmCheckout(CartService cartService) async {
+    // If all checks pass, create loan and navigate to deposit payment screen
     try {
-      Get.back(); // Close confirmation dialog
-
       // Calculate deposit amount (10% of total including interest)
       final totalAmount = cartService.total;
       final depositAmount = totalAmount * 0.10;
 
-      // Show deposit payment dialog FIRST before creating loan
-      await _showDepositPaymentDialog(cartService, depositAmount);
+      // Create loan and navigate directly to deposit payment screen
+      await _processDepositAndCreateLoan(cartService, depositAmount);
 
     } catch (e) {
       // Check if this is a structured popup response
@@ -648,247 +606,12 @@ class CartScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _showDepositPaymentDialog(CartService cartService, double depositAmount) async {
-    final phoneController = TextEditingController();
-    bool isProcessing = false;
-
-    await Get.dialog(
-      AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.payment, color: Colors.blue),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Text(
-                'Deposit Payment Required',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-        content: StatefulBuilder(
-          builder: (context, setState) {
-            return SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'To proceed with your loan application, please pay the deposit amount (10% of total loan).',
-                    style: TextStyle(fontSize: 14, height: 1.5),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.shade200),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('Cart Subtotal:'),
-                            Text(
-                              'KES ${cartService.subtotal.toStringAsFixed(2)}',
-                              style: const TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('Interest (30%):'),
-                            Text(
-                              'KES ${cartService.interestAmount.toStringAsFixed(2)}',
-                              style: const TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                        const Divider(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Total Loan:',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              'KES ${cartService.total.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: Colors.blue.shade300, width: 2),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Deposit Required (10%):',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue,
-                                ),
-                              ),
-                              Text(
-                                'KES ${depositAmount.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                  color: Colors.blue,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'M-PESA Phone Number',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      hintText: '0712345678',
-                      prefixIcon: const Icon(Icons.phone),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      filled: true,
-                      fillColor: Colors.grey.shade50,
-                    ),
-                    enabled: !isProcessing,
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.amber.shade200),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.info_outline, color: Colors.amber.shade900, size: 20),
-                        const SizedBox(width: 8),
-                        const Expanded(
-                          child: Text(
-                            'You will receive an M-PESA prompt on your phone. Enter your PIN to complete payment.',
-                            style: TextStyle(fontSize: 12, height: 1.4),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (isProcessing) ...[
-                    const SizedBox(height: 16),
-                    const Center(
-                      child: Column(
-                        children: [
-                          CircularProgressIndicator(),
-                          SizedBox(height: 8),
-                          Text(
-                            'Processing payment...',
-                            style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w500),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            );
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: isProcessing
-                ? null
-                : () {
-                    phoneController.dispose();
-                    Get.back(); // Close dialog without creating loan - cart remains intact
-                  },
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: isProcessing
-                ? null
-                : () async {
-                    // Validate phone number
-                    final phone = phoneController.text.trim();
-                    if (phone.isEmpty) {
-                      Get.snackbar(
-                        'Error',
-                        'Please enter your phone number',
-                        backgroundColor: Colors.red,
-                        colorText: Colors.white,
-                      );
-                      return;
-                    }
-
-                    final phoneRegex = RegExp(r'^0[0-9]{9}$');
-                    if (!phoneRegex.hasMatch(phone)) {
-                      Get.snackbar(
-                        'Error',
-                        'Invalid phone number. Use format: 0712345678',
-                        backgroundColor: Colors.red,
-                        colorText: Colors.white,
-                      );
-                      return;
-                    }
-
-                    // Process payment
-                    await _processDepositAndCreateLoan(
-                      cartService,
-                      depositAmount,
-                      phone,
-                      phoneController,
-                    );
-                  },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: const Text('Pay Deposit'),
-          ),
-        ],
-      ),
-      barrierDismissible: false,
-    );
-  }
-
   Future<void> _processDepositAndCreateLoan(
     CartService cartService,
     double depositAmount,
-    String phoneNumber,
-    TextEditingController phoneController,
   ) async {
-    Loan? createdLoan;
-
     try {
-      // Close deposit dialog
-      Get.back();
-
-      // Step 1: Create loan first (deposit will be 0 initially)
+      // Show loading dialog
       Get.dialog(
         const Center(
           child: Card(
@@ -923,9 +646,8 @@ class CartScreen extends StatelessWidget {
 
       final loan = await loanRepo.createLoan(
         customerId: cartService.customerId!,
-        principalAmount: cartService
-            .subtotal, // Send subtotal as principal, backend will add interest
-        interestRate: cartService.interestRate * 100, // Convert to percentage
+        principalAmount: cartService.subtotal,
+        interestRate: cartService.interestRate * 100,
         durationDays: 30,
         purpose: 'Purchase of motorcycle parts and accessories',
         notes:
@@ -946,116 +668,35 @@ class CartScreen extends StatelessWidget {
         guarantorLogbookPhotoPath: cartService.guarantorLogbookPhotoPath,
       );
 
+      Get.back(); // Close loading dialog
+
       if (loan == null) {
         throw Exception('Failed to create loan application');
       }
 
-      // Store the created loan
-      createdLoan = loan;
+      // Clear cart
+      cartService.clearCart();
 
-      // Step 2: Now record deposit payment for the created loan
-      Get.back(); // Close loan creation dialog
-      Get.dialog(
-        const Center(
-          child: Card(
-            child: Padding(
-              padding: EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Processing deposit payment...'),
-                  SizedBox(height: 8),
-                  Text(
-                    'Please check your phone for M-PESA prompt',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        barrierDismissible: false,
-      );
+      // Navigate to deposit payment screen
+      Get.offNamed('/deposit-payment', arguments: loan);
 
-      // Initiate M-PESA deposit payment via API
-      final depositRepo = DepositRepository();
-      final paymentResponse = await depositRepo.initiateMpesaPayment(
-        loanId: loan.id,
-        phoneNumber: phoneNumber,
-        amount: depositAmount,
-      );
-
-      final transactionId = paymentResponse['transaction_id'];
-
-      // Step 3: Verify payment (simulate for now, in production poll for real status)
-      await Future.delayed(const Duration(seconds: 3)); // Simulate M-PESA processing
-
-      final verificationResponse = await depositRepo.verifyPayment(transactionId);
-
-      Get.back(); // Close payment processing dialog
-
-      if (verificationResponse['deposit'] != null) {
-        // Payment successful!
-        cartService.clearCart();
-        phoneController.dispose();
-
-        // Show success dialog with actual deposit amount
-        final Deposit deposit = verificationResponse['deposit'] as Deposit;
-        _showLoanCreatedSuccessDialog(loan, deposit.amount);
-      } else {
-        throw Exception('Deposit payment verification failed');
-      }
     } catch (e) {
       Get.back(); // Close loading dialog
 
-      // IMPORTANT: If loan was created but deposit failed, rollback the loan
-      if (createdLoan != null) {
-        try {
-          final loanRepo = LoanRepository();
-          await loanRepo.deleteLoan(createdLoan.id);
-          // Don't clear cart - allow user to try again
-          Get.snackbar(
-            'Payment Failed',
-            'Deposit payment failed. Your cart has been preserved. Please try again.',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.orange,
-            colorText: Colors.white,
-            duration: const Duration(seconds: 5),
-          );
-        } catch (deleteError) {
-          // If we can't delete the loan, show a different message
-          Get.snackbar(
-            'Error',
-            'Payment failed and loan cleanup encountered an issue. Please contact support.',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-            duration: const Duration(seconds: 5),
-          );
-        }
+      // Check if this is a structured popup response
+      if (e is Map<String, dynamic> && e['show_popup'] == true) {
+        _showPopupDialog(e);
       } else {
-        // Loan wasn't created yet, just show error
-        // Check if this is a structured popup response
-        if (e is Map<String, dynamic> && e['show_popup'] == true) {
-          _showPopupDialog(e);
-        } else {
-          // Regular error handling
-          Get.snackbar(
-            'Checkout Failed',
-            'Failed to process checkout: ${e.toString()}',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-            duration: const Duration(seconds: 3),
-          );
-        }
+        // Regular error handling
+        Get.snackbar(
+          'Checkout Failed',
+          'Failed to create loan: ${e.toString()}',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
       }
-
-      // Dispose phone controller
-      phoneController.dispose();
     }
   }
 

@@ -173,13 +173,8 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
         duration: const Duration(seconds: 5),
       );
 
-      // Navigate to deposit status screen
-      Get.offNamed('/deposit-status', arguments: {
-        'status': result['status'] ?? 'pending_verification',
-        'deposit': result['deposit'],
-        'loan': _loan,
-        'deposit_amount': paymentAmount,
-      });
+      // Show pending verification dialog
+      _showPendingVerificationDialog();
     } catch (e) {
       setState(() {
         _isSubmitting = false;
@@ -192,6 +187,80 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
         duration: const Duration(seconds: 5),
       );
     }
+  }
+
+  void _showPendingVerificationDialog() {
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: Colors.blue.shade50,
+        title: Row(
+          children: [
+            const Icon(Icons.pending_actions, color: Colors.blue, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Payment Under Verification',
+                style: TextStyle(
+                  color: Colors.blue.shade900,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Your deposit payment has been submitted and is awaiting admin verification.\n\n'
+              'You will receive a notification once your payment is verified.\n\n'
+              'This usually takes a few minutes to a few hours.',
+              style: TextStyle(fontSize: 15, height: 1.5),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Check your deposit status in My Loans',
+                      style: TextStyle(fontSize: 13),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Get.back(); // Close dialog
+              Get.offAllNamed('/my-loans'); // Go to my loans screen
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade700,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text('View My Loans'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
   }
 
   void _showSuccessDialog() {
