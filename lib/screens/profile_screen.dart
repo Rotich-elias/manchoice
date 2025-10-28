@@ -274,6 +274,16 @@ class ProfileScreen extends StatelessWidget {
                                 );
                               },
                             ),
+                            const Divider(height: 1),
+                            ListTile(
+                              leading: const Icon(Icons.description, color: Colors.blue),
+                              title: const Text('Terms & Conditions'),
+                              trailing:
+                                  const Icon(Icons.arrow_forward_ios, size: 16),
+                              onTap: () {
+                                Get.toNamed('/terms-conditions');
+                              },
+                            ),
                           ],
                         ),
                       ),

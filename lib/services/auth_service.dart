@@ -38,6 +38,7 @@ class AuthService {
     required String email,
     required String pin,
     required String pinConfirmation,
+    bool acceptedTerms = true,
   }) async {
     try {
       // Clear any existing photo paths from previous users
@@ -51,6 +52,7 @@ class AuthService {
           'email': email,
           'pin': pin,
           'pin_confirmation': pinConfirmation,
+          'accepted_terms': acceptedTerms,
         },
       );
 

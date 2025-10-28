@@ -75,4 +75,70 @@ class SupportTicketRepository {
       throw Exception('Error loading ticket: $e');
     }
   }
+
+  /// Submit a deposit rejection dispute ticket
+  Future<Map<String, dynamic>> submitDepositRejectionDispute({
+    required int loanId,
+    required int depositId,
+    required String rejectionReason,
+    required String disputeMessage,
+    String? contactPhone,
+  }) async {
+    try {
+      final subject = 'Deposit Rejection Dispute - Loan #$loanId';
+      final message = '''
+Dispute Type: Deposit Payment Rejection
+Loan ID: $loanId
+Deposit ID: $depositId
+Rejection Reason: $rejectionReason
+
+Customer's Message:
+$disputeMessage
+
+The customer is disputing the rejection of their deposit payment and requests a review.
+''';
+
+      return await submitTicket(
+        type: 'deposit_dispute',
+        subject: subject,
+        message: message,
+        priority: 'high',
+        contactPhone: contactPhone,
+      );
+    } catch (e) {
+      throw Exception('Error submitting deposit dispute: $e');
+    }
+  }
+
+  /// Submit a rejection limit reached support request
+  Future<Map<String, dynamic>> submitRejectionLimitSupport({
+    required int loanId,
+    required int rejectionCount,
+    required String customerMessage,
+    String? contactPhone,
+  }) async {
+    try {
+      final subject = 'Rejection Limit Reached - Loan #$loanId';
+      final message = '''
+Issue Type: Rejection Limit Reached
+Loan ID: $loanId
+Total Rejections: $rejectionCount
+
+Customer's Message:
+$customerMessage
+
+The customer has reached the rejection limit and needs assistance to complete their deposit payment.
+''';
+
+      return await submitTicket(
+        type: 'rejection_limit',
+        subject: subject,
+        message: message,
+        priority: 'high',
+        contactPhone: contactPhone,
+      );
+    } catch (e) {
+      throw Exception('Error submitting rejection limit support request: $e');
+    }
+  }
 }

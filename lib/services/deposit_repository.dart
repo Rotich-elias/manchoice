@@ -194,4 +194,65 @@ class DepositRepository {
       throw Exception('Failed to fetch deposits: $e');
     }
   }
+
+  // Get rejection history for a loan (all rejected deposits)
+  Future<List<Deposit>> getRejectionHistory(int loanId) async {
+    try {
+      final response = await _apiService.get(
+        '/loans/$loanId/deposits/rejected',
+      );
+
+      if (response.data['success'] == true) {
+        final data = response.data['data'] as List;
+        return data.map((e) => Deposit.fromJson(e)).toList();
+      }
+      return [];
+    } catch (e) {
+      // If endpoint doesn't exist yet, fall back to filtering local deposits
+      try {
+        final allDeposits = await getLoanDeposits(loanId);
+        return allDeposits.where((d) => d.isRejected || d.isFailed).toList();
+      } catch (e2) {
+        throw Exception('Failed to fetch rejection history: $e');
+      }
+    }
+  }
+
+  // Get total rejection count for a loan
+  Future<int> getRejectionCount(int loanId) async {
+    try {
+      final rejectedDeposits = await getRejectionHistory(loanId);
+      return rejectedDeposits.length;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  // Check if loan has reached rejection limit
+  Future<bool> hasReachedRejectionLimit(int loanId) async {
+    try {
+      final count = await getRejectionCount(loanId);
+      return count >= 3; // 3 rejections is the limit
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Get latest deposit status with rejection info
+  Future<Map<String, dynamic>> getDepositStatusWithRejectionInfo(int loanId) async {
+    try {
+      final statusData = await getDepositStatus(loanId);
+      final rejectionCount = await getRejectionCount(loanId);
+      final hasReachedLimit = rejectionCount >= 3;
+
+      return {
+        ...statusData,
+        'rejection_count': rejectionCount,
+        'has_reached_rejection_limit': hasReachedLimit,
+        'can_retry': !hasReachedLimit,
+      };
+    } catch (e) {
+      throw Exception('Failed to fetch deposit status with rejection info: $e');
+    }
+  }
 }

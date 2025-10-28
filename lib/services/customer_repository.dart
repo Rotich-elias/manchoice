@@ -84,6 +84,8 @@ class CustomerRepository {
     String? guarantorMotorcycleType,
     String? guarantorMotorcycleEngineCC,
     String? guarantorMotorcycleColour,
+    // Terms & Conditions
+    bool acceptedTerms = true,
   }) async {
     try {
       final response = await _apiService.post(
@@ -119,6 +121,8 @@ class CustomerRepository {
           if (guarantorMotorcycleType != null) 'guarantor_motorcycle_type': guarantorMotorcycleType,
           if (guarantorMotorcycleEngineCC != null) 'guarantor_motorcycle_engine_cc': guarantorMotorcycleEngineCC,
           if (guarantorMotorcycleColour != null) 'guarantor_motorcycle_colour': guarantorMotorcycleColour,
+          // Terms & Conditions
+          'accepted_terms': acceptedTerms,
         },
       );
 

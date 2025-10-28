@@ -47,6 +47,7 @@ class _SignupScreenState extends State<SignupScreen> {
   File? _guarantorIdPhoto;
 
   bool _isLoading = false;
+  bool _acceptedTerms = false;
 
   @override
   void dispose() {
@@ -129,6 +130,19 @@ class _SignupScreenState extends State<SignupScreen> {
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
+      );
+      return;
+    }
+
+    // Check if terms are accepted
+    if (!_acceptedTerms) {
+      Get.snackbar(
+        'Terms & Conditions',
+        'Please accept the Terms & Conditions to continue',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
       );
       return;
     }
@@ -435,6 +449,57 @@ class _SignupScreenState extends State<SignupScreen> {
                   Icons.badge,
                 ),
                 const SizedBox(height: 32),
+
+                // Terms & Conditions Checkbox
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: _acceptedTerms ? Colors.green : Colors.grey.shade300,
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: CheckboxListTile(
+                    value: _acceptedTerms,
+                    onChanged: (value) {
+                      setState(() {
+                        _acceptedTerms = value ?? false;
+                      });
+                    },
+                    controlAffinity: ListTileControlAffinity.leading,
+                    title: Row(
+                      children: [
+                        const Text('I accept the '),
+                        GestureDetector(
+                          onTap: () async {
+                            final result = await Get.toNamed(
+                              '/terms-conditions',
+                              arguments: {'showAcceptButton': true},
+                            );
+                            if (result == true) {
+                              setState(() {
+                                _acceptedTerms = true;
+                              });
+                            }
+                          },
+                          child: Text(
+                            'Terms & Conditions',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    subtitle: const Text(
+                      'Required to submit application',
+                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
 
                 // Submit Button
                 ElevatedButton(

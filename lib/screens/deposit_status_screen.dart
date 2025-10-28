@@ -2,9 +2,51 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/loan.dart';
 import '../models/deposit.dart';
+import '../services/deposit_repository.dart';
 
-class DepositStatusScreen extends StatelessWidget {
+class DepositStatusScreen extends StatefulWidget {
   const DepositStatusScreen({super.key});
+
+  @override
+  State<DepositStatusScreen> createState() => _DepositStatusScreenState();
+}
+
+class _DepositStatusScreenState extends State<DepositStatusScreen> {
+  final DepositRepository _depositRepository = DepositRepository();
+  List<Deposit> _rejectionHistory = [];
+  int _rejectionCount = 0;
+  bool _hasReachedLimit = false;
+  bool _isLoadingHistory = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRejectionHistory();
+  }
+
+  Future<void> _loadRejectionHistory() async {
+    final Map<String, dynamic> args = Get.arguments ?? {};
+    final Loan? loan = args['loan'];
+
+    if (loan != null) {
+      setState(() => _isLoadingHistory = true);
+      try {
+        final history = await _depositRepository.getRejectionHistory(loan.id);
+        final count = await _depositRepository.getRejectionCount(loan.id);
+        final hasLimit = await _depositRepository.hasReachedRejectionLimit(loan.id);
+
+        setState(() {
+          _rejectionHistory = history;
+          _rejectionCount = count;
+          _hasReachedLimit = hasLimit;
+          _isLoadingHistory = false;
+        });
+      } catch (e) {
+        setState(() => _isLoadingHistory = false);
+        print('Error loading rejection history: $e');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +88,12 @@ class DepositStatusScreen extends StatelessWidget {
               _buildStatusMessage(status, deposit, depositAmount, rejectionReason),
               const SizedBox(height: 32),
               _buildStatusDetails(status, deposit, depositAmount, rejectionReason),
+              if (_rejectionCount > 0 && (status == 'rejected' || status == 'failed')) ...[
+                const SizedBox(height: 16),
+                _buildRejectionHistorySection(),
+              ],
               const Spacer(),
-              _buildActionButtons(status, loan),
+              _buildActionButtons(status, loan, deposit, rejectionReason),
               const SizedBox(height: 16),
             ],
           ),
@@ -268,7 +314,126 @@ class DepositStatusScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(String status, Loan? loan) {
+  Widget _buildRejectionHistorySection() {
+    return Card(
+      elevation: 2,
+      color: Colors.orange.shade50,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.history, color: Colors.orange.shade700, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Rejection History',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange.shade900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: _hasReachedLimit ? Colors.red.shade100 : Colors.orange.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _hasReachedLimit ? Icons.block : Icons.warning_amber,
+                    color: _hasReachedLimit ? Colors.red.shade700 : Colors.orange.shade700,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _hasReachedLimit
+                          ? 'Rejection limit reached ($_rejectionCount/3). Please contact support.'
+                          : 'Your payment has been rejected $_rejectionCount time(s). ${3 - _rejectionCount} attempt(s) remaining.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: _hasReachedLimit ? Colors.red.shade900 : Colors.orange.shade900,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (_rejectionHistory.isNotEmpty && !_isLoadingHistory) ...[
+              const SizedBox(height: 12),
+              ...(_rejectionHistory.take(3).map((rejection) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.orange.shade200),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.cancel, color: Colors.red.shade600, size: 16),
+                              const SizedBox(width: 6),
+                              Text(
+                                _formatDate(rejection.rejectedAt ?? rejection.createdAt),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey.shade600,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (rejection.rejectionReason != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              rejection.rejectionReason!,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade800,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 4),
+                          Text(
+                            'Amount: KES ${rejection.amount.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ))),
+            ],
+            if (_isLoadingHistory)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(String status, Loan? loan, Deposit? deposit, String? rejectionReason) {
     print('_buildActionButtons called with status: "$status", loan: ${loan?.id}');
     print('Should show retry button: ${(status == 'rejected' || status == 'failed')}');
 
@@ -278,7 +443,7 @@ class DepositStatusScreen extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {
+              onPressed: _hasReachedLimit ? null : () {
                 print('Retry Payment button clicked for loan: ${loan?.id}');
                 // Navigate back to deposit payment screen
                 Get.back();
@@ -299,6 +464,89 @@ class DepositStatusScreen extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          if (_hasReachedLimit) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.block, color: Colors.red.shade700, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Payment attempts exceeded. Please contact support to continue.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.red.shade900,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Get.toNamed('/support');
+                },
+                icon: const Icon(Icons.support_agent),
+                label: const Text(
+                  'Contact Support',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade700,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+        if ((status == 'rejected' || status == 'failed') && !_hasReachedLimit) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                // Navigate to support with pre-filled dispute information
+                Get.toNamed('/support', arguments: {
+                  'dispute_type': 'deposit_rejection',
+                  'loan_id': loan?.id,
+                  'deposit_id': deposit?.id,
+                  'rejection_reason': rejectionReason,
+                });
+              },
+              icon: const Icon(Icons.report_problem),
+              label: const Text(
+                'Dispute This Rejection',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: Colors.orange.shade700),
+                foregroundColor: Colors.orange.shade700,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
             ),
