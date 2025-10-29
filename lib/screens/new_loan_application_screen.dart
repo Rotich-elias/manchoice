@@ -9,6 +9,7 @@ import '../services/customer_repository.dart';
 import '../services/cart_service.dart';
 import '../services/auth_service.dart';
 import '../models/customer_api.dart';
+import '../config/api_config.dart';
 
 class NewLoanApplicationScreen extends StatefulWidget {
   const NewLoanApplicationScreen({super.key});
@@ -206,7 +207,7 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
 
       // Download the file from the server
       final response = await http.get(
-        Uri.parse(url.startsWith('http') ? url : 'http://192.168.100.65:8000/storage/$url'),
+        Uri.parse(url.startsWith('http') ? url : ApiConfig.getImageUrl(url)),
         headers: {'Authorization': 'Bearer $token'},
       );
 

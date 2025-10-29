@@ -7,6 +7,7 @@ import '../services/product_repository.dart';
 import '../models/user.dart';
 import '../models/loan.dart';
 import '../models/product.dart';
+import '../config/api_config.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -1092,7 +1093,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ? Image.network(
                           product.imageUrl!.startsWith('http')
                               ? product.imageUrl!
-                              : 'http://192.168.100.65:8000/storage/${product.imageUrl}',
+                              : ApiConfig.getImageUrl(product.imageUrl),
                           fit: BoxFit.cover,
                           width: double.infinity,
                           height: 80,

@@ -5,10 +5,16 @@ class ApiConfig {
   // Base URLs
   static const String _devBaseUrl = 'http://192.168.100.60:8000/api';
 
-  // TODO: Update this with your production backend URL after deployment
-  static const String _prodBaseUrl = 'https://your-backend-url.com/api';
+  // ⚠️ IMPORTANT: Update this with your production backend URL before deploying!
+  // This URL will be used when building release APK/AAB
+  static const String _prodBaseUrl = 'https://manschoice.co.ke/api';
+
   // Example: 'https://api.manchoice.com/api'
-  // Example: 'https://manchoice-api.herokuapp.com/api'
+  // Example: 'https://manchoice.herokuapp.com/api'
+  //
+  // To build for production with this URL:
+  // flutter build apk --release
+  // flutter build appbundle --release
 
   // Auto-select base URL based on environment
   static String get baseUrl => isProduction ? _prodBaseUrl : _devBaseUrl;
@@ -46,4 +52,17 @@ class ApiConfig {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
+
+  // Storage URL for images
+  static String get storageUrl {
+    final base = baseUrl.replaceAll('/api', '');
+    return '$base/storage';
+  }
+
+  // Helper to get full image URL
+  static String getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return '';
+    if (path.startsWith('http')) return path; // Already full URL
+    return '$storageUrl/$path';
+  }
 }

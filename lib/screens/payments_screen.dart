@@ -29,7 +29,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
   // Get loan data from navigation arguments
   Loan? _loan;
-  final String mpesaPaybill = "247247"; // TODO: Replace with actual paybill number
+  // ⚠️ IMPORTANT: Replace with your actual Safaricom M-PESA paybill number before going live!
+  final String mpesaPaybill = "247247"; // TODO: Update this with your production paybill number
 
   // Real payment data from API
   List<dynamic> _paymentHistory = [];
@@ -290,6 +291,35 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               ),
             ],
           ),
+          // Show penalties if they exist
+          if ((_loan?.totalPenalties ?? 0) > 0 || (_loan?.pendingPenalties ?? 0) > 0) ...[
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildSummaryItem(
+                    context,
+                    'Applied Penalties',
+                    'KES ${_formatCurrency(_loan?.totalPenalties ?? 0)}',
+                    Icons.warning_amber,
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  height: 40,
+                  color: Colors.white.withValues(alpha: 0.3),
+                ),
+                Expanded(
+                  child: _buildSummaryItem(
+                    context,
+                    'Pending Penalties',
+                    'KES ${_formatCurrency(_loan?.pendingPenalties ?? 0)}',
+                    Icons.error_outline,
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 20),
           const Divider(color: Colors.white38),
           const SizedBox(height: 12),
@@ -1101,6 +1131,44 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                           'Your payments are on schedule. Keep up the good work!',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Colors.green.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // Penalty Warning
+          if ((_loan?.pendingPenalties ?? 0) > 0)
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.deepOrange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.deepOrange.withValues(alpha: 0.5)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.deepOrange, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'PENALTY ALERT',
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.deepOrange,
+                          ),
+                        ),
+                        Text(
+                          'You have KES ${_formatCurrency(_loan?.pendingPenalties ?? 0)} in pending penalties for missed payments. A 1% penalty is applied daily for missed payments.',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.deepOrange.shade700,
                           ),
                         ),
                       ],

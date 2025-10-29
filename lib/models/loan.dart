@@ -12,6 +12,11 @@ class Loan {
   final double totalAmount;
   final double amountPaid;
   final double balance;
+  final double totalPenaltyAmount;
+  final double totalPenalties;
+  final double pendingPenalties;
+  final double totalWithPenalties;
+  final List<Map<String, dynamic>>? penaltyDetails;
   final double depositAmount;
   final double depositPaid;
   final bool depositRequired;
@@ -56,6 +61,11 @@ class Loan {
     required this.totalAmount,
     required this.amountPaid,
     required this.balance,
+    this.totalPenaltyAmount = 0,
+    this.totalPenalties = 0,
+    this.pendingPenalties = 0,
+    this.totalWithPenalties = 0,
+    this.penaltyDetails,
     this.depositAmount = 0,
     this.depositPaid = 0,
     this.depositRequired = true,
@@ -100,6 +110,13 @@ class Loan {
       totalAmount: double.parse(json['total_amount']?.toString() ?? '0'),
       amountPaid: double.parse(json['amount_paid']?.toString() ?? '0'),
       balance: double.parse(json['balance']?.toString() ?? '0'),
+      totalPenaltyAmount: double.parse(json['total_penalty_amount']?.toString() ?? '0'),
+      totalPenalties: double.parse(json['total_penalties']?.toString() ?? '0'),
+      pendingPenalties: double.parse(json['pending_penalties']?.toString() ?? '0'),
+      totalWithPenalties: double.parse(json['total_with_penalties']?.toString() ?? '0'),
+      penaltyDetails: json['penalty_details'] != null
+          ? List<Map<String, dynamic>>.from(json['penalty_details'])
+          : null,
       depositAmount: double.parse(json['deposit_amount']?.toString() ?? '0'),
       depositPaid: double.parse(json['deposit_paid']?.toString() ?? '0'),
       depositRequired: json['deposit_required'] ?? true,
