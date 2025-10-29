@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "453794966533",
+    "project_id": "manschoice-d6377",
+    "storage_bucket": "manschoice-d6377.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:453794966533:android:8e712dd67326d7226bc06c",
+        "android_client_info": {
+          "package_name": "com.example.manchoice"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBR5Y1W0TkI07csHOKRj1lamohAZpaIvuw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
