@@ -1214,7 +1214,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               'For support, contact us at:',
               style: Theme.of(context).textTheme.bodySmall,
             ),
-            const Text('manchoiceenterprise@gmail.com'),
+            const Text('info@manschoice.co.ke'),
             const Text('+254 0110 846 828'),
           ],
         ),

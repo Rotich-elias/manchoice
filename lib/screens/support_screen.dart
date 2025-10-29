@@ -87,9 +87,9 @@ class SupportScreen extends StatelessWidget {
                 context,
                 icon: Icons.email,
                 title: 'Email Us',
-                subtitle: 'manchoiceenterprise@gmail.com',
+                subtitle: 'info@manschoice.co.ke',
                 color: Colors.blue,
-                onTap: () => _sendEmail('manchoiceenterprise@gmail.com'),
+                onTap: () => _sendEmail('info@manschoice.co.ke'),
               ),
               const SizedBox(height: 12),
               _buildContactCard(

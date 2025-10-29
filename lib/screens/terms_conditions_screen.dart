@@ -212,7 +212,7 @@ class TermsConditionsScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     _buildContactRow(Icons.phone, '+254 011 0846 828'),
                     const SizedBox(height: 8),
-                    _buildContactRow(Icons.email, 'manchoiceenterprise@gmail.com'),
+                    _buildContactRow(Icons.email, 'info@manschoice.co.ke'),
                   ],
                 ),
               ),
