@@ -7,7 +7,8 @@ class ApiConfig {
 
   // ⚠️ IMPORTANT: Update this with your production backend URL before deploying!
   // This URL will be used when building release APK/AAB
-  static const String _prodBaseUrl = 'http://192.168.100.60:8000/api';
+  // static const String _prodBaseUrl = 'http://192.168.100.60:8000/api';
+  static const String _prodBaseUrl = 'https://manschoice.co.ke/api';
 
   // Example: 'https://api.manchoice.com/api'
   // Example: 'https://manchoice.herokuapp.com/api'
