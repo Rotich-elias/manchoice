@@ -512,7 +512,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.green.shade600, Colors.green.shade800],
+            colors: _activeLoan!.isOverdue
+                ? [Colors.red.shade600, Colors.red.shade800]
+                : [Colors.green.shade600, Colors.green.shade800],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

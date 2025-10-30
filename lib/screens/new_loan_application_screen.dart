@@ -1744,12 +1744,23 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
       controller: controller,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon),
+        labelStyle: const TextStyle(
+          color: Colors.black87,
+          fontSize: 14,
+        ),
+        hintStyle: const TextStyle(
+          color: Colors.black54,
+        ),
+        prefixIcon: Icon(icon, color: Colors.black54),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
         ),
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor: Colors.white,
+      ),
+      style: const TextStyle(
+        color: Colors.black87,
+        fontSize: 16,
       ),
       keyboardType: keyboardType,
       validator: validator,
