@@ -286,4 +286,35 @@ class Loan {
     final behind = expectedPaymentByToday - amountPaid;
     return behind > 0 ? behind : 0;
   }
+
+  // Calculate 1% daily penalty for overdue loans
+  double get calculatedDailyPenalty {
+    if (!isOverdue || balance <= 0) return 0;
+    // 1% of remaining balance per day
+    return balance * 0.01;
+  }
+
+  // Calculate total penalty amount based on days overdue
+  double get calculatedTotalPenalty {
+    if (!isOverdue || daysOverdue == 0) return 0;
+    // 1% per day * days overdue * balance
+    return balance * 0.01 * daysOverdue;
+  }
+
+  // Get effective penalties (use backend value if available, otherwise calculate)
+  double get effectivePenalties {
+    // If backend has calculated penalties, use those
+    if (pendingPenalties > 0) return pendingPenalties;
+    if (totalPenalties > 0) return totalPenalties;
+    // Otherwise, use frontend calculation
+    return calculatedTotalPenalty;
+  }
+
+  // Get total amount due including calculated penalties
+  double get totalDueWithPenalties {
+    return balance + effectivePenalties;
+  }
+
+  // Get penalty rate percentage
+  double get penaltyRate => 1.0; // 1% per day
 }

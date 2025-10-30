@@ -291,17 +291,17 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               ),
             ],
           ),
-          // Show penalties if they exist
-          if ((_loan?.totalPenalties ?? 0) > 0 || (_loan?.pendingPenalties ?? 0) > 0) ...[
+          // Show penalties if they exist (use calculated penalties if backend doesn't provide them)
+          if ((_loan?.effectivePenalties ?? 0) > 0) ...[
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
                   child: _buildSummaryItem(
                     context,
-                    'Applied Penalties',
-                    'KES ${_formatCurrency(_loan?.totalPenalties ?? 0)}',
-                    Icons.warning_amber,
+                    'Daily Penalty',
+                    'KES ${_formatCurrency(_loan?.calculatedDailyPenalty ?? 0)}',
+                    Icons.calendar_today,
                   ),
                 ),
                 Container(
@@ -312,9 +312,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 Expanded(
                   child: _buildSummaryItem(
                     context,
-                    'Pending Penalties',
-                    'KES ${_formatCurrency(_loan?.pendingPenalties ?? 0)}',
-                    Icons.error_outline,
+                    'Total Penalties',
+                    'KES ${_formatCurrency(_loan?.effectivePenalties ?? 0)}',
+                    Icons.warning_amber,
                   ),
                 ),
               ],
@@ -1141,7 +1141,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             ),
 
           // Penalty Warning
-          if ((_loan?.pendingPenalties ?? 0) > 0)
+          if ((_loan?.effectivePenalties ?? 0) > 0)
             Container(
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(bottom: 16),
@@ -1166,7 +1166,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                           ),
                         ),
                         Text(
-                          'You have KES ${_formatCurrency(_loan?.pendingPenalties ?? 0)} in pending penalties for missed payments. A 1% penalty is applied daily for missed payments.',
+                          'You have KES ${_formatCurrency(_loan?.effectivePenalties ?? 0)} in penalties. A 1% daily penalty (KES ${_formatCurrency(_loan?.calculatedDailyPenalty ?? 0)}) is applied for ${_loan?.daysOverdue ?? 0} days overdue.',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Colors.deepOrange.shade700,
                           ),

@@ -3,12 +3,40 @@ import 'package:get/get.dart';
 import '../models/cart_item.dart';
 import '../models/loan.dart';
 import '../models/loan_item.dart';
+import '../models/customer_api.dart';
 import '../services/cart_service.dart';
 import '../services/customer_repository.dart';
 import '../services/loan_repository.dart';
 
-class CartScreen extends StatelessWidget {
+class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
+
+  @override
+  State<CartScreen> createState() => _CartScreenState();
+}
+
+class _CartScreenState extends State<CartScreen> {
+  final CustomerRepository _customerRepository = CustomerRepository();
+  CustomerApi? _existingCustomer;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCustomerProfile();
+  }
+
+  Future<void> _loadCustomerProfile() async {
+    try {
+      final customer = await _customerRepository.getMyProfile();
+      if (mounted) {
+        setState(() {
+          _existingCustomer = customer;
+        });
+      }
+    } catch (e) {
+      // Silently fail - credit limit card won't show if profile can't be loaded
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,6 +139,9 @@ class CartScreen extends StatelessWidget {
                   ],
                 ),
               ),
+
+            // Credit Limit Card
+            _buildCreditLimitCard(),
 
             // Cart Items List
             Expanded(
@@ -1147,6 +1178,208 @@ class CartScreen extends StatelessWidget {
       default:
         Get.offAllNamed('/home');
     }
+  }
+
+  Widget _buildCreditLimitCard() {
+    if (_existingCustomer == null) {
+      return const SizedBox.shrink();
+    }
+
+    final creditLimit = _existingCustomer!.creditLimit;
+    final outstandingBalance = _existingCustomer!.outstandingBalance;
+    final availableCredit = creditLimit - outstandingBalance;
+    final usagePercentage = creditLimit > 0 ? (outstandingBalance / creditLimit) * 100 : 0.0;
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.green.shade700,
+            Colors.green.shade500,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.account_balance_wallet,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Your Credit Limit',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Total Limit',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.8),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'KSh ${creditLimit.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Used',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.8),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'KSh ${outstandingBalance.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.check_circle,
+                  color: Colors.white,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Available Balance',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'KSh ${availableCredit.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (usagePercentage > 0) ...[
+            const SizedBox(height: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Credit Usage',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.8),
+                      ),
+                    ),
+                    Text(
+                      '${usagePercentage.toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: usagePercentage / 100,
+                    backgroundColor: Colors.white.withValues(alpha: 0.3),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      usagePercentage > 80
+                          ? Colors.red.shade300
+                          : usagePercentage > 50
+                              ? Colors.orange.shade300
+                              : Colors.white,
+                    ),
+                    minHeight: 8,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
   static Widget _buildCreditInfoRow(

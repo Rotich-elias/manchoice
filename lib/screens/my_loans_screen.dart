@@ -419,6 +419,68 @@ class _MyLoansScreenState extends State<MyLoansScreen> {
                         ],
                       ],
                     ),
+                    // Penalty Warning for Overdue Loans
+                    if (loan.isOverdue && loan.effectivePenalties > 0) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.warning_amber_rounded,
+                                  color: Colors.red,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'PENALTY APPLIED',
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Daily Penalty: KSh ${loan.calculatedDailyPenalty.toStringAsFixed(2)} (${loan.penaltyRate}% per day)',
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Total Penalties: KSh ${loan.effectivePenalties.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Amount Due (with penalties): KSh ${loan.totalDueWithPenalties.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
 
@@ -560,8 +622,13 @@ class _MyLoansScreenState extends State<MyLoansScreen> {
                 _buildDetailRow('Due Date', dateFormat.format(loan.dueDate!)),
               if (loan.durationDays != null)
                 _buildDetailRow('Duration', '${loan.durationDays} days'),
-              if (loan.isOverdue)
+              if (loan.isOverdue) ...[
                 _buildDetailRow('Days Overdue', '${loan.daysOverdue} days', isWarning: true),
+                const Divider(),
+                _buildDetailRow('Daily Penalty', currencyFormat.format(loan.calculatedDailyPenalty), isWarning: true),
+                _buildDetailRow('Total Penalties', currencyFormat.format(loan.effectivePenalties), isWarning: true),
+                _buildDetailRow('Total Due (with penalties)', currencyFormat.format(loan.totalDueWithPenalties), isWarning: true),
+              ],
               if (loan.purpose != null) ...[
                 const Divider(),
                 _buildDetailRow('Purpose', loan.purpose!),
