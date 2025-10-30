@@ -19,6 +19,7 @@ import 'package:manschoice/screens/registration_fee_status_screen.dart';
 import 'package:manschoice/screens/deposit_payment_screen.dart';
 import 'package:manschoice/screens/deposit_status_screen.dart';
 import 'package:manschoice/screens/terms_conditions_screen.dart';
+import 'package:manschoice/screens/phone_verification_screen.dart';
 
 class AppRoutes {
   static final routes = <GetPage>[
@@ -41,6 +42,7 @@ class AppRoutes {
     GetPage(name: '/part-requests', page: () => const PartRequestsScreen()),
     GetPage(name: '/support', page: () => SupportScreen()),
     GetPage(name: '/terms-conditions', page: () => const TermsConditionsScreen()),
+    GetPage(name: '/phone-verification', page: () => const PhoneVerificationScreen()),
     GetPage(name: '/profile', page: () => const ProfileScreen(), binding: ProfileBinding()),
   ];
 }

@@ -22,6 +22,7 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
   bool _obscureConfirmPin = true;
   bool _isLoading = false;
   bool _acceptedTerms = false;
+  bool _phoneVerified = false;
 
   @override
   void dispose() {
@@ -33,6 +34,40 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
     super.dispose();
   }
 
+  Future<void> _verifyPhone() async {
+    // Check if phone number is valid first
+    if (_phoneController.text.isEmpty ||
+        !RegExp(r'^0[0-9]{9}$').hasMatch(_phoneController.text)) {
+      Get.snackbar(
+        'Invalid Phone',
+        'Please enter a valid phone number first',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    // Navigate to phone verification screen
+    final result = await Get.toNamed('/phone-verification', arguments: {
+      'phone': _phoneController.text.trim(),
+    });
+
+    if (result != null && result['verified'] == true) {
+      setState(() {
+        _phoneVerified = true;
+      });
+
+      Get.snackbar(
+        'Phone Verified!',
+        'Your phone number has been verified',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    }
+  }
+
   Future<void> _handleSignup() async {
     if (_formKey.currentState!.validate()) {
       // Check if PINs match
@@ -42,6 +77,19 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
           'PINs do not match',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.red,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
+        return;
+      }
+
+      // Check if phone is verified
+      if (!_phoneVerified) {
+        Get.snackbar(
+          'Phone Not Verified',
+          'Please verify your phone number before signing up',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.orange,
           colorText: Colors.white,
           duration: const Duration(seconds: 3),
         );
@@ -173,15 +221,19 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Phone Number Field
+                  // Phone Number Field with Verification
                   TextFormField(
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
+                    enabled: !_phoneVerified,
+                    decoration: InputDecoration(
                       labelText: 'Phone Number',
                       hintText: '0712345678',
-                      prefixIcon: Icon(Icons.phone),
+                      prefixIcon: const Icon(Icons.phone),
                       helperText: 'Format: 0XXXXXXXXX',
+                      suffixIcon: _phoneVerified
+                          ? const Icon(Icons.check_circle, color: Colors.green)
+                          : null,
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -192,6 +244,60 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
                       }
                       return null;
                     },
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Phone Verification Button
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: _phoneVerified
+                          ? Colors.green.shade50
+                          : Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: _phoneVerified
+                            ? Colors.green.shade200
+                            : Colors.blue.shade200,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _phoneVerified ? Icons.check_circle : Icons.security,
+                          color: _phoneVerified
+                              ? Colors.green.shade700
+                              : Colors.blue.shade700,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _phoneVerified
+                                ? 'Phone number verified ✓'
+                                : 'Verify your phone number with OTP',
+                            style: TextStyle(
+                              color: _phoneVerified
+                                  ? Colors.green.shade700
+                                  : Colors.blue.shade700,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        if (!_phoneVerified)
+                          TextButton(
+                            onPressed: _verifyPhone,
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                            ),
+                            child: const Text('Verify'),
+                          ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 16),
 

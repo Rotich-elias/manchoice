@@ -6,12 +6,12 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 android {
-    // ⚠️ TODO: Change package name from com.example.manchoice to your unique package name
-    // Example: com.manchoice.enterprise or ke.co.manchoice.app
-    namespace = "com.manchoice.enterprise"
+    // Package name must match google-services.json
+    namespace = "com.example.manchoice"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -49,8 +49,8 @@ android {
     }
 
     defaultConfig {
-        // ⚠️ TODO: Update applicationId to match namespace above
-        applicationId = "com.manchoice.enterprise"
+        // Must match google-services.json package name
+        applicationId = "com.example.manchoice"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

@@ -1,4 +1,4 @@
-package com.manchoice.enterprise
+package com.example.manchoice
 
 import io.flutter.embedding.android.FlutterActivity
 
