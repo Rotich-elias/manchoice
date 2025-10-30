@@ -872,7 +872,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               _buildReminderRow(
                 'Balance Remaining:',
-                currencyFormat.format(loan.balance),
+                currencyFormat.format(loan.totalDueWithPenalties),
                 highlight: true,
               ),
 

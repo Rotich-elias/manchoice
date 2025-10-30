@@ -333,9 +333,9 @@ class _MyLoansScreenState extends State<MyLoansScreen> {
                   Expanded(
                     child: _buildInfoColumn(
                       'Balance',
-                      currencyFormat.format(loan.balance),
+                      currencyFormat.format(loan.totalDueWithPenalties),
                       Icons.pending_actions,
-                      valueColor: loan.balance > 0 ? Colors.orange : Colors.green,
+                      valueColor: loan.totalDueWithPenalties > 0 ? Colors.orange : Colors.green,
                     ),
                   ),
                 ],
@@ -613,7 +613,7 @@ class _MyLoansScreenState extends State<MyLoansScreen> {
               _buildDetailRow('Total Amount', currencyFormat.format(loan.totalAmount)),
               const Divider(),
               _buildDetailRow('Amount Paid', currencyFormat.format(loan.amountPaid)),
-              _buildDetailRow('Balance', currencyFormat.format(loan.balance)),
+              _buildDetailRow('Balance', currencyFormat.format(loan.totalDueWithPenalties)),
               _buildDetailRow('Payment Progress', '${loan.paymentProgress.toStringAsFixed(1)}%'),
               const Divider(),
               if (loan.disbursementDate != null)
@@ -646,7 +646,7 @@ class _MyLoansScreenState extends State<MyLoansScreen> {
           ),
         ),
         actions: [
-          if (loan.balance > 0 && (loan.status == 'active' || loan.status == 'approved'))
+          if (loan.totalDueWithPenalties > 0 && (loan.status == 'active' || loan.status == 'approved'))
             TextButton.icon(
               onPressed: () {
                 Get.back();

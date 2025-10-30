@@ -88,7 +88,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     }
   }
 
-  double get remainingBalance => _loan?.balance ?? 0;
+  double get remainingBalance => _loan?.totalDueWithPenalties ?? 0;
   double get paymentProgress => _loan?.paymentProgress ?? 0;
   double get totalLoanAmount => _loan?.totalAmount ?? 0;
   double get amountPaid => _loan?.amountPaid ?? 0;
