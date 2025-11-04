@@ -240,19 +240,28 @@ class Loan {
 
   // Calculate daily payment based on actual days in the loan period
   double get dailyPayment {
-    const minDailyPayment = 200.0; // Minimum KES 200 daily
+    const minDailyPayment = 200.0; // Minimum KES 200 daily for balances > 200
 
     if (disbursementDate == null || dueDate == null) {
       // Fallback: assume 30 days if dates not available
       final calculated = balance / 30;
-      return calculated < minDailyPayment ? minDailyPayment : calculated;
+      // Only apply minimum if balance is greater than the minimum
+      if (balance > minDailyPayment) {
+        return calculated < minDailyPayment ? minDailyPayment : calculated;
+      }
+      return calculated;
     }
 
     final actualDays = dueDate!.difference(disbursementDate!).inDays;
     if (actualDays <= 0) return balance;
 
     final calculated = balance / actualDays;
-    return calculated < minDailyPayment ? minDailyPayment : calculated;
+    // Only apply minimum daily payment if balance is greater than minimum
+    // This prevents showing 200 daily payment when someone owes only 26.50
+    if (balance > minDailyPayment) {
+      return calculated < minDailyPayment ? minDailyPayment : calculated;
+    }
+    return calculated;
   }
 
   // Calculate expected payment by today

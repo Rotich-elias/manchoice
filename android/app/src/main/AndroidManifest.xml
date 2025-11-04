@@ -6,11 +6,9 @@
         android:label="MansChoice"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="true">
-        <!-- ⚠️ SECURITY WARNING: usesCleartextTraffic="true" allows HTTP connections.
-             For PRODUCTION, set this to "false" and use HTTPS only!
-             Change to: android:usesCleartextTraffic="false"
-             Make sure your backend API uses HTTPS before changing this. -->
+        android:usesCleartextTraffic="false">
+        <!-- ✅ SECURITY: Cleartext traffic (HTTP) is disabled. Only HTTPS connections allowed.
+             Backend API: https://manschoice.co.ke/api -->
         <activity
             android:name=".MainActivity"
             android:exported="true"

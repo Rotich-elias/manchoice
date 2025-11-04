@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,7 +15,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
   final _phoneController = TextEditingController();
   final _otpController = TextEditingController();
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseAuth? _auth;
 
   bool _isLoading = false;
   bool _codeSent = false;
@@ -24,6 +25,12 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
   @override
   void initState() {
     super.initState();
+
+    // Initialize Firebase Auth only on mobile
+    if (!kIsWeb) {
+      _auth = FirebaseAuth.instance;
+    }
+
     // Get phone number from arguments if provided
     final args = Get.arguments;
     if (args != null && args['phone'] != null) {
@@ -56,22 +63,34 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       return;
     }
 
+    // Phone auth only works on mobile
+    if (kIsWeb || _auth == null) {
+      Get.snackbar(
+        'Error',
+        'Phone authentication is only available on mobile devices',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
       final phoneNumber = _formatPhoneNumber(_phoneController.text.trim());
 
-      await _auth.verifyPhoneNumber(
+      await _auth!.verifyPhoneNumber(
         phoneNumber: phoneNumber,
         verificationCompleted: (PhoneAuthCredential credential) async {
           // Auto-verification (happens on some devices)
           try {
-            await _auth.signInWithCredential(credential);
+            await _auth!.signInWithCredential(credential);
             // Immediately sign out as we only needed verification
-            await _auth.signOut();
+            await _auth!.signOut();
           } catch (e) {
             // Ignore errors here, auto-verification worked
-            await _auth.signOut();
+            await _auth!.signOut();
           }
 
           if (!mounted) return;
@@ -179,7 +198,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
 
       // Try to sign in to verify the credential is valid
       try {
-        await _auth.signInWithCredential(credential);
+        await _auth!.signInWithCredential(credential);
         verificationSuccessful = true;
       } catch (signInError) {
         // If there's a type casting error, verification actually succeeded
@@ -193,7 +212,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
 
       // Clean up - sign out
       try {
-        await _auth.signOut();
+        await _auth!.signOut();
       } catch (e) {
         // Ignore sign out errors
       }

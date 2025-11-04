@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -7,7 +8,12 @@ import 'screens/main_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+
+  // Only initialize Firebase on mobile (phone auth doesn't work on web)
+  if (!kIsWeb) {
+    await Firebase.initializeApp();
+  }
+
   runApp(const PlumerApp());
 }
 

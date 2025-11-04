@@ -15,7 +15,8 @@ class RegistrationFeePaymentScreen extends StatefulWidget {
 class _RegistrationFeePaymentScreenState
     extends State<RegistrationFeePaymentScreen> {
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _transactionIdController = TextEditingController();
+  final TextEditingController _transactionIdController =
+      TextEditingController();
   final RegistrationFeeRepository _feeRepository = RegistrationFeeRepository();
 
   bool _isLoading = false;
@@ -25,8 +26,8 @@ class _RegistrationFeePaymentScreenState
   RegistrationFee? _registrationFee;
 
   // Paybill Details
-  final String _paybillNumber = '522533';
-  final String _accountNumber = 'MANCHOICE';
+  final String _paybillNumber = '247247';
+  final String _accountNumber = '846828';
   final double _amount = 300.00;
 
   @override
@@ -202,7 +203,11 @@ class _RegistrationFeePaymentScreenState
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
+                  Icon(
+                    Icons.info_outline,
+                    color: Colors.blue.shade700,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
@@ -308,7 +313,11 @@ class _RegistrationFeePaymentScreenState
                       padding: const EdgeInsets.all(20.0),
                       child: Column(
                         children: [
-                          Icon(Icons.payment, size: 48, color: Colors.blue.shade700),
+                          Icon(
+                            Icons.payment,
+                            size: 48,
+                            color: Colors.blue.shade700,
+                          ),
                           const SizedBox(height: 12),
                           const Text(
                             'Registration Fee',
@@ -348,7 +357,10 @@ class _RegistrationFeePaymentScreenState
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.info_outline, color: Colors.blue.shade700),
+                              Icon(
+                                Icons.info_outline,
+                                color: Colors.blue.shade700,
+                              ),
                               const SizedBox(width: 8),
                               const Text(
                                 'How to Pay',
@@ -360,13 +372,22 @@ class _RegistrationFeePaymentScreenState
                             ],
                           ),
                           const SizedBox(height: 16),
-                          _buildInstructionStep('1', 'Go to M-PESA on your phone'),
+                          _buildInstructionStep(
+                            '1',
+                            'Go to M-PESA on your phone',
+                          ),
                           _buildInstructionStep('2', 'Select Lipa Na M-PESA'),
                           _buildInstructionStep('3', 'Select Paybill'),
                           _buildInstructionStep('4', 'Enter the details below'),
                           _buildInstructionStep('5', 'Enter your M-PESA PIN'),
-                          _buildInstructionStep('6', 'Copy the transaction code from the SMS'),
-                          _buildInstructionStep('7', 'Enter the code in the form below'),
+                          _buildInstructionStep(
+                            '6',
+                            'Copy the transaction code from the SMS',
+                          ),
+                          _buildInstructionStep(
+                            '7',
+                            'Enter the code in the form below',
+                          ),
                         ],
                       ),
                     ),
@@ -384,7 +405,11 @@ class _RegistrationFeePaymentScreenState
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.account_balance, color: Colors.green.shade700, size: 24),
+                              Icon(
+                                Icons.account_balance,
+                                color: Colors.green.shade700,
+                                size: 24,
+                              ),
                               const SizedBox(width: 8),
                               const Text(
                                 'M-PESA Paybill Details',
@@ -479,8 +504,9 @@ class _RegistrationFeePaymentScreenState
                               suffixIcon: IconButton(
                                 icon: const Icon(Icons.paste),
                                 onPressed: () async {
-                                  final clipboardData =
-                                      await Clipboard.getData('text/plain');
+                                  final clipboardData = await Clipboard.getData(
+                                    'text/plain',
+                                  );
                                   if (clipboardData != null &&
                                       clipboardData.text != null) {
                                     _transactionIdController.text =
@@ -494,7 +520,8 @@ class _RegistrationFeePaymentScreenState
                               ),
                               filled: true,
                               fillColor: Colors.grey.shade50,
-                              helperText: 'Found in your M-PESA confirmation SMS',
+                              helperText:
+                                  'Found in your M-PESA confirmation SMS',
                             ),
                             enabled: !_isSubmitting,
                           ),
@@ -510,7 +537,11 @@ class _RegistrationFeePaymentScreenState
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.info_outline, color: Colors.amber.shade900, size: 20),
+                                Icon(
+                                  Icons.info_outline,
+                                  color: Colors.amber.shade900,
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 8),
                                 const Expanded(
                                   child: Text(
@@ -531,7 +562,9 @@ class _RegistrationFeePaymentScreenState
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue.shade700,
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -542,8 +575,10 @@ class _RegistrationFeePaymentScreenState
                                       width: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                            Colors.white),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
                                       ),
                                     )
                                   : const Text(

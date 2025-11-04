@@ -15,8 +15,13 @@ class DepositPaymentScreen extends StatefulWidget {
 class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
-  final TextEditingController _transactionCodeController = TextEditingController();
+  final TextEditingController _transactionCodeController =
+      TextEditingController();
   final DepositRepository _depositRepository = DepositRepository();
+
+  // ⚠️ IMPORTANT: Update this with your actual Safaricom M-PESA paybill number before going live!
+  final String mpesaPaybill =
+      "247247"; // TODO: Update with your production paybill number
 
   bool _isLoading = false;
   bool _isSubmitting = false;
@@ -230,7 +235,11 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
+                  Icon(
+                    Icons.info_outline,
+                    color: Colors.blue.shade700,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
@@ -268,11 +277,7 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        icon: const Icon(
-          Icons.check_circle,
-          color: Colors.green,
-          size: 64,
-        ),
+        icon: const Icon(Icons.check_circle, color: Colors.green, size: 64),
         title: const Text('Deposit Paid Successfully!'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -284,10 +289,7 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
             const SizedBox(height: 16),
             Text(
               'Total Deposit: KES ${_depositAmount.toStringAsFixed(2)}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -313,9 +315,7 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Loan Deposit Payment'),
-      ),
+      appBar: AppBar(title: const Text('Loan Deposit Payment')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -379,19 +379,27 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
                   // Deposit Information Card
                   Card(
                     elevation: 4,
-                    color: _isDepositPaid ? Colors.green.shade50 : Colors.orange.shade50,
+                    color: _isDepositPaid
+                        ? Colors.green.shade50
+                        : Colors.orange.shade50,
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         children: [
                           Icon(
-                            _isDepositPaid ? Icons.check_circle : Icons.account_balance_wallet,
+                            _isDepositPaid
+                                ? Icons.check_circle
+                                : Icons.account_balance_wallet,
                             size: 64,
-                            color: _isDepositPaid ? Colors.green : Colors.orange,
+                            color: _isDepositPaid
+                                ? Colors.green
+                                : Colors.orange,
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            _isDepositPaid ? 'Deposit Paid' : 'Deposit Required (10%)',
+                            _isDepositPaid
+                                ? 'Deposit Paid'
+                                : 'Deposit Required (10%)',
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -403,7 +411,9 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
                             style: TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
-                              color: _isDepositPaid ? Colors.green : Colors.orange,
+                              color: _isDepositPaid
+                                  ? Colors.green
+                                  : Colors.orange,
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -413,7 +423,9 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
                             LinearProgressIndicator(
                               value: _depositPaid / _depositAmount,
                               backgroundColor: Colors.grey.shade300,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.orange,
+                              ),
                               minHeight: 8,
                             ),
                             const SizedBox(height: 8),
@@ -436,10 +448,14 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
                           ] else ...[
                             const Text(
                               'Fully paid on',
-                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
                             ),
                             Text(
-                              _loan?.depositPaidAt?.toString().split(' ')[0] ?? 'N/A',
+                              _loan?.depositPaidAt?.toString().split(' ')[0] ??
+                                  'N/A',
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
@@ -478,8 +494,13 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
                                     const Icon(Icons.phone_android, size: 40),
                               ),
                               title: const Text('M-PESA'),
-                              subtitle: const Text('Pay via M-PESA STK Push'),
-                              trailing: const Icon(Icons.check_circle, color: Colors.green),
+                              subtitle: const Text(
+                                'Manual Payment - Pay via Paybill',
+                              ),
+                              trailing: const Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                              ),
                             ),
                           ],
                         ),
@@ -558,7 +579,9 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
 
                     // Pay Button
                     ElevatedButton(
-                      onPressed: _isSubmitting || _isDepositPaid ? null : _submitPayment,
+                      onPressed: _isSubmitting || _isDepositPaid
+                          ? null
+                          : _submitPayment,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.all(16),
                         backgroundColor: Colors.green,
@@ -616,13 +639,17 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
                             ],
                           ),
                           const SizedBox(height: 12),
-                          const Text(
+                          Text(
                             '• A 10% deposit is required for loan processing\n'
                             '• You can pay in full or make partial payments\n'
-                            '• You will receive an M-PESA prompt on your phone\n'
-                            '• Enter your M-PESA PIN to complete payment\n'
+                            '• Go to M-PESA → Lipa na M-PESA → Paybill\n'
+                            '• Enter Business No: $mpesaPaybill\n'
+                            '• Enter Account No: 846828\n'
+                            '• Enter the amount and complete payment\n'
+                            '• Copy the M-PESA transaction code (e.g., SH12XYZ789)\n'
+                            '• Enter the code below to submit for verification\n'
                             '• Your loan will be ready for approval once deposit is fully paid',
-                            style: TextStyle(fontSize: 14),
+                            style: const TextStyle(fontSize: 14),
                           ),
                         ],
                       ),
@@ -652,20 +679,23 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
                               deposit.isCompleted
                                   ? Icons.check_circle
                                   : deposit.isPending
-                                      ? Icons.pending
-                                      : Icons.error,
+                                  ? Icons.pending
+                                  : Icons.error,
                               color: deposit.isCompleted
                                   ? Colors.green
                                   : deposit.isPending
-                                      ? Colors.orange
-                                      : Colors.red,
+                                  ? Colors.orange
+                                  : Colors.red,
                             ),
-                            title: Text('KES ${deposit.amount.toStringAsFixed(2)}'),
+                            title: Text(
+                              'KES ${deposit.amount.toStringAsFixed(2)}',
+                            ),
                             subtitle: Text(
                               '${deposit.paymentMethod.toUpperCase()} - ${deposit.status}',
                             ),
                             trailing: Text(
-                              deposit.paidAt?.toString().split(' ')[0] ?? 'Pending',
+                              deposit.paidAt?.toString().split(' ')[0] ??
+                                  'Pending',
                               style: const TextStyle(fontSize: 12),
                             ),
                           ),
