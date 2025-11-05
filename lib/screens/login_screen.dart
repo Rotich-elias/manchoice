@@ -24,6 +24,86 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  void _showForgotPinDialog() {
+    Get.dialog(
+      AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.help_outline, color: Colors.blue, size: 28),
+            SizedBox(width: 12),
+            Text('Forgot Your PIN?'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'To reset your PIN, please contact our admin team:',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+            ),
+            SizedBox(height: 16),
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.phone, color: Colors.blue, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Call us:',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '0110846828',
+                    style: TextStyle(fontSize: 16, color: Colors.blue.shade700),
+                  ),
+                  SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Icon(Icons.message, color: Colors.green, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'WhatsApp:',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '0110846828',
+                    style: TextStyle(fontSize: 16, color: Colors.green.shade700),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Have your phone number ready when you contact us.',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600, fontStyle: FontStyle.italic),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
@@ -260,17 +340,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
 
-                  // Forgot Password Link
+                  // Forgot PIN Link
                   TextButton(
                     onPressed: () {
-                      Get.snackbar(
-                        'Forgot Password',
-                        'Password recovery will be implemented',
-                        snackPosition: SnackPosition.BOTTOM,
-                      );
+                      _showForgotPinDialog();
                     },
                     child: Text(
-                      'Forgot Password?',
+                      'Forgot PIN?',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.secondary,
                       ),

@@ -34,6 +34,7 @@ class ApiConfig {
   static const String register = '/register';
   static const String logout = '/logout';
   static const String user = '/user';
+  static const String lookupCustomer = '/lookup-customer';
 
   static const String customers = '/customers';
   static const String loans = '/loans';

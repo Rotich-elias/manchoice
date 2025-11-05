@@ -31,6 +31,53 @@ class AuthService {
     }
   }
 
+  // Lookup customer by ID number or phone
+  Future<Map<String, dynamic>> lookupCustomer({
+    String? phone,
+    String? idNumber,
+  }) async {
+    try {
+      // Validate that at least one parameter is provided
+      if ((phone == null || phone.isEmpty) && (idNumber == null || idNumber.isEmpty)) {
+        return {
+          'success': false,
+          'message': 'Please provide either phone number or ID number',
+        };
+      }
+
+      final Map<String, dynamic> data = {};
+      if (phone != null && phone.isNotEmpty) {
+        data['phone'] = phone;
+      }
+      if (idNumber != null && idNumber.isNotEmpty) {
+        data['id_number'] = idNumber;
+      }
+
+      final response = await _apiService.post(
+        ApiConfig.lookupCustomer,
+        data: data,
+      );
+
+      if (response.data['success'] == true) {
+        return {
+          'success': true,
+          'customer': response.data['data'],
+          'message': response.data['message'],
+        };
+      }
+
+      return {
+        'success': false,
+        'message': response.data['message'] ?? 'Customer not found',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': e.toString(),
+      };
+    }
+  }
+
   // Register new user
   Future<Map<String, dynamic>> register({
     required String name,
@@ -39,21 +86,31 @@ class AuthService {
     required String pin,
     required String pinConfirmation,
     bool acceptedTerms = true,
+    int? customerId,  // Optional: link to existing customer
+    bool claimExisting = false,  // Whether claiming existing customer record
   }) async {
     try {
       // Clear any existing photo paths from previous users
       await _clearStoredPhotoPaths();
 
+      final Map<String, dynamic> data = {
+        'name': name,
+        'phone': phone,
+        'email': email,
+        'pin': pin,
+        'pin_confirmation': pinConfirmation,
+        'accepted_terms': acceptedTerms,
+      };
+
+      // Add customer linking fields if provided
+      if (customerId != null) {
+        data['customer_id'] = customerId;
+        data['claim_existing'] = claimExisting;
+      }
+
       final response = await _apiService.post(
         ApiConfig.register,
-        data: {
-          'name': name,
-          'phone': phone,
-          'email': email,
-          'pin': pin,
-          'pin_confirmation': pinConfirmation,
-          'accepted_terms': acceptedTerms,
-        },
+        data: data,
       );
 
       if (response.data['success'] == true) {

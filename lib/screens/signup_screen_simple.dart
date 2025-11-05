@@ -11,6 +11,7 @@ class SignupScreenSimple extends StatefulWidget {
 
 class _SignupScreenSimpleState extends State<SignupScreenSimple> {
   final _formKey = GlobalKey<FormState>();
+  final _idNumberController = TextEditingController();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
@@ -21,11 +22,15 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
   bool _obscurePin = true;
   bool _obscureConfirmPin = true;
   bool _isLoading = false;
+  bool _isLookingUp = false;
   bool _acceptedTerms = false;
-  bool _phoneVerified = false;
+  bool _customerFound = false;
+  int? _customerId;
+  // bool _phoneVerified = false; // COMMENTED OUT: Verification disabled
 
   @override
   void dispose() {
+    _idNumberController.dispose();
     _nameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
@@ -34,13 +39,11 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
     super.dispose();
   }
 
-  Future<void> _verifyPhone() async {
-    // Check if phone number is valid first
-    if (_phoneController.text.isEmpty ||
-        !RegExp(r'^0[0-9]{9}$').hasMatch(_phoneController.text)) {
+  Future<void> _lookupCustomer() async {
+    if (_idNumberController.text.isEmpty) {
       Get.snackbar(
-        'Invalid Phone',
-        'Please enter a valid phone number first',
+        'ID Number Required',
+        'Please enter your ID number first',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.orange,
         colorText: Colors.white,
@@ -48,25 +51,116 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
       return;
     }
 
-    // Navigate to phone verification screen
-    final result = await Get.toNamed('/phone-verification', arguments: {
-      'phone': _phoneController.text.trim(),
-    });
+    setState(() => _isLookingUp = true);
 
-    if (result != null && result['verified'] == true) {
-      setState(() {
-        _phoneVerified = true;
-      });
-
-      Get.snackbar(
-        'Phone Verified!',
-        'Your phone number has been verified',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
+    try {
+      final result = await _authService.lookupCustomer(
+        idNumber: _idNumberController.text.trim(),
       );
+
+      if (!mounted) return;
+
+      if (result['success'] == true) {
+        final customer = result['customer'];
+
+        setState(() {
+          _customerFound = true;
+          _customerId = customer['id'];
+
+          // Pre-fill the form with customer data
+          _nameController.text = customer['name'] ?? '';
+          _phoneController.text = customer['phone'] ?? '';
+          _emailController.text = customer['email'] ?? '';
+        });
+
+        Get.snackbar(
+          'Customer Found!',
+          'Your information has been loaded. Please set your PIN to continue.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
+      } else {
+        // Check if customer is already registered
+        final alreadyRegistered = result['already_registered'] ?? false;
+
+        if (alreadyRegistered) {
+          Get.snackbar(
+            'Already Registered',
+            result['message'] ?? 'This account is already registered. Please login instead.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.orange,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 5),
+          );
+
+          // Navigate to login after a delay
+          Future.delayed(const Duration(seconds: 2), () {
+            Get.offNamed('/login');
+          });
+        } else {
+          Get.snackbar(
+            'Not Found',
+            result['message'] ?? 'No customer record found with this ID number. You can proceed to register as a new customer.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.blue,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 4),
+          );
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      Get.snackbar(
+        'Error',
+        'Failed to lookup customer. Please try again.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLookingUp = false);
+      }
     }
   }
+
+  // COMMENTED OUT: Firebase verification temporarily disabled
+  // Future<void> _verifyPhone() async {
+  //   // Check if phone number is valid first
+  //   if (_phoneController.text.isEmpty ||
+  //       !RegExp(r'^0[0-9]{9}$').hasMatch(_phoneController.text)) {
+  //     Get.snackbar(
+  //       'Invalid Phone',
+  //       'Please enter a valid phone number first',
+  //       snackPosition: SnackPosition.BOTTOM,
+  //       backgroundColor: Colors.orange,
+  //       colorText: Colors.white,
+  //     );
+  //     return;
+  //   }
+  //
+  //   // Navigate to phone verification screen
+  //   final result = await Get.toNamed('/phone-verification', arguments: {
+  //     'phone': _phoneController.text.trim(),
+  //   });
+  //
+  //   if (result != null && result['verified'] == true) {
+  //     setState(() {
+  //       _phoneVerified = true;
+  //     });
+  //
+  //     Get.snackbar(
+  //       'Phone Verified!',
+  //       'Your phone number has been verified',
+  //       snackPosition: SnackPosition.BOTTOM,
+  //       backgroundColor: Colors.green,
+  //       colorText: Colors.white,
+  //     );
+  //   }
+  // }
 
   Future<void> _handleSignup() async {
     if (_formKey.currentState!.validate()) {
@@ -84,17 +178,18 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
       }
 
       // Check if phone is verified
-      if (!_phoneVerified) {
-        Get.snackbar(
-          'Phone Not Verified',
-          'Please verify your phone number before signing up',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 3),
-        );
-        return;
-      }
+      // COMMENTED OUT: Firebase verification temporarily disabled
+      // if (!_phoneVerified) {
+      //   Get.snackbar(
+      //     'Phone Not Verified',
+      //     'Please verify your phone number before signing up',
+      //     snackPosition: SnackPosition.BOTTOM,
+      //     backgroundColor: Colors.orange,
+      //     colorText: Colors.white,
+      //     duration: const Duration(seconds: 3),
+      //   );
+      //   return;
+      // }
 
       // Check if terms are accepted
       if (!_acceptedTerms) {
@@ -118,22 +213,41 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
           email: _emailController.text.trim(),
           pin: _pinController.text,
           pinConfirmation: _confirmPinController.text,
+          customerId: _customerId,
+          claimExisting: _customerFound,
         );
 
         if (!mounted) return;
 
         if (result['success'] == true) {
-          // Registration successful - navigate to registration fee payment
-          Get.offAllNamed('/registration-fee');
+          // Check if customer was linked (admin-created customer)
+          final customerLinked = result['data']?['customer_linked'] ?? false;
 
-          Get.snackbar(
-            'Account Created!',
-            'Please pay the registration fee to activate your account',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.blue,
-            colorText: Colors.white,
-            duration: const Duration(seconds: 3),
-          );
+          if (customerLinked || _customerFound) {
+            // Skip registration fee for admin-created customers
+            Get.offAllNamed('/home');
+
+            Get.snackbar(
+              'Welcome!',
+              'Your account has been activated. You can now start using the app.',
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: Colors.green,
+              colorText: Colors.white,
+              duration: const Duration(seconds: 3),
+            );
+          } else {
+            // New customer - navigate to registration fee payment
+            Get.offAllNamed('/registration-fee');
+
+            Get.snackbar(
+              'Account Created!',
+              'Please pay the registration fee to activate your account',
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: Colors.blue,
+              colorText: Colors.white,
+              duration: const Duration(seconds: 3),
+            );
+          }
         } else {
           // Show error message
           Get.snackbar(
@@ -201,13 +315,92 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
                   ),
                   const SizedBox(height: 48),
 
+                  // ID Number Field with Lookup Button
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _idNumberController,
+                          decoration: const InputDecoration(
+                            labelText: 'ID Number',
+                            hintText: 'Enter your ID number',
+                            prefixIcon: Icon(Icons.badge),
+                            helperText: 'Enter ID number if admin created your account',
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: ElevatedButton(
+                          onPressed: _isLookingUp ? null : _lookupCustomer,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 16,
+                            ),
+                          ),
+                          child: _isLookingUp
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                )
+                              : const Text('Check'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Customer found indicator
+                  if (_customerFound)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.green.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle,
+                            color: Colors.green.shade700,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Existing customer found! Your details have been loaded.',
+                              style: TextStyle(
+                                color: Colors.green.shade700,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (_customerFound) const SizedBox(height: 16),
+
                   // Name Field
                   TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(
+                    enabled: !_customerFound, // Disable if customer found
+                    decoration: InputDecoration(
                       labelText: 'Full Name',
                       hintText: 'Enter your full name',
-                      prefixIcon: Icon(Icons.person),
+                      prefixIcon: const Icon(Icons.person),
+                      helperText: _customerFound
+                          ? 'Pre-filled from your customer record'
+                          : null,
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -225,15 +418,15 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
                   TextFormField(
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
-                    enabled: !_phoneVerified,
+                    enabled: !_customerFound, // Disable if customer found
                     decoration: InputDecoration(
                       labelText: 'Phone Number',
                       hintText: '0712345678',
                       prefixIcon: const Icon(Icons.phone),
-                      helperText: 'Format: 0XXXXXXXXX',
-                      suffixIcon: _phoneVerified
-                          ? const Icon(Icons.check_circle, color: Colors.green)
-                          : null,
+                      helperText: _customerFound
+                          ? 'Pre-filled from your customer record'
+                          : 'Format: 0XXXXXXXXX',
+                      // suffixIcon removed - verification disabled
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -245,72 +438,81 @@ class _SignupScreenSimpleState extends State<SignupScreenSimple> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
 
                   // Phone Verification Button
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: _phoneVerified
-                          ? Colors.green.shade50
-                          : Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: _phoneVerified
-                            ? Colors.green.shade200
-                            : Colors.blue.shade200,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          _phoneVerified ? Icons.check_circle : Icons.security,
-                          color: _phoneVerified
-                              ? Colors.green.shade700
-                              : Colors.blue.shade700,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            _phoneVerified
-                                ? 'Phone number verified ✓'
-                                : 'Verify your phone number with OTP',
-                            style: TextStyle(
-                              color: _phoneVerified
-                                  ? Colors.green.shade700
-                                  : Colors.blue.shade700,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                        if (!_phoneVerified)
-                          TextButton(
-                            onPressed: _verifyPhone,
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                            ),
-                            child: const Text('Verify'),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                  // COMMENTED OUT: Firebase verification temporarily disabled
+                  // Container(
+                  //   padding: const EdgeInsets.all(12),
+                  //   decoration: BoxDecoration(
+                  //     color: _phoneVerified
+                  //         ? Colors.green.shade50
+                  //         : Colors.blue.shade50,
+                  //     borderRadius: BorderRadius.circular(8),
+                  //     border: Border.all(
+                  //       color: _phoneVerified
+                  //           ? Colors.green.shade200
+                  //           : Colors.blue.shade200,
+                  //     ),
+                  //   ),
+                  //   child: Row(
+                  //     children: [
+                  //       Icon(
+                  //         _phoneVerified ? Icons.check_circle : Icons.security,
+                  //         color: _phoneVerified
+                  //             ? Colors.green.shade700
+                  //             : Colors.blue.shade700,
+                  //         size: 20,
+                  //       ),
+                  //       const SizedBox(width: 12),
+                  //       Expanded(
+                  //         child: Text(
+                  //           _phoneVerified
+                  //               ? 'Phone number verified ✓'
+                  //               : 'Verify your phone number with OTP',
+                  //           style: TextStyle(
+                  //             color: _phoneVerified
+                  //                 ? Colors.green.shade700
+                  //                 : Colors.blue.shade700,
+                  //             fontWeight: FontWeight.w500,
+                  //             fontSize: 13,
+                  //           ),
+                  //         ),
+                  //       ),
+                  //       if (!_phoneVerified)
+                  //         TextButton(
+                  //           onPressed: _verifyPhone,
+                  //           style: TextButton.styleFrom(
+                  //             padding: const EdgeInsets.symmetric(
+                  //               horizontal: 12,
+                  //               vertical: 6,
+                  //             ),
+                  //           ),
+                  //           child: const Text('Verify'),
+                  //         ),
+                  //     ],
+                  //   ),
+                  // ),
+                  // const SizedBox(height: 16),
 
                   // Email Field
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
+                    enabled: !_customerFound, // Disable if customer found
+                    decoration: InputDecoration(
                       labelText: 'Email Address',
                       hintText: 'your.email@example.com',
-                      prefixIcon: Icon(Icons.email),
+                      prefixIcon: const Icon(Icons.email),
+                      helperText: _customerFound
+                          ? 'Pre-filled from your customer record'
+                          : null,
                     ),
                     validator: (value) {
+                      // Email is optional if customer is found and already has email
+                      if (_customerFound && (value == null || value.isEmpty)) {
+                        return null;
+                      }
                       if (value == null || value.isEmpty) {
                         return 'Please enter your email address';
                       }
