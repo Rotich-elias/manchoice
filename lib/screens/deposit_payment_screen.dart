@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../models/loan.dart';
 import '../models/deposit.dart';
 import '../services/deposit_repository.dart';
+import '../utils/payment_utils.dart';
 import 'dart:async';
 
 class DepositPaymentScreen extends StatefulWidget {
@@ -144,15 +145,8 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
       return;
     }
 
-    if (paymentAmount > _remainingDeposit) {
-      Get.snackbar(
-        'Error',
-        'Amount exceeds remaining deposit',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-      return;
-    }
+    // Round up to nearest 10 for M-Pesa (M-Pesa doesn't accept decimals)
+    final roundedAmount = PaymentUtils.roundUpToNearestTen(paymentAmount);
 
     setState(() {
       _isSubmitting = true;
@@ -163,7 +157,7 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
         loanId: _loan!.id,
         phoneNumber: _phoneController.text,
         mpesaCode: _transactionCodeController.text,
-        amount: paymentAmount,
+        amount: roundedAmount,
       );
 
       setState(() {
@@ -577,6 +571,72 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
                     ),
                     const SizedBox(height: 24),
 
+                    // M-Pesa amount display with rounding info
+                    if (_payPartial && _amountController.text.isNotEmpty ||
+                        !_payPartial) ...[
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.green.shade300),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.payments, color: Colors.green.shade700),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Amount to Pay via M-Pesa',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green.shade900,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'KES ${PaymentUtils.roundUpToNearestTen(_payPartial ? (double.tryParse(_amountController.text) ?? 0) : _remainingDeposit).toStringAsFixed(0)}',
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green.shade700,
+                              ),
+                            ),
+                            if ((_payPartial
+                                    ? (double.tryParse(_amountController.text) ?? 0)
+                                    : _remainingDeposit) !=
+                                PaymentUtils.roundUpToNearestTen(_payPartial
+                                    ? (double.tryParse(_amountController.text) ?? 0)
+                                    : _remainingDeposit)) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                'Rounded from KES ${(_payPartial ? (double.tryParse(_amountController.text) ?? 0) : _remainingDeposit).toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.green.shade700,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'M-Pesa requires amounts in whole tens',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
                     // Pay Button
                     ElevatedButton(
                       onPressed: _isSubmitting || _isDepositPaid
@@ -606,11 +666,9 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
                                 Text('Submitting...'),
                               ],
                             )
-                          : Text(
-                              _payPartial
-                                  ? 'Submit Payment (KES ${_amountController.text.isEmpty ? "0.00" : _amountController.text})'
-                                  : 'Submit Full Deposit (KES ${_remainingDeposit.toStringAsFixed(2)})',
-                              style: const TextStyle(fontSize: 18),
+                          : const Text(
+                              'Submit Payment',
+                              style: TextStyle(fontSize: 18),
                             ),
                     ),
                     const SizedBox(height: 16),

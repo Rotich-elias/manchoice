@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import '../models/loan.dart';
 import '../services/payment_repository.dart';
+import '../utils/payment_utils.dart';
 
 class PaymentsScreen extends StatefulWidget {
   const PaymentsScreen({super.key});
@@ -725,8 +726,73 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
             ],
+            onChanged: (value) {
+              setState(() {}); // Trigger rebuild to update rounded amount display
+            },
           ),
           const SizedBox(height: 16),
+
+          // M-Pesa amount display with rounding info
+          if (_amountController.text.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.green.shade300),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.payments, color: Colors.green.shade700),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Amount to Pay via M-Pesa',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade900,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'KES ${PaymentUtils.roundUpToNearestTen(double.tryParse(_amountController.text) ?? 0).toStringAsFixed(0)}',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green.shade700,
+                    ),
+                  ),
+                  if ((double.tryParse(_amountController.text) ?? 0) !=
+                      PaymentUtils.roundUpToNearestTen(
+                          double.tryParse(_amountController.text) ?? 0)) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Rounded from KES ${(double.tryParse(_amountController.text) ?? 0).toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.green.shade700,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'M-Pesa requires amounts in whole tens',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
 
           // Transaction Code Input
           TextField(
@@ -1355,7 +1421,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     if (amount > remainingBalance) {
       Get.snackbar(
         'Warning',
-        'Amount exceeds remaining balance. Your payment will be adjusted to KES ${_formatCurrency(remainingBalance)}',
+        'Amount exceeds remaining balance. Overpayments will be recorded.',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.orange,
         colorText: Colors.white,
@@ -1374,6 +1440,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       return;
     }
 
+    // Round up to nearest 10 for M-Pesa (M-Pesa doesn't accept decimals)
+    final roundedAmount = PaymentUtils.roundUpToNearestTen(amount);
+
     // Submit payment to API
     setState(() {
       _isSubmitting = true;
@@ -1382,7 +1451,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     try {
       final payment = await _paymentRepository.createPayment(
         loanId: _loan!.id,
-        amount: amount,
+        amount: roundedAmount,
         paymentMethod: _selectedPaymentMethod,
         mpesaReceiptNumber: transactionCode,
         notes: 'Payment submitted by customer via mobile app',
@@ -1440,7 +1509,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 _buildDetailRow('Transaction Code:', transactionCode),
                 _buildDetailRow(
                   'Amount:',
-                  'KES ${_formatCurrency(amount)}',
+                  'KES ${_formatCurrency(roundedAmount)}',
                 ),
                 _buildDetailRow(
                   'Payment Method:',
