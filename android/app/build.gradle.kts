@@ -11,7 +11,7 @@ plugins {
 
 android {
     // Package name must match google-services.json
-    namespace = "com.example.manchoice"
+    namespace = "com.manschoice.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -50,7 +50,7 @@ android {
 
     defaultConfig {
         // Must match google-services.json package name
-        applicationId = "com.example.manchoice"
+        applicationId = "com.manchoice.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

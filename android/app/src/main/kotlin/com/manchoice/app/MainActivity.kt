@@ -1,4 +1,4 @@
-package com.example.manchoice
+package com.manschoice.app
 
 import io.flutter.embedding.android.FlutterActivity
 
