@@ -50,7 +50,7 @@ android {
 
     defaultConfig {
         // Must match google-services.json package name
-        applicationId = "com.manchoice.app"
+        applicationId = "com.manschoice.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

@@ -32,7 +32,7 @@ static const String baseUrl = 'http://YOUR_IP_HERE:8000/api';
 
 Open terminal and run:
 ```bash
-cd /home/smith/Desktop/myproject/manchoice-backend
+cd /home/smith/Desktop/myproject/manschoice-backend
 ./artisan.sh serve --host=0.0.0.0 --port=8000
 ```
 
@@ -43,7 +43,7 @@ Keep this terminal open!
 Add this to your Flutter app (e.g., in a button):
 
 ```dart
-import 'package:manchoice/services/auth_service.dart';
+import 'package:manschoice/services/auth_service.dart';
 
 final authService = AuthService();
 
@@ -76,7 +76,7 @@ Future<void> testApi() async {
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:manchoice/services/auth_service.dart';
+import 'package:manschoice/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   @override

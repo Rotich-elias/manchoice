@@ -102,7 +102,7 @@ _guarantorColourController.text = customer.guarantorMotorcycleColour ?? '';
 ### Test 2: Verify Data Saved in Backend
 
 ```bash
-cd /home/smith/Desktop/MAN/manchoice-backend
+cd /home/smith/Desktop/MAN/manschoice-backend
 php artisan tinker --execute="
 \$customer = \App\Models\Customer::latest()->first();
 echo 'Customer: ' . \$customer->name . PHP_EOL;

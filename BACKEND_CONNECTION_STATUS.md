@@ -86,7 +86,7 @@ Password: password123
 
 ### Option 1: Chrome/Web (Recommended for quick testing)
 ```bash
-cd /home/smith/Desktop/myproject/manchoice
+cd /home/smith/Desktop/myproject/manschoice
 flutter run -d chrome
 ```
 
@@ -113,7 +113,7 @@ flutter run -d <device-id>
 Navigate to the `BackendConnectionTest` screen in your app:
 
 ```dart
-import 'package:manchoice/test_backend_connection.dart';
+import 'package:manschoice/test_backend_connection.dart';
 
 Navigator.push(
   context,
@@ -211,7 +211,7 @@ All API responses follow this structure:
 Example: Update login screen to use real authentication
 
 ```dart
-import 'package:manchoice/services/auth_service.dart';
+import 'package:manschoice/services/auth_service.dart';
 
 final authService = AuthService();
 
@@ -235,8 +235,8 @@ if (result['success']) {
 ### 2. Update Dashboard to Display Real Data
 
 ```dart
-import 'package:manchoice/services/customer_repository.dart';
-import 'package:manchoice/services/loan_repository.dart';
+import 'package:manschoice/services/customer_repository.dart';
+import 'package:manschoice/services/loan_repository.dart';
 
 final customerRepo = CustomerRepository();
 final loanRepo = LoanRepository();
@@ -283,7 +283,7 @@ static const String baseUrl = 'http://192.168.100.65:8000/api';
 
 ### Backend Not Responding
 ```bash
-cd /home/smith/Desktop/myproject/manchoice-backend
+cd /home/smith/Desktop/myproject/manschoice-backend
 ./artisan.sh serve --host=0.0.0.0 --port=8000
 ```
 

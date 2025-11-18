@@ -136,13 +136,13 @@ All components for the product-based loan system with automatic stock management
 
 ### 1. Start Backend Server
 ```bash
-cd /home/smith/Desktop/MAN/manchoice-backend
+cd /home/smith/Desktop/MAN/manschoice-backend
 php artisan serve
 ```
 
 ### 2. Run Flutter App
 ```bash
-cd /home/smith/Desktop/MAN/manchoice
+cd /home/smith/Desktop/MAN/manschoice
 flutter run
 ```
 

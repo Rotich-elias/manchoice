@@ -11,7 +11,7 @@
 - [ ] **Update `.env` file with production settings**
   - [ ] Set `APP_ENV=production`
   - [ ] Set `APP_DEBUG=false`
-  - [ ] Update `APP_URL` to production domain (e.g., `https://api.manchoice.com`)
+  - [ ] Update `APP_URL` to production domain (e.g., `https://api.manschoice.com`)
   - [ ] Set `LOG_LEVEL=error` or `warning`
   - [ ] Update database credentials (use strong password)
   - [ ] Configure M-PESA production credentials:
@@ -71,19 +71,19 @@
 ### Frontend Configuration
 
 - [ ] **Update API URLs**
-  - [ ] Open `/home/smith/Desktop/MAN/manchoice/lib/config/api_config.dart`
+  - [ ] Open `/home/smith/Desktop/MAN/manschoice/lib/config/api_config.dart`
   - [ ] Update `_prodBaseUrl` to your production backend URL
-  - [ ] Example: `'https://api.manchoice.com/api'`
+  - [ ] Example: `'https://api.manschoice.com/api'`
 
 - [ ] **Update M-PESA Paybill Number**
-  - [ ] Open `/home/smith/Desktop/MAN/manchoice/lib/screens/payments_screen.dart`
+  - [ ] Open `/home/smith/Desktop/MAN/manschoice/lib/screens/payments_screen.dart`
   - [ ] Update `mpesaPaybill` (line 33) with your actual paybill number
 
 - [ ] **Update Package Name** (if not done)
-  - [ ] The package name has been changed to `com.manchoice.enterprise`
+  - [ ] The package name has been changed to `com.manschoice.enterprise`
   - [ ] If you want a different name, update:
     - [ ] `android/app/build.gradle.kts` (namespace and applicationId)
-    - [ ] `android/app/src/main/kotlin/com/manchoice/enterprise/MainActivity.kt` (package)
+    - [ ] `android/app/src/main/kotlin/com/manschoice/enterprise/MainActivity.kt` (package)
     - [ ] Move MainActivity.kt to new package folder structure
 
 - [ ] **Create Android Release Keystore**
@@ -216,8 +216,8 @@
 
 ```bash
 # 1. Upload code to server
-git clone <repository> /var/www/manchoice-backend
-cd /var/www/manchoice-backend
+git clone <repository> /var/www/manschoice-backend
+cd /var/www/manschoice-backend
 
 # 2. Install dependencies
 composer install --optimize-autoloader --no-dev

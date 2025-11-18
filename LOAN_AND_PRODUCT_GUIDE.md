@@ -15,7 +15,7 @@ The loan approval endpoint is already implemented: `POST /api/loans/{id}/approve
 ### Flutter Usage
 
 ```dart
-import 'package:manchoice/services/loan_repository.dart';
+import 'package:manschoice/services/loan_repository.dart';
 
 final loanRepo = LoanRepository();
 
@@ -105,7 +105,7 @@ GET    /api/products/category/{category} - Get by category
 #### Get All Products
 
 ```dart
-import 'package:manchoice/services/product_repository.dart';
+import 'package:manschoice/services/product_repository.dart';
 
 final productRepo = ProductRepository();
 
@@ -193,8 +193,8 @@ await productRepo.toggleAvailability(productId);
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:manchoice/services/product_repository.dart';
-import 'package:manchoice/models/product.dart';
+import 'package:manschoice/services/product_repository.dart';
+import 'package:manschoice/models/product.dart';
 
 class ProductManagementScreen extends StatefulWidget {
   @override

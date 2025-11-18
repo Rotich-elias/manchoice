@@ -1,13 +1,13 @@
-# Firebase Deployment Guide - Manchoice App
+# Firebase Deployment Guide - Manschoice App
 
 **Date:** October 16, 2025
-**App:** Manchoice Flutter App + Laravel Backend
+**App:** Manschoice Flutter App + Laravel Backend
 
 ---
 
 ## Overview
 
-This guide covers deploying your Manchoice app to Firebase. Since you have both a Flutter frontend and Laravel backend, we'll cover:
+This guide covers deploying your Manschoice app to Firebase. Since you have both a Flutter frontend and Laravel backend, we'll cover:
 
 1. **Flutter Web** → Firebase Hosting
 2. **Android/iOS Apps** → Firebase App Distribution (for testing) or Google Play/App Store
@@ -21,7 +21,7 @@ This guide covers deploying your Manchoice app to Firebase. Since you have both 
 
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Click **"Add project"**
-3. Enter project name: `manchoice` or `manchoice-app`
+3. Enter project name: `manschoice` or `manschoice-app`
 4. Enable Google Analytics (optional but recommended)
 5. Click **"Create project"**
 
@@ -45,7 +45,7 @@ firebase --version
 ### Step 1: Enable Web Support in Flutter
 
 ```bash
-cd /home/smith/Desktop/MAN/manchoice
+cd /home/smith/Desktop/MAN/manschoice
 
 # Check if web is enabled
 flutter devices
@@ -95,7 +95,7 @@ flutter build web --release
 
 ```bash
 # Make sure you're in the Flutter app directory
-cd /home/smith/Desktop/MAN/manchoice
+cd /home/smith/Desktop/MAN/manschoice
 
 # Initialize Firebase
 firebase init
@@ -104,7 +104,7 @@ firebase init
 # ◯ Hosting: Configure files for Firebase Hosting
 #
 # Choose: Use an existing project
-# Select: manchoice (or your project name)
+# Select: manschoice (or your project name)
 #
 # What do you want to use as your public directory? build/web
 # Configure as a single-page app? Yes
@@ -121,7 +121,7 @@ This creates:
 # Deploy to Firebase
 firebase deploy --only hosting
 
-# You'll get a URL like: https://manchoice-app.web.app
+# You'll get a URL like: https://manschoice-app.web.app
 ```
 
 ### Step 6: Custom Domain (Optional)
@@ -129,7 +129,7 @@ firebase deploy --only hosting
 1. Go to Firebase Console → Hosting
 2. Click **"Add custom domain"**
 3. Follow the DNS configuration steps
-4. Example: `app.manchoice.com`
+4. Example: `app.manschoice.com`
 
 ---
 
@@ -249,7 +249,7 @@ For production release:
 **Steps:**
 1. Create Ubuntu 22.04 VPS
 2. Install LAMP stack (Linux, Apache, MySQL, PHP)
-3. Configure domain (e.g., `api.manchoice.com`)
+3. Configure domain (e.g., `api.manschoice.com`)
 4. Upload Laravel app
 5. Configure SSL with Let's Encrypt
 6. Set up database
@@ -261,8 +261,8 @@ sudo apt update
 sudo apt install -y apache2 mysql-server php8.2 php8.2-mysql php8.2-curl php8.2-gd php8.2-mbstring php8.2-xml php8.2-zip composer
 
 # Clone your repo
-git clone YOUR_REPO_URL /var/www/manchoice-backend
-cd /var/www/manchoice-backend
+git clone YOUR_REPO_URL /var/www/manschoice-backend
+cd /var/www/manschoice-backend
 
 # Install dependencies
 composer install --no-dev --optimize-autoloader
@@ -272,7 +272,7 @@ cp .env.example .env
 php artisan key:generate
 
 # Configure Apache virtual host
-# Set document root to: /var/www/manchoice-backend/public
+# Set document root to: /var/www/manschoice-backend/public
 
 # Set permissions
 sudo chown -R www-data:www-data storage bootstrap/cache
@@ -295,8 +295,8 @@ curl https://cli-assets.heroku.com/install.sh | sh
 heroku login
 
 # Create app
-cd /home/smith/Desktop/MAN/manchoice-backend
-heroku create manchoice-api
+cd /home/smith/Desktop/MAN/manschoice-backend
+heroku create manschoice-api
 
 # Add Procfile
 echo "web: vendor/bin/heroku-php-apache2 public/" > Procfile
@@ -348,9 +348,9 @@ After deploying backend, update Flutter app:
 ```dart
 class ApiConfig {
   // Production backend URL
-  static const String baseUrl = 'https://api.manchoice.com/api';
+  static const String baseUrl = 'https://api.manschoice.com/api';
   // or
-  // static const String baseUrl = 'https://manchoice-api.herokuapp.com/api';
+  // static const String baseUrl = 'https://manschoice-api.herokuapp.com/api';
 
   static const String products = '/products';
   static const String loans = '/loans';
@@ -374,8 +374,8 @@ return [
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
     'allowed_methods' => ['*'],
     'allowed_origins' => [
-        'https://manchoice-app.web.app',
-        'https://manchoice-app.firebaseapp.com',
+        'https://manschoice-app.web.app',
+        'https://manschoice-app.firebaseapp.com',
         'http://localhost:*', // For local development
     ],
     'allowed_origins_patterns' => [],
@@ -391,19 +391,19 @@ return [
 ```env
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://api.manchoice.com
+APP_URL=https://api.manschoice.com
 
 # Update database credentials
 DB_CONNECTION=mysql
 DB_HOST=your-db-host
 DB_PORT=3306
-DB_DATABASE=manchoice_db
+DB_DATABASE=manschoice_db
 DB_USERNAME=your-username
 DB_PASSWORD=your-password
 
 # CORS origins
-SANCTUM_STATEFUL_DOMAINS=manchoice-app.web.app,manchoice-app.firebaseapp.com
-SESSION_DOMAIN=.manchoice.com
+SANCTUM_STATEFUL_DOMAINS=manschoice-app.web.app,manschoice-app.firebaseapp.com
+SESSION_DOMAIN=.manschoice.com
 ```
 
 ---
@@ -412,7 +412,7 @@ SESSION_DOMAIN=.manchoice.com
 
 ### Test Flutter Web App
 
-1. Visit your Firebase URL: `https://manchoice-app.web.app`
+1. Visit your Firebase URL: `https://manschoice-app.web.app`
 2. Test login/logout
 3. Test product browsing
 4. Test loan creation
@@ -429,10 +429,10 @@ SESSION_DOMAIN=.manchoice.com
 
 ```bash
 # Test categories endpoint
-curl https://api.manchoice.com/api/products/categories
+curl https://api.manschoice.com/api/products/categories
 
 # Test products endpoint
-curl https://api.manchoice.com/api/products
+curl https://api.manschoice.com/api/products
 
 # Should return JSON responses
 ```
@@ -475,7 +475,7 @@ jobs:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
           channelId: live
-          projectId: manchoice-app
+          projectId: manschoice-app
 ```
 
 ---

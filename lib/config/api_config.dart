@@ -10,8 +10,8 @@ class ApiConfig {
   // static const String _prodBaseUrl = 'http://192.168.100.60:8000/api';
   static const String _prodBaseUrl = 'https://manschoice.co.ke/api';
 
-  // Example: 'https://api.manchoice.com/api'
-  // Example: 'https://manchoice.herokuapp.com/api'
+  // Example: 'https://api.manschoice.com/api'
+  // Example: 'https://manschoice.herokuapp.com/api'
   //
   // To build for production with this URL:
   // flutter build apk --release

@@ -1,6 +1,6 @@
-# Deployment Checklist - Manchoice App
+# Deployment Checklist - Manschoice App
 
-Quick checklist for deploying your Manchoice app to Firebase.
+Quick checklist for deploying your Manschoice app to Firebase.
 
 ---
 
@@ -22,20 +22,20 @@ flutter --version
 ### 2. Create Firebase Project
 - [ ] Go to [Firebase Console](https://console.firebase.google.com/)
 - [ ] Click "Add project"
-- [ ] Name: `manchoice` or `manchoice-app`
+- [ ] Name: `manschoice` or `manschoice-app`
 - [ ] Enable/disable Google Analytics (your choice)
 - [ ] Click "Create project"
 
 ### 3. Enable Web Support in Flutter
 ```bash
-cd /home/smith/Desktop/MAN/manchoice
+cd /home/smith/Desktop/MAN/manschoice
 flutter config --enable-web
 flutter create . --platforms=web
 ```
 
 ### 4. Initialize Firebase in Project
 ```bash
-cd /home/smith/Desktop/MAN/manchoice
+cd /home/smith/Desktop/MAN/manschoice
 
 # Login to Firebase
 firebase login
@@ -44,7 +44,7 @@ firebase login
 firebase init hosting
 
 # Configuration:
-# - Use existing project: manchoice
+# - Use existing project: manschoice
 # - Public directory: build/web
 # - Single-page app: Yes
 # - GitHub deploys: No
@@ -57,7 +57,7 @@ firebase init hosting
 ### Option A: Heroku (Recommended for Quick Start)
 
 ```bash
-cd /home/smith/Desktop/MAN/manchoice-backend
+cd /home/smith/Desktop/MAN/manschoice-backend
 
 # Install Heroku CLI (if not installed)
 # Visit: https://devcenter.heroku.com/articles/heroku-cli
@@ -66,7 +66,7 @@ cd /home/smith/Desktop/MAN/manchoice-backend
 heroku login
 
 # Create app
-heroku create manchoice-api
+heroku create manschoice-api
 
 # Add Procfile
 echo "web: vendor/bin/heroku-php-apache2 public/" > Procfile
@@ -92,18 +92,18 @@ heroku run php artisan migrate --force
 heroku run php artisan storage:link
 ```
 
-**Your backend URL:** `https://manchoice-api.herokuapp.com/api`
+**Your backend URL:** `https://manschoice-api.herokuapp.com/api`
 
 ### Option B: DigitalOcean VPS
 
 - [ ] Create Ubuntu 22.04 droplet ($5/month)
 - [ ] Install LAMP stack
 - [ ] Upload Laravel backend
-- [ ] Configure domain (e.g., `api.manchoice.com`)
+- [ ] Configure domain (e.g., `api.manschoice.com`)
 - [ ] Install SSL certificate (Let's Encrypt)
 - [ ] Run migrations
 
-**Your backend URL:** `https://api.manchoice.com/api`
+**Your backend URL:** `https://api.manschoice.com/api`
 
 ---
 
@@ -114,9 +114,9 @@ heroku run php artisan storage:link
 
 ```dart
 // Update this line with your deployed backend URL:
-static const String _prodBaseUrl = 'https://manchoice-api.herokuapp.com/api';
+static const String _prodBaseUrl = 'https://manschoice-api.herokuapp.com/api';
 // or
-// static const String _prodBaseUrl = 'https://api.manchoice.com/api';
+// static const String _prodBaseUrl = 'https://api.manschoice.com/api';
 ```
 
 ### 2. Update Laravel CORS
@@ -124,8 +124,8 @@ static const String _prodBaseUrl = 'https://manchoice-api.herokuapp.com/api';
 
 ```php
 'allowed_origins' => [
-    'https://manchoice-app.web.app',
-    'https://manchoice-app.firebaseapp.com',
+    'https://manschoice-app.web.app',
+    'https://manschoice-app.firebaseapp.com',
     'http://localhost:*', // For local dev
 ],
 ```
@@ -134,8 +134,8 @@ static const String _prodBaseUrl = 'https://manchoice-api.herokuapp.com/api';
 **File (Backend):** `.env`
 
 ```env
-SANCTUM_STATEFUL_DOMAINS=manchoice-app.web.app,manchoice-app.firebaseapp.com
-SESSION_DOMAIN=.manchoice.com
+SANCTUM_STATEFUL_DOMAINS=manschoice-app.web.app,manschoice-app.firebaseapp.com
+SESSION_DOMAIN=.manschoice.com
 ```
 
 ---
@@ -144,13 +144,13 @@ SESSION_DOMAIN=.manchoice.com
 
 ### Using the Deployment Script (Recommended)
 ```bash
-cd /home/smith/Desktop/MAN/manchoice
+cd /home/smith/Desktop/MAN/manschoice
 ./deploy.sh
 ```
 
 ### Manual Deployment
 ```bash
-cd /home/smith/Desktop/MAN/manchoice
+cd /home/smith/Desktop/MAN/manschoice
 
 # Clean and build
 flutter clean
@@ -161,7 +161,7 @@ flutter build web --release
 firebase deploy --only hosting
 ```
 
-**Your web app URL:** `https://manchoice-app.web.app`
+**Your web app URL:** `https://manschoice-app.web.app`
 
 ---
 
@@ -169,7 +169,7 @@ firebase deploy --only hosting
 
 ### Build APK
 ```bash
-cd /home/smith/Desktop/MAN/manchoice
+cd /home/smith/Desktop/MAN/manschoice
 
 # Build release APK
 flutter build apk --release
@@ -204,7 +204,7 @@ firebase appdistribution:distribute \
 ## Post-Deployment Testing
 
 ### Test Web App
-- [ ] Visit Firebase URL: `https://manchoice-app.web.app`
+- [ ] Visit Firebase URL: `https://manschoice-app.web.app`
 - [ ] Test login/logout
 - [ ] Test product browsing
 - [ ] Test loan creation with products
@@ -223,10 +223,10 @@ firebase appdistribution:distribute \
 ### Test Backend API
 ```bash
 # Test categories
-curl https://manchoice-api.herokuapp.com/api/products/categories
+curl https://manschoice-api.herokuapp.com/api/products/categories
 
 # Test products
-curl https://manchoice-api.herokuapp.com/api/products
+curl https://manschoice-api.herokuapp.com/api/products
 
 # Should return JSON responses
 ```

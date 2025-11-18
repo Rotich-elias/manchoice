@@ -60,7 +60,7 @@ Enter key password for <upload>
 Create a file named `key.properties` in the `android/` directory:
 
 ```bash
-cd /home/smith/Desktop/MAN/manchoice/android
+cd /home/smith/Desktop/MAN/manschoice/android
 nano key.properties
 ```
 
@@ -95,7 +95,7 @@ storeFile=/home/smith/upload-keystore.jks
 The `key.properties` file is **ALREADY** in `.gitignore`. Verify:
 
 ```bash
-cd /home/smith/Desktop/MAN/manchoice
+cd /home/smith/Desktop/MAN/manschoice
 grep -n "key.properties" .gitignore
 ```
 
@@ -141,7 +141,7 @@ Once `key.properties` is configured, build your release:
 
 ### For APK (Direct Installation):
 ```bash
-cd /home/smith/Desktop/MAN/manchoice
+cd /home/smith/Desktop/MAN/manschoice
 flutter build apk --release
 ```
 

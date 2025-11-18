@@ -9,7 +9,7 @@
 -dontwarn com.google.**
 
 # Keep application classes
--keep class com.manchoice.enterprise.** { *; }
+-keep class com.manschoice.enterprise.** { *; }
 
 # Keep data models (add your model package here)
 -keep class * extends com.google.gson.** { *; }

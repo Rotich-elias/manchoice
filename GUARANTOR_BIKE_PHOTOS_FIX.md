@@ -149,7 +149,7 @@ guarantorLogbookPhotoUrl: json['guarantor_logbook_photo_url'],
 5. **Verify in database:**
 
 ```bash
-cd /home/smith/Desktop/MAN/manchoice-backend
+cd /home/smith/Desktop/MAN/manschoice-backend
 php artisan tinker --execute="
 \$customer = \App\Models\Customer::latest()->first();
 echo 'Guarantor Bike Photo Path: ' . \$customer->guarantor_bike_photo_path . PHP_EOL;

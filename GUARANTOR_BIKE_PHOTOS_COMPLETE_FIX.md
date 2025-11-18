@@ -13,7 +13,7 @@ The photo upload flow was incomplete:
 
 ### 1. Backend - LoanController.php
 
-**File**: `/home/smith/Desktop/MAN/manchoice-backend/app/Http/Controllers/API/LoanController.php`
+**File**: `/home/smith/Desktop/MAN/manschoice-backend/app/Http/Controllers/API/LoanController.php`
 
 #### Added Validation Rules (Lines 117-118):
 ```php
@@ -39,7 +39,7 @@ This ensures:
 
 ### 2. Flutter - loan_repository.dart
 
-**File**: `/home/smith/Desktop/MAN/manchoice/lib/services/loan_repository.dart`
+**File**: `/home/smith/Desktop/MAN/manschoice/lib/services/loan_repository.dart`
 
 #### Added Parameters (Lines 74-75):
 ```dart
@@ -59,7 +59,7 @@ if (guarantorLogbookPhotoPath != null) {
 
 ### 3. Flutter - cart_screen.dart
 
-**File**: `/home/smith/Desktop/MAN/manchoice/lib/screens/cart_screen.dart`
+**File**: `/home/smith/Desktop/MAN/manschoice/lib/screens/cart_screen.dart`
 
 #### Added Photo Paths to createLoan Call (Lines 677-678):
 ```dart
@@ -147,7 +147,7 @@ guarantorLogbookPhotoPath: cartService.guarantorLogbookPhotoPath,
 
 5. **Verify in database**:
    ```bash
-   cd /home/smith/Desktop/MAN/manchoice-backend
+   cd /home/smith/Desktop/MAN/manschoice-backend
    php artisan tinker --execute="
    \$customer = \App\Models\Customer::latest()->first();
    echo 'Guarantor Bike Photo: ' . \$customer->guarantor_bike_photo_url . PHP_EOL;

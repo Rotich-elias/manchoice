@@ -3,7 +3,7 @@
 ## 🚀 Running the App
 
 ```bash
-cd /home/smith/Desktop/myproject/manchoice
+cd /home/smith/Desktop/myproject/manschoice
 
 # Android Phone
 flutter run -d 27915e84ec217ece

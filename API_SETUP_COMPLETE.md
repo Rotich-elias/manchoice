@@ -65,7 +65,7 @@ The backend is **currently running** at:
 
 To start it again:
 ```bash
-cd /home/smith/Desktop/myproject/manchoice-backend
+cd /home/smith/Desktop/myproject/manschoice-backend
 ./artisan.sh serve --host=0.0.0.0 --port=8000
 ```
 
@@ -93,7 +93,7 @@ Navigator.push(
 
 **Method 2: Quick Code Test**
 ```dart
-import 'package:manchoice/services/auth_service.dart';
+import 'package:manschoice/services/auth_service.dart';
 
 final authService = AuthService();
 
@@ -113,7 +113,7 @@ void testConnection() async {
 
 ### Authentication
 ```dart
-import 'package:manchoice/services/auth_service.dart';
+import 'package:manschoice/services/auth_service.dart';
 
 final authService = AuthService();
 
@@ -130,7 +130,7 @@ if (result['success']) {
 
 ### Get Customers
 ```dart
-import 'package:manchoice/services/customer_repository.dart';
+import 'package:manschoice/services/customer_repository.dart';
 
 final customerRepo = CustomerRepository();
 final customers = await customerRepo.getAllCustomers();
@@ -140,7 +140,7 @@ final customers = await customerRepo.getAllCustomers();
 
 ### Create Loan
 ```dart
-import 'package:manchoice/services/loan_repository.dart';
+import 'package:manschoice/services/loan_repository.dart';
 
 final loanRepo = LoanRepository();
 final loan = await loanRepo.createLoan(
@@ -163,7 +163,7 @@ final loan = await loanRepo.createLoan(
 
 - **Quick Start**: `QUICK_START_API.md` - Get started in 5 minutes
 - **Full Guide**: `BACKEND_INTEGRATION_GUIDE.md` - Complete API documentation
-- **Backend API**: `../manchoice-backend/README.md` - Backend documentation
+- **Backend API**: `../manschoice-backend/README.md` - Backend documentation
 
 ## 🔐 Test Credentials
 
@@ -177,7 +177,7 @@ Password: password123
 ### "Connection refused"
 **Solution:** Make sure backend is running:
 ```bash
-cd /home/smith/Desktop/myproject/manchoice-backend
+cd /home/smith/Desktop/myproject/manschoice-backend
 ./artisan.sh serve --host=0.0.0.0 --port=8000
 ```
 

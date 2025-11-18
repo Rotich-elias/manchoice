@@ -67,7 +67,7 @@ ipconfig
 ### Step 2: Ensure Backend is Running
 
 ```bash
-cd /home/smith/Desktop/myproject/manchoice-backend
+cd /home/smith/Desktop/myproject/manschoice-backend
 ./artisan.sh serve --host=0.0.0.0 --port=8000
 ```
 
@@ -79,7 +79,7 @@ The server must be accessible from your device/emulator.
 
 #### Register New User
 ```dart
-import 'package:manchoice/services/auth_service.dart';
+import 'package:manschoice/services/auth_service.dart';
 
 final authService = AuthService();
 
@@ -131,7 +131,7 @@ Future<void> logoutUser() async {
 ### Customer Operations
 
 ```dart
-import 'package:manchoice/services/customer_repository.dart';
+import 'package:manschoice/services/customer_repository.dart';
 
 final customerRepo = CustomerRepository();
 
@@ -182,7 +182,7 @@ Future<void> getCustomer(int id) async {
 ### Loan Operations
 
 ```dart
-import 'package:manchoice/services/loan_repository.dart';
+import 'package:manschoice/services/loan_repository.dart';
 
 final loanRepo = LoanRepository();
 
@@ -247,7 +247,7 @@ Future<void> fetchOverdueLoans() async {
 ### Payment Operations
 
 ```dart
-import 'package:manchoice/services/payment_repository.dart';
+import 'package:manschoice/services/payment_repository.dart';
 
 final paymentRepo = PaymentRepository();
 
@@ -307,7 +307,7 @@ Future<void> payWithMpesa() async {
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:manchoice/services/auth_service.dart';
+import 'package:manschoice/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -385,7 +385,7 @@ class _LoginScreenState extends State<LoginScreen> {
 ### Quick Test
 ```dart
 // Add this to your main.dart or a test screen
-import 'package:manchoice/services/auth_service.dart';
+import 'package:manschoice/services/auth_service.dart';
 
 Future<void> testConnection() async {
   final authService = AuthService();
@@ -458,9 +458,9 @@ Future<void> testConnection() async {
 
 ## 🔗 Resources
 
-- Backend API Documentation: See `manchoice-backend/README.md`
-- API Test Script: `manchoice-backend/test-api.sh`
-- Backend Quick Start: `manchoice-backend/START_SERVER.md`
+- Backend API Documentation: See `manschoice-backend/README.md`
+- API Test Script: `manschoice-backend/test-api.sh`
+- Backend Quick Start: `manschoice-backend/START_SERVER.md`
 
 ## Test Credentials
 

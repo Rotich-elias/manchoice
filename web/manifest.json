@@ -1,6 +1,6 @@
 {
-    "name": "manchoice",
-    "short_name": "manchoice",
+    "name": "manschoice",
+    "short_name": "manschoice",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -77,7 +77,7 @@ The **Payments Screen** (`lib/screens/payments_screen.dart`) is a comprehensive 
 
 1. **Navigate to Project Directory:**
    ```bash
-   cd /home/smith/Desktop/myproject/manchoice
+   cd /home/smith/Desktop/myproject/manschoice
    ```
 
 2. **Check Available Devices:**

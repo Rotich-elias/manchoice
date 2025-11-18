@@ -1,4 +1,4 @@
-# manchoice
+# manschoice
 
 A new Flutter project.
 

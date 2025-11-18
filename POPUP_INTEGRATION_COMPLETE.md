@@ -26,7 +26,7 @@ The frontend Flutter app has been successfully updated to handle the new popup r
 
 ### Frontend Changes (Just Completed)
 
-#### 1. loan_repository.dart (`/manchoice/lib/services/loan_repository.dart`)
+#### 1. loan_repository.dart (`/manschoice/lib/services/loan_repository.dart`)
 **Lines 147-155:**
 ```dart
 } on DioException catch (e) {
@@ -40,7 +40,7 @@ The frontend Flutter app has been successfully updated to handle the new popup r
 
 **Purpose:** Instead of wrapping the error in an Exception, we now throw the raw response data so the popup information is preserved.
 
-#### 2. deposit_repository.dart (`/manchoice/lib/services/deposit_repository.dart`)
+#### 2. deposit_repository.dart (`/manschoice/lib/services/deposit_repository.dart`)
 **Lines 1-6, 59-67:**
 ```dart
 import 'package:dio/dio.dart';  // Added import
@@ -56,7 +56,7 @@ import 'package:dio/dio.dart';  // Added import
 
 **Purpose:** Same as loan_repository - preserve popup response data.
 
-#### 3. cart_screen.dart (`/manchoice/lib/screens/cart_screen.dart`)
+#### 3. cart_screen.dart (`/manschoice/lib/screens/cart_screen.dart`)
 **Lines 700-854:** Added comprehensive popup handling
 
 **a) Updated Error Handling (Lines 700-717):**

@@ -78,7 +78,7 @@ The app now includes **Guarantor Motorcycle Details**:
 
 ### Check Database After Submission:
 ```bash
-cd /home/smith/Desktop/MAN/manchoice-backend
+cd /home/smith/Desktop/MAN/manschoice-backend
 php artisan tinker --execute="
 \$customer = \App\Models\Customer::latest()->first();
 echo 'Guarantor Bike Details:' . PHP_EOL;

@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Manchoice Flutter App - Firebase Deployment Script
+# Manschoice Flutter App - Firebase Deployment Script
 # This script builds and deploys the Flutter web app to Firebase Hosting
 
 set -e  # Exit on error
 
 echo "================================================"
-echo "Manchoice Flutter App - Firebase Deployment"
+echo "Manschoice Flutter App - Firebase Deployment"
 echo "================================================"
 echo ""
 

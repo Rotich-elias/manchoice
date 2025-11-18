@@ -148,7 +148,7 @@ Users can access Terms & Conditions from:
 ### Contact Information
 - Blue info box at bottom
 - Phone: +254 011 0846 828
-- Email: manchoiceenterprise@gmail.com
+- Email: manschoiceenterprise@gmail.com
 
 ---
 
@@ -285,7 +285,7 @@ When testing, verify these screens:
 
 **For Questions:**
 - Phone: +254 011 0846 828
-- Email: manchoiceenterprise@gmail.com
+- Email: manschoiceenterprise@gmail.com
 
 **For Issues:**
 - Check route configuration in `app_routes.dart`
