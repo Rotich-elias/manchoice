@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import '../config/payment_config.dart';
+
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -30,8 +32,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
   // Get loan data from navigation arguments
   Loan? _loan;
-  // ⚠️ IMPORTANT: Replace with your actual Safaricom M-PESA paybill number before going live!
-  final String mpesaPaybill = "247247"; // TODO: Update this with your production paybill number
+  final String mpesaPaybill = PaymentConfig.paybillNumber;
 
   // Real payment data from API
   List<dynamic> _paymentHistory = [];
@@ -534,7 +535,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 Row(
                   children: [
                     Image.asset(
-                      'assets/mpesa_logo.png',
+                      'assets/images/mpesa_logo.png',
                       height: 24,
                       errorBuilder: (context, error, stackTrace) {
                         return const Icon(
@@ -566,7 +567,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 _buildPaymentStep('2', 'Select Lipa na M-PESA'),
                 _buildPaymentStep('3', 'Select Paybill'),
                 _buildPaymentStep('4', 'Enter Business No: $mpesaPaybill'),
-                _buildPaymentStep('5', 'Account No: 846828'),
+                _buildPaymentStep('5', 'Account No: ${PaymentConfig.accountNumber}'),
                 _buildPaymentStep(
                   '6',
                   'Enter Amount: Any amount towards your balance',
@@ -644,7 +645,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '846828',
+                            PaymentConfig.accountNumber,
                             style: Theme.of(context).textTheme.headlineSmall
                                 ?.copyWith(
                                   fontWeight: FontWeight.bold,
@@ -656,7 +657,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                       ),
                       IconButton(
                         onPressed: () {
-                          Clipboard.setData(const ClipboardData(text: '846828'));
+                          Clipboard.setData(ClipboardData(text: PaymentConfig.accountNumber));
                           Get.snackbar(
                             'Copied!',
                             'Account number copied to clipboard',

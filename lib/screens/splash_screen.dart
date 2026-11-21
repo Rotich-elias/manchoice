@@ -151,14 +151,14 @@ class _SplashScreenState extends State<SplashScreen>
                                     boxShadow: [
                                       // Multiple glow layers
                                       BoxShadow(
-                                        color: Colors.cyan.withValues(
+                                        color: const Color(0xFFF5C518).withValues(
                                           alpha: 0.6 * _glowAnimation.value,
                                         ),
                                         blurRadius: 40 * _glowAnimation.value,
                                         spreadRadius: 5 * _glowAnimation.value,
                                       ),
                                       BoxShadow(
-                                        color: Colors.blue.withValues(
+                                        color: const Color(0xFF9A7300).withValues(
                                           alpha: 0.4 * _glowAnimation.value,
                                         ),
                                         blurRadius: 60 * _glowAnimation.value,

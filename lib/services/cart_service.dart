@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/cart_item.dart';
+import '../config/payment_config.dart';
+
 import 'auth_service.dart';
 
 class CartService extends GetxController {
@@ -48,7 +50,7 @@ class CartService extends GetxController {
   String? get guarantorLogbookPhotoPath => _guarantorLogbookPhotoPath.value.isEmpty ? null : _guarantorLogbookPhotoPath.value;
 
   double get subtotal => _items.fold(0, (sum, item) => sum + item.totalPrice);
-  double get interestRate => 0.30; // 30% interest
+  double get interestRate => PaymentConfig.interestRate;
   double get interestAmount => subtotal * interestRate;
   double get total => subtotal + interestAmount;
 

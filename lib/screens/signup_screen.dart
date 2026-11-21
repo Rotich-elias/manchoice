@@ -2,6 +2,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import '../models/user.dart';
+import '../services/auth_service.dart';
+import '../services/cart_service.dart';
+import '../services/customer_repository.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -13,10 +17,15 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _imagePicker = ImagePicker();
+  final _authService = AuthService();
+  final _customerRepository = CustomerRepository();
 
   // Personal Information Controllers
   final _fullNameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _pinController = TextEditingController();
+  final _confirmPinController = TextEditingController();
   final _nationalIdController = TextEditingController();
   final _workingStationController = TextEditingController();
 
@@ -53,6 +62,9 @@ class _SignupScreenState extends State<SignupScreen> {
   void dispose() {
     _fullNameController.dispose();
     _phoneController.dispose();
+    _emailController.dispose();
+    _pinController.dispose();
+    _confirmPinController.dispose();
     _nationalIdController.dispose();
     _workingStationController.dispose();
     _numberPlateController.dispose();
@@ -113,11 +125,19 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> _handleSubmit() async {
-    if (!_formKey.currentState!.validate()) {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (_pinController.text != _confirmPinController.text) {
+      Get.snackbar(
+        'PIN mismatch',
+        'PIN and confirmation PIN must match',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
       return;
     }
 
-    // Validate that all images are uploaded
     if (_bikePhoto == null ||
         _logbookPhoto == null ||
         _passportPhoto == null ||
@@ -125,16 +145,15 @@ class _SignupScreenState extends State<SignupScreen> {
         _kinIdPhoto == null ||
         _guarantorIdPhoto == null) {
       Get.snackbar(
-        'Missing Photos',
+        'Missing photos',
         'Please upload all required photos',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.orange,
         colorText: Colors.white,
       );
       return;
     }
 
-    // Check if terms are accepted
     if (!_acceptedTerms) {
       Get.snackbar(
         'Terms & Conditions',
@@ -142,33 +161,106 @@ class _SignupScreenState extends State<SignupScreen> {
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.orange,
         colorText: Colors.white,
-        duration: const Duration(seconds: 3),
       );
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
+    try {
+      final result = await _authService.register(
+        name: _fullNameController.text.trim(),
+        phone: _phoneController.text.trim(),
+        email: _emailController.text.trim(),
+        pin: _pinController.text,
+        pinConfirmation: _confirmPinController.text,
+        acceptedTerms: true,
+      );
 
-    // TODO: Save data locally or send to API
-    // For now, just simulate a save operation
-    await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
 
-    setState(() {
-      _isLoading = false;
-    });
+      if (result['success'] != true) {
+        Get.snackbar(
+          'Registration failed',
+          result['message'] ?? 'Please check your details and try again',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+        );
+        return;
+      }
 
-    Get.snackbar(
-      'Success',
-      'Registration submitted successfully!',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-    );
+      // Reuse the selected documents in the later loan application.
+      try {
+        Get.find<CartService>().setCustomerDocuments(
+          bikePhoto: _bikePhoto?.path ?? '',
+          logbookPhoto: _logbookPhoto?.path ?? '',
+          passportPhoto: _passportPhoto?.path ?? '',
+          idPhotoFront: _idPhoto?.path ?? '',
+          idPhotoBack: '',
+          kinIdPhotoFront: _kinIdPhoto?.path ?? '',
+          kinIdPhotoBack: '',
+          kinPassportPhoto: '',
+          guarantorIdPhotoFront: _guarantorIdPhoto?.path ?? '',
+          guarantorIdPhotoBack: '',
+          guarantorPassportPhoto: '',
+          guarantorBikePhoto: '',
+          guarantorLogbookPhoto: '',
+        );
+      } catch (_) {
+        // CartService is registered globally; ignore transient failures.
+      }
 
-    // Navigate back to login screen
-    Get.back();
+      // Persist the extended profile once the account is authenticated.
+      try {
+        await _customerRepository.createCustomer(
+          name: _fullNameController.text.trim(),
+          phone: _phoneController.text.trim(),
+          email: _emailController.text.trim(),
+          idNumber: _nationalIdController.text.trim(),
+          address: _workingStationController.text.trim(),
+          motorcycleNumberPlate: _numberPlateController.text.trim(),
+          motorcycleChassisNumber: _chassisNumberController.text.trim(),
+          motorcycleModel: _modelController.text.trim(),
+          motorcycleType: _typeController.text.trim(),
+          motorcycleEngineCC: _engineCCController.text.trim(),
+          motorcycleColour: _colourController.text.trim(),
+          nextOfKinName: _kinNameController.text.trim(),
+          nextOfKinPhone: _kinPhoneController.text.trim(),
+          nextOfKinRelationship: _kinRelationshipController.text.trim(),
+          guarantorName: _guarantorNameController.text.trim(),
+          guarantorPhone: _guarantorPhoneController.text.trim(),
+          guarantorRelationship: _guarantorRelationshipController.text.trim(),
+          acceptedTerms: true,
+        );
+      } catch (_) {
+        // Profile details can be completed later in the loan application.
+      }
+
+      final user = result['user'] as User?;
+      Get.offAllNamed(user?.customerId != null ? '/home' : '/registration-fee');
+      Get.snackbar(
+        'Account created',
+        user?.customerId != null
+            ? 'Your account is ready.'
+            : 'Please pay the registration fee to activate your account.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      Get.snackbar(
+        'Connection error',
+        'Please check your internet connection and try again',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -256,6 +348,44 @@ class _SignupScreenState extends State<SignupScreen> {
                     }
                     return null;
                   },
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  controller: _emailController,
+                  label: 'Email Address',
+                  icon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Email is required';
+                    }
+                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(value.trim())) {
+                      return 'Enter a valid email address';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  controller: _pinController,
+                  label: '4-digit PIN',
+                  icon: Icons.lock_outline,
+                  keyboardType: TextInputType.number,
+                  obscureText: true,
+                  validator: (value) => value == null || !RegExp(r'^[0-9]{4}$').hasMatch(value)
+                      ? 'PIN must be exactly 4 digits'
+                      : null,
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  controller: _confirmPinController,
+                  label: 'Confirm PIN',
+                  icon: Icons.lock_outline,
+                  keyboardType: TextInputType.number,
+                  obscureText: true,
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Please confirm your PIN'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
@@ -562,11 +692,13 @@ class _SignupScreenState extends State<SignupScreen> {
     required String label,
     required IconData icon,
     TextInputType? keyboardType,
+    bool obscureText = false,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
+      obscureText: obscureText,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),

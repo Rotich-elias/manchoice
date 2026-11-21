@@ -13,14 +13,14 @@ class RegistrationFeeStatusScreen extends StatelessWidget {
     final String? userPhone = args['user_phone'];
 
     // Debug logging
-    print('========== RegistrationFeeStatusScreen ==========');
-    print('Raw arguments: $args');
-    print('Status: "$status" (type: ${status.runtimeType})');
-    print('User Phone: $userPhone');
-    print('Payment Status: $paymentStatus');
-    print('Status == "rejected": ${status == 'rejected'}');
-    print('Status == "not_submitted": ${status == 'not_submitted'}');
-    print('================================================');
+    debugPrint('========== RegistrationFeeStatusScreen ==========');
+    debugPrint('Raw arguments: $args');
+    debugPrint('Status: "$status" (type: ${status.runtimeType})');
+    debugPrint('User Phone: $userPhone');
+    debugPrint('Payment Status: $paymentStatus');
+    debugPrint('Status == "rejected": ${status == 'rejected'}');
+    debugPrint('Status == "not_submitted": ${status == 'not_submitted'}');
+    debugPrint('================================================');
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -71,7 +71,7 @@ class RegistrationFeeStatusScreen extends StatelessWidget {
       width: 120,
       height: 120,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         shape: BoxShape.circle,
       ),
       child: Icon(
@@ -245,8 +245,8 @@ class RegistrationFeeStatusScreen extends StatelessWidget {
   }
 
   Widget _buildActionButtons(String status, String? userPhone) {
-    print('_buildActionButtons called with status: "$status", userPhone: $userPhone');
-    print('Should show button: ${status == 'not_submitted' || status == 'rejected'}');
+    debugPrint('_buildActionButtons called with status: "$status", userPhone: $userPhone');
+    debugPrint('Should show button: ${status == 'not_submitted' || status == 'rejected'}');
 
     return Column(
       children: [
@@ -255,7 +255,7 @@ class RegistrationFeeStatusScreen extends StatelessWidget {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                print('Retry Payment button clicked!');
+                debugPrint('Retry Payment button clicked!');
                 // Pass user phone to pre-fill the form
                 Get.offAllNamed('/registration-fee', arguments: {
                   'phone': userPhone,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../config/payment_config.dart';
 import '../services/support_ticket_repository.dart';
 import 'support_tickets_screen.dart';
 
@@ -80,7 +81,7 @@ class SupportScreen extends StatelessWidget {
                 title: 'Call Us',
                 subtitle: '+254 011 0846 828',
                 color: Colors.green,
-                onTap: () => _makePhoneCall('+254110846828'),
+                onTap: () => _makePhoneCall('+254${PaymentConfig.supportPhone.substring(1)}'),
               ),
               const SizedBox(height: 12),
               _buildContactCard(
@@ -98,7 +99,7 @@ class SupportScreen extends StatelessWidget {
                 title: 'WhatsApp',
                 subtitle: '+254 0110 846 828',
                 color: Colors.green.shade700,
-                onTap: () => _openWhatsApp('+2540110846828'),
+                onTap: () => _openWhatsApp('+254${PaymentConfig.supportPhone.substring(1)}'),
               ),
               const SizedBox(height: 24),
 

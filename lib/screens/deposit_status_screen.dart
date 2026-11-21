@@ -43,7 +43,7 @@ class _DepositStatusScreenState extends State<DepositStatusScreen> {
         });
       } catch (e) {
         setState(() => _isLoadingHistory = false);
-        print('Error loading rejection history: $e');
+        debugPrint('Error loading rejection history: $e');
       }
     }
   }
@@ -59,14 +59,14 @@ class _DepositStatusScreenState extends State<DepositStatusScreen> {
     final String? rejectionReason = args['rejection_reason'];
 
     // Debug logging
-    print('========== DepositStatusScreen ==========');
-    print('Raw arguments: $args');
-    print('Status: "$status" (type: ${status.runtimeType})');
-    print('Deposit: $deposit');
-    print('Loan ID: ${loan?.id}');
-    print('Status == "rejected": ${status == 'rejected'}');
-    print('Status == "failed": ${status == 'failed'}');
-    print('================================================');
+    debugPrint('========== DepositStatusScreen ==========');
+    debugPrint('Raw arguments: $args');
+    debugPrint('Status: "$status" (type: ${status.runtimeType})');
+    debugPrint('Deposit: $deposit');
+    debugPrint('Loan ID: ${loan?.id}');
+    debugPrint('Status == "rejected": ${status == 'rejected'}');
+    debugPrint('Status == "failed": ${status == 'failed'}');
+    debugPrint('================================================');
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -124,7 +124,7 @@ class _DepositStatusScreenState extends State<DepositStatusScreen> {
       width: 120,
       height: 120,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         shape: BoxShape.circle,
       ),
       child: Icon(
@@ -434,8 +434,8 @@ class _DepositStatusScreenState extends State<DepositStatusScreen> {
   }
 
   Widget _buildActionButtons(String status, Loan? loan, Deposit? deposit, String? rejectionReason) {
-    print('_buildActionButtons called with status: "$status", loan: ${loan?.id}');
-    print('Should show retry button: ${(status == 'rejected' || status == 'failed')}');
+    debugPrint('_buildActionButtons called with status: "$status", loan: ${loan?.id}');
+    debugPrint('Should show retry button: ${(status == 'rejected' || status == 'failed')}');
 
     return Column(
       children: [
@@ -444,7 +444,7 @@ class _DepositStatusScreenState extends State<DepositStatusScreen> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: _hasReachedLimit ? null : () {
-                print('Retry Payment button clicked for loan: ${loan?.id}');
+                debugPrint('Retry Payment button clicked for loan: ${loan?.id}');
                 // Navigate back to deposit payment screen
                 Get.back();
                 if (loan != null) {

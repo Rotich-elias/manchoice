@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import '../config/payment_config.dart';
+
 import '../services/registration_fee_repository.dart';
-import '../models/registration_fee.dart';
 
 class RegistrationFeePaymentScreen extends StatefulWidget {
   const RegistrationFeePaymentScreen({super.key});
@@ -22,13 +23,12 @@ class _RegistrationFeePaymentScreenState
   bool _isLoading = false;
   bool _isSubmitting = false;
   bool _feePaid = false;
-  double _feeAmount = 300.00;
-  RegistrationFee? _registrationFee;
+  double _feeAmount = PaymentConfig.registrationFee;
 
   // Paybill Details
-  final String _paybillNumber = '247247';
-  final String _accountNumber = '846828';
-  final double _amount = 300.00;
+  final String _paybillNumber = PaymentConfig.paybillNumber;
+  final String _accountNumber = PaymentConfig.accountNumber;
+  final double _amount = PaymentConfig.registrationFee;
 
   @override
   void initState() {
@@ -57,8 +57,7 @@ class _RegistrationFeePaymentScreenState
       final status = await _feeRepository.getStatus();
       setState(() {
         _feePaid = status['fee_paid'] ?? false;
-        _feeAmount = status['amount'] ?? 300.00;
-        _registrationFee = status['registration_fee'];
+        _feeAmount = status['amount'] ?? PaymentConfig.registrationFee;
         _isLoading = false;
       });
 
@@ -328,7 +327,7 @@ class _RegistrationFeePaymentScreenState
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'KES ${_amount.toStringAsFixed(2)}',
+                            'KES ${_feeAmount.toStringAsFixed(2)}',
                             style: TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
@@ -435,7 +434,7 @@ class _RegistrationFeePaymentScreenState
                           const Divider(height: 24),
                           _buildPaybillDetail(
                             'Amount',
-                            'KES ${_amount.toStringAsFixed(2)}',
+                            'KES ${_feeAmount.toStringAsFixed(2)}',
                             Icons.money,
                           ),
                         ],

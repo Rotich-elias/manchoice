@@ -16,7 +16,7 @@ class ProductsScreen extends StatefulWidget {
 }
 
 class _ProductsScreenState extends State<ProductsScreen> {
-  final CartService _cartService = Get.put(CartService());
+  final CartService _cartService = Get.find<CartService>();
   final ProductRepository _productRepository = ProductRepository();
 
   String _selectedCategory = 'All';
@@ -757,39 +757,39 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 const SizedBox(height: 8),
                 StatefulBuilder(
                   builder: (context, setState) {
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: RadioListTile<String>(
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            title: const Text('Low', style: TextStyle(fontSize: 12)),
-                            value: 'low',
-                            groupValue: urgency,
-                            onChanged: (value) => setState(() => urgency = value!),
+                    return RadioGroup<String>(
+                      groupValue: urgency,
+                      onChanged: (value) {
+                        if (value != null) setState(() => urgency = value);
+                      },
+                      child: const Row(
+                        children: [
+                          Expanded(
+                            child: RadioListTile<String>(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              title: Text('Low', style: TextStyle(fontSize: 12)),
+                              value: 'low',
+                            ),
                           ),
-                        ),
-                        Expanded(
-                          child: RadioListTile<String>(
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            title: const Text('Medium', style: TextStyle(fontSize: 12)),
-                            value: 'medium',
-                            groupValue: urgency,
-                            onChanged: (value) => setState(() => urgency = value!),
+                          Expanded(
+                            child: RadioListTile<String>(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              title: Text('Medium', style: TextStyle(fontSize: 12)),
+                              value: 'medium',
+                            ),
                           ),
-                        ),
-                        Expanded(
-                          child: RadioListTile<String>(
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            title: const Text('High', style: TextStyle(fontSize: 12)),
-                            value: 'high',
-                            groupValue: urgency,
-                            onChanged: (value) => setState(() => urgency = value!),
+                          Expanded(
+                            child: RadioListTile<String>(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              title: Text('High', style: TextStyle(fontSize: 12)),
+                              value: 'high',
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     );
                   },
                 ),

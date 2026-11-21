@@ -30,6 +30,8 @@ class AppRoutes {
     GetPage(name: '/registration-fee', page: () => const RegistrationFeePaymentScreen()),
     GetPage(name: '/registration-fee-status', page: () => const RegistrationFeeStatusScreen()),
     GetPage(name: '/dashboard', page: () => const DashboardScreen()),
+    GetPage(name: '/home', page: () => const DashboardScreen()), // Alias used by legacy callers
+    GetPage(name: '/registration-fee-payment', page: () => const RegistrationFeePaymentScreen()), // Alias
     GetPage(name: '/loan-application', page: () => const NewLoanApplicationScreen()), // Unified loan application
     GetPage(name: '/new-loan-application', page: () => const NewLoanApplicationScreen()), // Keep both routes for compatibility
     GetPage(name: '/my-loans', page: () => const MyLoansScreen()),

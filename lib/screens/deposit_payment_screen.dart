@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../config/payment_config.dart';
+
 import '../models/loan.dart';
 import '../models/deposit.dart';
 import '../services/deposit_repository.dart';
@@ -20,9 +22,7 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
       TextEditingController();
   final DepositRepository _depositRepository = DepositRepository();
 
-  // ⚠️ IMPORTANT: Update this with your actual Safaricom M-PESA paybill number before going live!
-  final String mpesaPaybill =
-      "247247"; // TODO: Update with your production paybill number
+  final String mpesaPaybill = PaymentConfig.paybillNumber;
 
   bool _isLoading = false;
   bool _isSubmitting = false;
@@ -702,7 +702,7 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
                             '• You can pay in full or make partial payments\n'
                             '• Go to M-PESA → Lipa na M-PESA → Paybill\n'
                             '• Enter Business No: $mpesaPaybill\n'
-                            '• Enter Account No: 846828\n'
+                            '• Enter Account No: ${PaymentConfig.accountNumber}\n'
                             '• Enter the amount and complete payment\n'
                             '• Copy the M-PESA transaction code (e.g., SH12XYZ789)\n'
                             '• Enter the code below to submit for verification\n'

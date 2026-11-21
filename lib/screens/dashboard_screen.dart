@@ -8,6 +8,7 @@ import '../models/user.dart';
 import '../models/loan.dart';
 import '../models/product.dart';
 import '../config/api_config.dart';
+import '../config/app_colors.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -171,7 +172,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: const BoxDecoration(
-                      color: Colors.red,
+                      color: AppColors.danger,
                       shape: BoxShape.circle,
                     ),
                     constraints: const BoxConstraints(
@@ -209,15 +210,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(20.0),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Theme.of(context).colorScheme.primary,
-                          Theme.of(context).colorScheme.secondary,
-                        ],
+                      gradient: const LinearGradient(
+                        colors: [AppColors.ink, Color(0xFF3A3117)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
                       children: [
@@ -246,10 +244,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 'Welcome Back,',
                                 style: Theme.of(context).textTheme.bodyLarge
                                     ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onPrimary
-                                          .withValues(alpha: 0.9),
+                                      color: Colors.white.withValues(alpha: 0.85),
                                     ),
                               ),
                               const SizedBox(height: 4),
@@ -257,9 +252,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 userName,
                                 style: Theme.of(context).textTheme.headlineSmall
                                     ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onPrimary,
+                                      color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                     ),
                               ),
@@ -268,10 +261,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 'MAN\'S CHOICE ENTERPRISE',
                                 style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onPrimary
-                                          .withValues(alpha: 0.8),
+                                      color: Colors.white.withValues(alpha: 0.75),
                                     ),
                               ),
                             ],
@@ -305,7 +295,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   icon: Icons.receipt_long,
                   title: 'My Loans',
                   subtitle: 'View loan status and payment history',
-                  color: Colors.blue,
+                  color: AppColors.info,
                   onTap: () => Get.toNamed('/my-loans'),
                 ),
                 const SizedBox(height: 12),
@@ -314,7 +304,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   icon: Icons.payment,
                   title: 'My Payments / Installments',
                   subtitle: 'View and manage your payments',
-                  color: Colors.green,
+                  color: AppColors.success,
                   onTap: () => Get.toNamed('/payment-history'),
                 ),
                 const SizedBox(height: 12),
@@ -323,7 +313,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   icon: Icons.shopping_bag,
                   title: 'Products (Spares)',
                   subtitle: 'Browse available spare parts',
-                  color: Colors.orange,
+                  color: AppColors.warning,
                   onTap: () => Get.toNamed('/products'),
                 ),
                 const SizedBox(height: 12),
@@ -332,7 +322,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   icon: Icons.support_agent,
                   title: 'Support / Help',
                   subtitle: 'Get help and contact support',
-                  color: Colors.red,
+                  color: AppColors.danger,
                   onTap: () => Get.toNamed('/support'),
                 ),
                 const SizedBox(height: 24),
@@ -371,12 +361,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.secondary,
-                ],
+                colors: [AppColors.ink, Color(0xFF3A3117)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -779,11 +766,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 'Logged Out',
                 'You have been successfully logged out',
                 snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: Colors.green,
+                backgroundColor: AppColors.success,
                 colorText: Colors.white,
               );
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.danger,
+                foregroundColor: Colors.white,
+              ),
             child: const Text('Logout'),
           ),
         ],
@@ -916,7 +906,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         children: [
                           Icon(
                             Icons.warning_amber,
-                            color: Colors.orange,
+                            color: AppColors.warning,
                             size: 20,
                           ),
                           SizedBox(width: 8),
@@ -924,7 +914,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             'Behind Schedule',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Colors.orange,
+                              color: AppColors.warning,
                             ),
                           ),
                         ],
@@ -956,13 +946,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       const Row(
                         children: [
-                          Icon(Icons.error, color: Colors.red, size: 20),
+                          Icon(Icons.error, color: AppColors.danger, size: 20),
                           SizedBox(width: 8),
                           Text(
                             'OVERDUE',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Colors.red,
+                              color: AppColors.danger,
                             ),
                           ),
                         ],
@@ -1008,7 +998,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             label,
             style: TextStyle(
               fontSize: 13,
-              color: highlight ? Colors.blue.shade700 : Colors.black87,
+              color: highlight
+                  ? Theme.of(context).colorScheme.tertiary
+                  : Theme.of(context).colorScheme.onSurface,
               fontWeight: highlight ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
@@ -1017,7 +1009,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: highlight ? Colors.blue.shade700 : Colors.black87,
+              color: highlight
+                  ? Theme.of(context).colorScheme.tertiary
+                  : Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ],
@@ -1151,9 +1145,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Product Price
               Row(
                 children: [
-                  if (product.hasDiscount) ...[
+                  if (product.hasDiscount && product.originalPrice != null) ...[
                     Text(
-                      currencyFormat.format(product.originalPrice),
+                      currencyFormat.format(product.originalPrice!),
                       style: const TextStyle(
                         fontSize: 11,
                         decoration: TextDecoration.lineThrough,

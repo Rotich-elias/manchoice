@@ -17,8 +17,14 @@ class ApiConfig {
   // flutter build apk --release
   // flutter build appbundle --release
 
-  // Auto-select base URL based on environment
-  static String get baseUrl => isProduction ? _prodBaseUrl : _devBaseUrl;
+  // Auto-select base URL based on environment.
+  // Override at build time, e.g.
+  // flutter run --dart-define=API_BASE_URL=http://192.168.1.10:8000/api
+  static String get baseUrl {
+    const override = String.fromEnvironment('API_BASE_URL');
+    if (override.isNotEmpty) return override;
+    return isProduction ? _prodBaseUrl : _devBaseUrl;
+  }
 
   // Alternative URLs for different devices (Development only)
   // Uncomment and use these if needed during development:

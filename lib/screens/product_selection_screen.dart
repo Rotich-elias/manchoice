@@ -14,10 +14,10 @@ class ProductSelectionScreen extends StatefulWidget {
   });
 
   @override
-  _ProductSelectionScreenState createState() => _ProductSelectionScreenState();
+  ProductSelectionScreenState createState() => ProductSelectionScreenState();
 }
 
-class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
+class ProductSelectionScreenState extends State<ProductSelectionScreen> {
   final ProductRepository _productRepository = ProductRepository();
 
   List<Product> _products = [];
@@ -46,7 +46,7 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
         _isLoadingCategories = false;
       });
     } catch (e) {
-      print('Error loading categories: $e');
+      debugPrint('Error loading categories: $e');
       setState(() {
         _isLoadingCategories = false;
       });
@@ -66,10 +66,12 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error loading products: $e')));
+      debugPrint('Error loading products: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not load products. Pull to retry.')),
+      );
     }
   }
 

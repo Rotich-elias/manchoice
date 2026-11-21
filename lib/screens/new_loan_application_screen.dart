@@ -106,8 +106,6 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
 
   Future<void> _loadCustomerDocuments(CustomerApi customer) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-
       // For each document, check if customer has it saved and load it
       if (customer.bikePhotoUrl != null && customer.bikePhotoUrl!.isNotEmpty && _bikePhoto == null) {
         await _downloadAndCacheDocument(customer.bikePhotoUrl!, 'bike_photo_path', (file) {
@@ -373,9 +371,9 @@ class _NewLoanApplicationScreenState extends State<NewLoanApplicationScreen> {
   }
 
   void _preFillForm(CustomerApi customer) {
-    _fullNameController.text = customer.name ?? '';
+    _fullNameController.text = customer.name;
     _emailController.text = customer.email ?? '';
-    _phoneController.text = customer.phone ?? '';
+    _phoneController.text = customer.phone;
     _nationalIdController.text = customer.idNumber ?? '';
     _workingStationController.text = customer.address ?? '';
     _numberPlateController.text = customer.motorcycleNumberPlate ?? '';

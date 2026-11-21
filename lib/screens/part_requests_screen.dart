@@ -116,7 +116,7 @@ class _PartRequestsScreenState extends State<PartRequestsScreen> {
           setState(() => _filter = value);
         },
         backgroundColor: Colors.white,
-        selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
+        selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
         checkmarkColor: Theme.of(context).primaryColor,
       ),
     );
@@ -303,9 +303,9 @@ class _PartRequestsScreenState extends State<PartRequestsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -344,7 +344,7 @@ class _PartRequestsScreenState extends State<PartRequestsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(

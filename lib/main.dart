@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'config/app_theme.dart';
+import 'services/cart_service.dart';
 import 'config/app_routes.dart';
-import 'screens/main_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +13,9 @@ void main() async {
   if (!kIsWeb) {
     await Firebase.initializeApp();
   }
+
+  // Register the shared cart once so every screen sees the same instance.
+  Get.put(CartService(), permanent: true);
 
   runApp(const PlumerApp());
 }
@@ -30,7 +33,6 @@ class PlumerApp extends StatelessWidget {
       themeMode: ThemeMode.system, // Automatically switches based on system preference
       initialRoute: '/login', // Start with login screen
       getPages: [
-        GetPage(name: '/', page: () => const MainPage()),
         ...AppRoutes.routes,
       ],
     );
