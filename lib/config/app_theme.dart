@@ -3,22 +3,24 @@ import 'app_colors.dart';
 
 /// Shared visual language for MansChoice.
 ///
-/// A restrained charcoal header, gold call-to-action buttons and soft,
+/// A restrained charcoal header, accessible deep-gold actions and soft,
 /// rounded surfaces give the app a consistent premium feel in both themes.
+/// Bright [AppColors.gold] is reserved for highlights (logo ring, focus,
+/// gradients) so text and icons using `colorScheme.primary` stay legible.
 class AppTheme {
   static ThemeData get lightTheme => _buildTheme(
         brightness: Brightness.light,
         colorScheme: const ColorScheme.light(
-          primary: AppColors.gold,
-          onPrimary: AppColors.ink,
+          primary: AppColors.goldPrimary,
+          onPrimary: Colors.white,
           secondary: AppColors.ink,
           onSecondary: Colors.white,
-          tertiary: AppColors.goldDeep,
+          tertiary: AppColors.goldPrimary,
           onTertiary: Colors.white,
           surface: AppColors.lightSurface,
           onSurface: AppColors.ink,
-          onSurfaceVariant: Color(0xFF666666),
-          surfaceContainerHighest: Color(0xFFF0EEE8),
+          onSurfaceVariant: Color(0xFF5F6368),
+          surfaceContainerHighest: Color(0xFFF1EFE9),
           outline: AppColors.line,
           error: AppColors.danger,
           onError: Colors.white,
@@ -39,8 +41,8 @@ class AppTheme {
           onTertiary: AppColors.ink,
           surface: AppColors.darkSurface,
           onSurface: AppColors.darkOnSurface,
-          onSurfaceVariant: Color(0xFFB0B0B0),
-          surfaceContainerHighest: Color(0xFF262626),
+          onSurfaceVariant: Color(0xFFB8B8B8),
+          surfaceContainerHighest: Color(0xFF272727),
           outline: Color(0xFF3A3A3A),
           error: Color(0xFFEF5350),
           onError: Colors.white,
@@ -89,7 +91,8 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: cardColor,
         surfaceTintColor: Colors.transparent,
-        elevation: 0,
+        elevation: 1,
+        shadowColor: isDark ? Colors.black54 : Colors.black12,
         margin: const EdgeInsets.symmetric(vertical: 6),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -103,8 +106,23 @@ class AppTheme {
           disabledBackgroundColor: colorScheme.primary.withValues(alpha: 0.35),
           disabledForegroundColor: colorScheme.onPrimary.withValues(alpha: 0.7),
           surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          elevation: 1,
+          shadowColor: colorScheme.primary.withValues(alpha: 0.3),
+          minimumSize: const Size(64, 46),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
+          elevation: 1,
+          shadowColor: colorScheme.primary.withValues(alpha: 0.3),
+          minimumSize: const Size(64, 46),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -115,6 +133,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: colorScheme.tertiary,
           side: BorderSide(color: colorScheme.tertiary, width: 1.5),
+          minimumSize: const Size(64, 46),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -154,10 +173,10 @@ class AppTheme {
         ),
         labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
         floatingLabelStyle: TextStyle(
-          color: colorScheme.tertiary,
+          color: colorScheme.primary,
           fontWeight: FontWeight.w600,
         ),
-        prefixIconColor: colorScheme.tertiary,
+        prefixIconColor: colorScheme.primary,
         suffixIconColor: colorScheme.onSurfaceVariant,
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(

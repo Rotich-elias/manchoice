@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../config/app_colors.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -101,13 +102,22 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
       body: Stack(
         children: [
-          // White background
+          // Brand-aware background
           Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isDark
+                    ? [AppColors.darkBackground, AppColors.ink]
+                    : [AppColors.goldSoft, AppColors.canvas],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
             ),
           ),
 
@@ -116,7 +126,11 @@ class _SplashScreenState extends State<SplashScreen>
             animation: _particleController,
             builder: (context, child) {
               return CustomPaint(
-                painter: ParticlePainter(_particleController.value),
+                painter: ParticlePainter(
+                  _particleController.value,
+                  accent: isDark ? AppColors.gold : AppColors.goldDeep,
+                  grid: isDark ? Colors.white24 : Colors.black12,
+                ),
                 child: Container(),
               );
             },
@@ -146,19 +160,19 @@ class _SplashScreenState extends State<SplashScreen>
                                 return Container(
                                   padding: const EdgeInsets.all(20),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: theme.colorScheme.surface,
                                     borderRadius: BorderRadius.circular(30),
                                     boxShadow: [
                                       // Multiple glow layers
                                       BoxShadow(
-                                        color: const Color(0xFFF5C518).withValues(
+                                        color: AppColors.gold.withValues(
                                           alpha: 0.6 * _glowAnimation.value,
                                         ),
                                         blurRadius: 40 * _glowAnimation.value,
                                         spreadRadius: 5 * _glowAnimation.value,
                                       ),
                                       BoxShadow(
-                                        color: const Color(0xFF9A7300).withValues(
+                                        color: AppColors.goldDeep.withValues(
                                           alpha: 0.4 * _glowAnimation.value,
                                         ),
                                         blurRadius: 60 * _glowAnimation.value,
@@ -254,7 +268,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontStyle: FontStyle.italic,
-                                  color: Colors.grey[600],
+                                  color: theme.colorScheme.onSurfaceVariant,
                                   letterSpacing: 1,
                                 ),
                               ),
@@ -331,7 +345,7 @@ class _SplashScreenState extends State<SplashScreen>
                                       Container(
                                         height: 4,
                                         decoration: BoxDecoration(
-                                          color: Colors.grey[300],
+                                          color: theme.colorScheme.outline.withValues(alpha: 0.5),
                                           borderRadius: BorderRadius.circular(2),
                                         ),
                                       ),
@@ -379,11 +393,11 @@ class _SplashScreenState extends State<SplashScreen>
                       FadeTransition(
                         opacity: _fadeAnimation,
                         child: Text(
-                          'v1.0.0 • POWERED BY INNOVATION',
+                          'v1.1.0 • POWERED BY INNOVATION',
                           style: TextStyle(
                             fontSize: 9,
                             letterSpacing: 1.5,
-                            color: Colors.grey[400],
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ),
@@ -404,9 +418,15 @@ class _SplashScreenState extends State<SplashScreen>
 // Custom painter for particle/grid effect
 class ParticlePainter extends CustomPainter {
   final double animationValue;
+  final Color accent;
+  final Color grid;
   final Random random = Random(42); // Fixed seed for consistent pattern
 
-  ParticlePainter(this.animationValue);
+  ParticlePainter(
+    this.animationValue, {
+    this.accent = AppColors.goldDeep,
+    this.grid = Colors.black12,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -414,13 +434,13 @@ class ParticlePainter extends CustomPainter {
       ..strokeWidth = 1
       ..style = PaintingStyle.fill;
 
-    // Draw moving particles with subtle colors for white background
+    // Draw moving brand-tinted particles
     for (int i = 0; i < 50; i++) {
       final x = (random.nextDouble() * size.width + animationValue * 50) % size.width;
       final y = (random.nextDouble() * size.height + animationValue * 30) % size.height;
       final opacity = 0.05 + random.nextDouble() * 0.1;
 
-      paint.color = Colors.blue.withValues(alpha: opacity);
+      paint.color = accent.withValues(alpha: opacity);
       canvas.drawCircle(
         Offset(x, y),
         1 + random.nextDouble() * 2,
@@ -430,7 +450,7 @@ class ParticlePainter extends CustomPainter {
 
     // Draw subtle grid lines
     paint
-      ..color = Colors.grey.withValues(alpha: 0.05)
+      ..color = grid
       ..style = PaintingStyle.stroke;
 
     // Horizontal lines

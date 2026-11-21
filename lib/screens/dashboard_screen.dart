@@ -205,7 +205,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 // Welcome Card with user's name
                 Card(
-                  elevation: 4,
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20.0),
@@ -295,7 +294,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   icon: Icons.receipt_long,
                   title: 'My Loans',
                   subtitle: 'View loan status and payment history',
-                  color: AppColors.info,
+                  color: AppColors.menuLoans,
                   onTap: () => Get.toNamed('/my-loans'),
                 ),
                 const SizedBox(height: 12),
@@ -304,7 +303,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   icon: Icons.payment,
                   title: 'My Payments / Installments',
                   subtitle: 'View and manage your payments',
-                  color: AppColors.success,
+                  color: AppColors.menuPayments,
                   onTap: () => Get.toNamed('/payment-history'),
                 ),
                 const SizedBox(height: 12),
@@ -313,7 +312,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   icon: Icons.shopping_bag,
                   title: 'Products (Spares)',
                   subtitle: 'Browse available spare parts',
-                  color: AppColors.warning,
+                  color: AppColors.menuProducts,
                   onTap: () => Get.toNamed('/products'),
                 ),
                 const SizedBox(height: 12),
@@ -322,7 +321,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   icon: Icons.support_agent,
                   title: 'Support / Help',
                   subtitle: 'Get help and contact support',
-                  color: AppColors.danger,
+                  color: AppColors.menuSupport,
                   onTap: () => Get.toNamed('/support'),
                 ),
                 const SizedBox(height: 24),
@@ -493,7 +492,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final dateFormat = DateFormat('MMM dd, yyyy');
 
     return Card(
-      elevation: 4,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(20),
@@ -690,7 +688,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required VoidCallback onTap,
   }) {
     return Card(
-      elevation: 2,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
@@ -1035,11 +1032,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.inventory_2_outlined, size: 48, color: Colors.grey.shade400),
+              Icon(
+                Icons.inventory_2_outlined,
+                size: 48,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(height: 8),
               Text(
                 'No products available',
-                style: TextStyle(color: Colors.grey.shade600),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -1162,7 +1165,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
-                        color: product.hasDiscount ? Colors.red : Colors.black87,
+                        color: product.hasDiscount
+                            ? AppColors.danger
+                            : Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ),

@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
+import '../config/payment_config.dart';
 import '../models/deposit.dart';
+import '../utils/phone_utils.dart';
 import 'api_service.dart';
 
 class DepositRepository {
@@ -22,6 +24,10 @@ class DepositRepository {
           'deposits': data['deposits'] != null
               ? (data['deposits'] as List).map((e) => Deposit.fromJson(e)).toList()
               : <Deposit>[],
+          'rejection_count': data['rejection_count'] ?? 0,
+          'has_reached_rejection_limit':
+              data['has_reached_rejection_limit'] ?? false,
+          'can_retry': data['can_retry'] ?? true,
         };
       }
       throw Exception('Failed to get deposit status');
@@ -40,7 +46,7 @@ class DepositRepository {
       final response = await _apiService.post(
         '/loans/$loanId/deposit/mpesa',
         data: {
-          'phone_number': phoneNumber,
+          'phone_number': PhoneUtils.toLocalFormat(phoneNumber),
           if (amount != null) 'amount': amount,
         },
       );
@@ -79,7 +85,7 @@ class DepositRepository {
         '/deposits/manual',
         data: {
           'loan_id': loanId,
-          'phone_number': phoneNumber,
+          'phone_number': PhoneUtils.toLocalFormat(phoneNumber),
           'mpesa_code': mpesaCode,
           'amount': amount,
         },
@@ -100,12 +106,19 @@ class DepositRepository {
     }
   }
 
-  // Verify M-PESA deposit payment
-  Future<Map<String, dynamic>> verifyPayment(String transactionId) async {
+  // Verify a deposit payment (admin/staff only on the backend).
+  Future<Map<String, dynamic>> verifyPayment(
+    int depositId, {
+    String status = 'completed',
+    String? rejectionReason,
+  }) async {
     try {
       final response = await _apiService.post(
-        '/deposits/verify',
-        data: {'transaction_id': transactionId},
+        '/deposits/$depositId/verify',
+        data: {
+          'status': status,
+          if (rejectionReason != null) 'rejection_reason': rejectionReason,
+        },
       );
 
       if (response.data['success'] == true) {
@@ -232,7 +245,7 @@ class DepositRepository {
   Future<bool> hasReachedRejectionLimit(int loanId) async {
     try {
       final count = await getRejectionCount(loanId);
-      return count >= 3; // 3 rejections is the limit
+      return count >= PaymentConfig.maxDepositRejections;
     } catch (e) {
       return false;
     }
@@ -242,8 +255,14 @@ class DepositRepository {
   Future<Map<String, dynamic>> getDepositStatusWithRejectionInfo(int loanId) async {
     try {
       final statusData = await getDepositStatus(loanId);
-      final rejectionCount = await getRejectionCount(loanId);
-      final hasReachedLimit = rejectionCount >= 3;
+      final serverCount = statusData['rejection_count'];
+      final rejectionCount = serverCount is int
+          ? serverCount
+          : await getRejectionCount(loanId);
+      final serverFlag = statusData['has_reached_rejection_limit'];
+      final hasReachedLimit = serverFlag is bool
+          ? serverFlag
+          : rejectionCount >= PaymentConfig.maxDepositRejections;
 
       return {
         ...statusData,

@@ -20,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePin = true;
   bool _isLoading = false;
 
-  static const String _supportPhone = PaymentConfig.supportPhone;
+  static String get _supportPhone => PaymentConfig.supportPhone;
 
   @override
   void dispose() {
@@ -35,7 +35,11 @@ class _LoginScreenState extends State<LoginScreen> {
       AlertDialog(
         title: Row(
           children: [
-            const Icon(Icons.help_outline, color: AppColors.goldDeep, size: 26),
+            Icon(
+              Icons.help_outline,
+              color: theme.colorScheme.primary,
+              size: 26,
+            ),
             const SizedBox(width: 12),
             Text('Forgot your PIN?', style: theme.textTheme.titleMedium),
           ],
@@ -61,7 +65,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.phone, color: AppColors.goldDeep, size: 20),
+                      Icon(
+                        Icons.phone,
+                        color: theme.colorScheme.primary,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
                       Text('Call or WhatsApp', style: theme.textTheme.titleSmall),
                     ],
@@ -70,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     _supportPhone,
                     style: theme.textTheme.titleLarge?.copyWith(
-                      color: AppColors.goldDeep,
+                      color: theme.colorScheme.primary,
                     ),
                   ),
                 ],
@@ -219,7 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             'ENTERPRISE',
                             textAlign: TextAlign.center,
                             style: theme.textTheme.titleSmall?.copyWith(
-                              color: AppColors.goldDeep,
+                              color: isDark ? AppColors.gold : AppColors.goldDeep,
                               letterSpacing: 4,
                             ),
                           ),

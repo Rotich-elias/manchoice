@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'config/app_theme.dart';
+import 'config/payment_config.dart';
 import 'services/cart_service.dart';
 import 'config/app_routes.dart';
 
@@ -13,6 +14,9 @@ void main() async {
   if (!kIsWeb) {
     await Firebase.initializeApp();
   }
+
+  // Keep payment/paybill values in sync with the backend when available.
+  await PaymentConfig.loadFromBackend();
 
   // Register the shared cart once so every screen sees the same instance.
   Get.put(CartService(), permanent: true);

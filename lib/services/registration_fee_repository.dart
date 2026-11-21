@@ -1,4 +1,5 @@
 import '../models/registration_fee.dart';
+import '../utils/phone_utils.dart';
 import 'api_service.dart';
 
 class RegistrationFeeRepository {
@@ -30,7 +31,7 @@ class RegistrationFeeRepository {
     try {
       final response = await _apiService.post(
         '/registration-fee/mpesa',
-        data: {'phone_number': phoneNumber},
+        data: {'phone_number': PhoneUtils.toLocalFormat(phoneNumber)},
       );
 
       if (response.data['success'] == true) {
@@ -57,7 +58,7 @@ class RegistrationFeeRepository {
       final response = await _apiService.post(
         '/registration-fee/manual',
         data: {
-          'phone_number': phoneNumber,
+          'phone_number': PhoneUtils.toLocalFormat(phoneNumber),
           'mpesa_code': transactionId,
           'amount': amount,
         },

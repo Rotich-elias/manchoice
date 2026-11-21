@@ -110,6 +110,27 @@ class ApiService {
     }
   }
 
+  // Multipart POST (file uploads)
+  Future<Response> postFormData(
+    String path, {
+    required FormData data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      await loadToken();
+      return await _dio.post(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+      );
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 402) {
+        rethrow;
+      }
+      throw _handleError(e);
+    }
+  }
+
   // PUT request
   Future<Response> put(
     String path, {

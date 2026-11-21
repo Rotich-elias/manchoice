@@ -99,7 +99,7 @@ The customer is disputing the rejection of their deposit payment and requests a 
 ''';
 
       return await submitTicket(
-        type: 'deposit_dispute',
+        type: 'complaint',
         subject: subject,
         message: message,
         priority: 'high',
@@ -131,7 +131,7 @@ The customer has reached the rejection limit and needs assistance to complete th
 ''';
 
       return await submitTicket(
-        type: 'rejection_limit',
+        type: 'help',
         subject: subject,
         message: message,
         priority: 'high',

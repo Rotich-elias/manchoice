@@ -4,6 +4,7 @@
     <domain-config cleartextTrafficPermitted="true">
         <!-- Local development backend -->
         <domain includeSubdomains="true">192.168.100.60</domain>
+        <domain includeSubdomains="true">192.168.100.6</domain>
         <!-- Android emulator host -->
         <domain includeSubdomains="true">10.0.2.2</domain>
         <domain includeSubdomains="true">localhost</domain>

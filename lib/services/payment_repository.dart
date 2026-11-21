@@ -1,4 +1,5 @@
 import '../config/api_config.dart';
+import '../utils/phone_utils.dart';
 import '../models/payment.dart';
 import 'api_service.dart';
 
@@ -108,7 +109,7 @@ class PaymentRepository {
         ApiConfig.mpesaStkPush,
         data: {
           'loan_id': loanId,
-          'phone_number': phoneNumber,
+          'phone_number': PhoneUtils.toMpesaFormat(phoneNumber),
           'amount': amount,
         },
       );

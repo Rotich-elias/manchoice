@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '../config/api_config.dart';
 import '../models/product.dart';
 import 'api_service.dart';
@@ -55,23 +57,32 @@ class ProductRepository {
     String? description,
     String? category,
     required double price,
-    String? imageUrl,
+    String? imagePath,
+    String? imageFilePath,
     int? stockQuantity,
     bool? isAvailable,
   }) async {
     try {
-      final response = await _apiService.post(
-        ApiConfig.products,
-        data: {
-          'name': name,
-          if (description != null) 'description': description,
-          if (category != null) 'category': category,
-          'price': price,
-          if (imageUrl != null) 'image_url': imageUrl,
-          if (stockQuantity != null) 'stock_quantity': stockQuantity,
-          if (isAvailable != null) 'is_available': isAvailable,
-        },
-      );
+      final fields = <String, dynamic>{
+        'name': name,
+        if (description != null) 'description': description,
+        if (category != null) 'category': category,
+        'price': price,
+        if (imagePath != null) 'image_path': imagePath,
+        if (stockQuantity != null) 'stock_quantity': stockQuantity,
+        if (isAvailable != null) 'is_available': isAvailable,
+      };
+
+      final Response response;
+      if (imageFilePath != null) {
+        final form = FormData.fromMap({
+          ...fields,
+          'image': await MultipartFile.fromFile(imageFilePath),
+        });
+        response = await _apiService.postFormData(ApiConfig.products, data: form);
+      } else {
+        response = await _apiService.post(ApiConfig.products, data: fields);
+      }
 
       if (response.data['success'] == true) {
         return Product.fromJson(response.data['data']);
@@ -89,23 +100,40 @@ class ProductRepository {
     String? description,
     String? category,
     double? price,
-    String? imageUrl,
+    String? imagePath,
+    String? imageFilePath,
     int? stockQuantity,
     bool? isAvailable,
   }) async {
     try {
-      final response = await _apiService.put(
-        '${ApiConfig.products}/$id',
-        data: {
-          if (name != null) 'name': name,
-          if (description != null) 'description': description,
-          if (category != null) 'category': category,
-          if (price != null) 'price': price,
-          if (imageUrl != null) 'image_url': imageUrl,
-          if (stockQuantity != null) 'stock_quantity': stockQuantity,
-          if (isAvailable != null) 'is_available': isAvailable,
-        },
-      );
+      final fields = <String, dynamic>{
+        if (name != null) 'name': name,
+        if (description != null) 'description': description,
+        if (category != null) 'category': category,
+        if (price != null) 'price': price,
+        if (imagePath != null) 'image_path': imagePath,
+        if (stockQuantity != null) 'stock_quantity': stockQuantity,
+        if (isAvailable != null) 'is_available': isAvailable,
+      };
+
+      final Response response;
+      if (imageFilePath != null) {
+        final form = FormData.fromMap({
+          ...fields,
+          // Laravel method spoofing: file uploads require a POST request.
+          '_method': 'PUT',
+          'image': await MultipartFile.fromFile(imageFilePath),
+        });
+        response = await _apiService.postFormData(
+          '${ApiConfig.products}/$id',
+          data: form,
+        );
+      } else {
+        response = await _apiService.put(
+          '${ApiConfig.products}/$id',
+          data: fields,
+        );
+      }
 
       if (response.data['success'] == true) {
         return Product.fromJson(response.data['data']);
